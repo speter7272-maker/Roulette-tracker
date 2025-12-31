@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Roulette Trend Tracker • BASE KEYPAD CONFIRMED — ADD TRACKING • v1 • Build: 2025-12-31</title>
+  <title>Roulette Trend Tracker • BASE KEYPAD CONFIRMED — ADD TRACKING + WHEEL • v2 • Build: 2025-12-31</title>
   <style>
     :root{color-scheme:dark; --bg:#0b1220; --card:#0f1a2e; --muted:#94a3b8; --txt:#e5e7eb; --accent:#60a5fa; --warn:#fbbf24; --danger:#ef4444; --ok:#34d399; --chip:#111c33; --border:#1f2a44;}
     *{box-sizing:border-box}
@@ -46,12 +46,32 @@
     #expBackdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
     #expCard{position:relative;max-width:720px;margin:8vh auto;background:#111827;color:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.45);padding:16px 16px 12px 16px}
     #expBody{margin:12px 0 0 0;white-space:pre-wrap;word-wrap:break-word;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;font-size:12px;line-height:1.35;background:rgba(255,255,255,.06);padding:12px;border-radius:12px;max-height:58vh;overflow:auto}
+    /* Wheel modal */
+    .modalOverlay{
+      position:fixed; inset:0; z-index:9999;
+      background:rgba(0,0,0,0.55);
+      display:flex; align-items:center; justify-content:center;
+      padding:14px;
+      backdrop-filter: blur(6px);
+    }
+    .modalCard{
+      width:min(680px, 100%);
+      background:rgba(20,28,45,0.95);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+      padding:14px;
+    }
+    .modalHeader{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:10px; margin-bottom:10px;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Roulette Trend Tracker</h1>
-    <div class="build">BASE KEYPAD CONFIRMED — ADD TRACKING • v1</div>
+    <div class="build">BASE KEYPAD CONFIRMED — ADD TRACKING + WHEEL • v2</div>
     <div class="sub">Build date: <b>2025-12-31</b>. Tap spins on the keypad. Tracks last 10/15/20: columns, dozens, double-streets, red/black, high/low, even/odd, Junko quadrants. Saves on-device.</div>
 
     <div class="card">
@@ -138,6 +158,7 @@
         <div class="row" style="gap:10px;flex-wrap:wrap">
           <button class="btn" id="copyCsvBtn" type="button">Copy CSV</button>
           <button class="btn" id="downloadCsvBtn" type="button">Download CSV</button>
+          <button class="btn" id="wheelViewBtn" type="button">Wheel View (Last 20)</button>
         </div>
 
         <div class="card" style="margin-top:14px;">
@@ -167,6 +188,22 @@
     </div>
   </div>
 
+  <!-- Wheel View Modal -->
+  <div id="wheelModal" class="modalOverlay" style="display:none;">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div>
+          <div class="h2" style="margin:0;">American Wheel — Last 20</div>
+          <div class="hint" id="wheelSubtitle" style="margin-top:4px;">Radial bars show hit count per pocket (most recent 20 spins).</div>
+        </div>
+        <button class="btn" id="wheelCloseBtn" type="button">Close</button>
+      </div>
+      <canvas id="wheelCanvas" width="420" height="420" style="width:100%; max-width:520px; border-radius:16px; background:rgba(255,255,255,0.03);"></canvas>
+      <div class="hint" style="margin-top:10px;">
+        Tip: Longer / more stacked bars = more hits in the last 20. Green pockets are 0 and 00.
+      </div>
+    </div>
+  </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const STORAGE_KEY = "roulette_trend_tracker_base_keypad_tracking_v1";
@@ -770,6 +807,177 @@ Exit
     $("importStatus").textContent = "";
   });
 
+    // ---------------- Wheel View (Last 20) ----------------
+    const WHEEL = [0,28,9,26,30,11,7,20,32,17,5,22,34,15,3,24,36,13,1,"00",27,10,25,29,12,8,19,31,18,6,21,33,16,4,23,35,14,2];
+
+    function numLabel(n){ return (n === "00") ? "00" : String(n); }
+
+    function pocketColor(n){
+      if(n === 0 || n === "00") return "rgba(80, 220, 160, 0.95)"; // green
+      const v = Number(n);
+      return (RED[v] ? "rgba(255, 92, 92, 0.95)" : "rgba(70, 140, 255, 0.95)"); // red / black-blue
+    }
+
+    function drawWheelHistogram(lastN=20){
+      const canvas = document.getElementById("wheelCanvas");
+      if(!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      // HiDPI crispness
+      const dpr = window.devicePixelRatio || 1;
+      const cssW = canvas.clientWidth || 420;
+      const size = Math.min(cssW, 520);
+      canvas.style.height = size + "px";
+      canvas.style.width  = size + "px";
+      canvas.width  = Math.floor(size * dpr);
+      canvas.height = Math.floor(size * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+
+      ctx.clearRect(0,0,size,size);
+
+      const cx = size/2, cy = size/2;
+      const outerR = (size/2) - 16;
+      const ringR1 = outerR - 46;
+      const innerR = 54;
+      const barLen = 10;
+      const barGap = 2;
+      const step = (Math.PI*2)/WHEEL.length;
+      const start = -Math.PI/2;
+
+      // count last N spins (spins is newest-first)
+      const slice = spins.slice(0, lastN);
+      const cts = {};
+      for(const x of slice){
+        const k = (x.n === "00") ? "00" : String(x.n);
+        cts[k] = (cts[k]||0) + 1;
+      }
+      let maxC = 0;
+      for(const n of WHEEL) maxC = Math.max(maxC, cts[numLabel(n)]||0);
+
+      // background rings
+      ctx.beginPath();
+      ctx.arc(cx,cy,outerR,0,Math.PI*2);
+      ctx.fillStyle="rgba(255,255,255,0.04)";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cx,cy,ringR1,0,Math.PI*2);
+      ctx.fillStyle="rgba(0,0,0,0.18)";
+      ctx.fill();
+
+      for(let k=0;k<WHEEL.length;k++){
+        const a0 = start + k*step;
+        const a1 = a0 + step;
+
+        ctx.beginPath();
+        ctx.moveTo(cx + ringR1*Math.cos(a0), cy + ringR1*Math.sin(a0));
+        ctx.arc(cx,cy,ringR1,a0,a1);
+        ctx.lineTo(cx + outerR*Math.cos(a1), cy + outerR*Math.sin(a1));
+        ctx.arc(cx,cy,outerR,a1,a0,true);
+        ctx.closePath();
+
+        ctx.fillStyle="rgba(255,255,255,0.02)";
+        ctx.fill();
+        ctx.strokeStyle="rgba(255,255,255,0.06)";
+        ctx.lineWidth=1;
+        ctx.stroke();
+
+        const n = WHEEL[k];
+        const key = numLabel(n);
+        const c = cts[key]||0;
+
+        if(c>0){
+          const aw = step*0.72;
+          const mid = (a0+a1)/2;
+          for(let s=0;s<c;s++){
+            const r1 = innerR + s*(barLen+barGap);
+            const r2 = r1 + barLen;
+            ctx.beginPath();
+            ctx.moveTo(cx + r1*Math.cos(mid-aw/2), cy + r1*Math.sin(mid-aw/2));
+            ctx.arc(cx,cy,r1, mid-aw/2, mid+aw/2);
+            ctx.lineTo(cx + r2*Math.cos(mid+aw/2), cy + r2*Math.sin(mid+aw/2));
+            ctx.arc(cx,cy,r2, mid+aw/2, mid-aw/2, true);
+            ctx.closePath();
+
+            ctx.fillStyle = pocketColor(key);
+            ctx.globalAlpha = 0.25 + 0.75*((s+1)/Math.max(1,maxC));
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+
+        // label
+        const midA = (a0+a1)/2;
+        const tx = cx + (outerR-18)*Math.cos(midA);
+        const ty = cy + (outerR-18)*Math.sin(midA);
+        ctx.save();
+        ctx.translate(tx,ty);
+        ctx.rotate(midA + Math.PI/2);
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+        ctx.font="12px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial";
+        ctx.fillStyle="rgba(255,255,255,0.85)";
+        ctx.fillText(key, 0, 0);
+        ctx.restore();
+
+        // count badge
+        if(c>0){
+          const bx = cx + (ringR1+18)*Math.cos(midA);
+          const by = cy + (ringR1+18)*Math.sin(midA);
+          ctx.beginPath();
+          ctx.arc(bx,by,10,0,Math.PI*2);
+          ctx.fillStyle="rgba(0,0,0,0.35)";
+          ctx.fill();
+          ctx.strokeStyle="rgba(255,255,255,0.12)";
+          ctx.stroke();
+
+          ctx.font="12px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial";
+          ctx.fillStyle="rgba(255,255,255,0.95)";
+          ctx.textAlign="center";
+          ctx.textBaseline="middle";
+          ctx.fillText(String(c), bx, by);
+        }
+      }
+
+      // center label
+      ctx.beginPath();
+      ctx.arc(cx,cy,innerR-14,0,Math.PI*2);
+      ctx.fillStyle="rgba(0,0,0,0.30)";
+      ctx.fill();
+      ctx.strokeStyle="rgba(255,255,255,0.10)";
+      ctx.stroke();
+
+      ctx.fillStyle="rgba(255,255,255,0.90)";
+      ctx.font="14px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial";
+      ctx.textAlign="center";
+      ctx.textBaseline="middle";
+      ctx.fillText("LAST " + lastN, cx, cy-10);
+      ctx.font="12px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial";
+      ctx.fillStyle="rgba(255,255,255,0.70)";
+      ctx.fillText("hit histogram", cx, cy+10);
+    }
+
+    function openWheelModal(){
+      const m = document.getElementById("wheelModal");
+      if(!m) return;
+      m.style.display = "flex";
+      drawWheelHistogram(20);
+    }
+    function closeWheelModal(){
+      const m = document.getElementById("wheelModal");
+      if(m) m.style.display = "none";
+    }
+
+    const wheelBtn = document.getElementById("wheelViewBtn");
+    if(wheelBtn) wheelBtn.addEventListener("click", openWheelModal);
+
+    const wheelClose = document.getElementById("wheelCloseBtn");
+    if(wheelClose) wheelClose.addEventListener("click", closeWheelModal);
+
+    const wheelModal = document.getElementById("wheelModal");
+    if(wheelModal) wheelModal.addEventListener("click", (e)=>{ if(e.target && e.target.id==="wheelModal") closeWheelModal(); });
+
+    window.addEventListener("resize", ()=>{ if(wheelModal && wheelModal.style.display !== "none") drawWheelHistogram(20); });
   load();
   buildKeypad();
   render();
