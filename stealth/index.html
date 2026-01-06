@@ -42,7 +42,7 @@
 <div class="wrap">
   <div class="topbar">
     <div class="name" id="contactName">Scott</div>
-    <div class="sub" id="buildLine">Texting view • STEALTH TEXT MODE — v1.1 (sendfix + explain numbers + opposite segment) • Build 2026-01-05</div>
+    <div class="sub" id="buildLine">Texting view • STEALTH TEXT MODE — v1.3 (sendfix: prevent form submit reload)</div>
   </div>
 
   <div class="chat" id="chat"></div>
@@ -52,16 +52,16 @@
       Paste history as comma-separated numbers (example: <span class="mono">0,00,34,23,5,17</span>) then tap <b>Send</b>.
       Commands: <b>status</b>, <b>trend</b>, <b>explain</b>, <b>explain 2</b>, <b>wheel</b>, <b>export</b>, <b>offline</b>, <b>clear</b>.
     </div>
-    <div class="form">
-      <input id="msg" type="text" placeholder="Type a spin, a comma list, or a command…" autocomplete="off" autocapitalize="none" />
+    <form id="composerForm" class="form" autocomplete="off">
+<input id="msg" type="text" placeholder="Type a spin, a comma list, or a command…" autocomplete="off" autocapitalize="none" />
       <button id="send" type="button">Send</button>
-    </div>
+</form>
   </div>
 </div>
 
 <script>
 (() => {
-  const VERSION = "v0.8";
+  const VERSION = "STEALTH TEXT MODE — v1.2 (iOS send/submit fix + error bubble)";
   const STORAGE_KEY = "roulette_stealth_v0_8";
   const RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
   const BLACK = new Set([2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35]);
@@ -108,6 +108,14 @@
   let windowN = 15;
 
   const $ = (id) => document.getElementById(id);
+
+  // Surface runtime errors inside the chat (prevents "silent white screen" confusion)
+  window.addEventListener("error", (ev) => {
+    try {
+      const msg = (ev && ev.message) ? ev.message : "Unknown error";
+      pushBubble("⚠️ App error: " + msg + "\n(Refresh after replacing index.html)", false);
+    } catch(_) {}
+  });
 
   function now(){ return Date.now(); }
 
@@ -749,8 +757,28 @@ function explainRank(rank){
   // init
   load();
   $("buildLine").textContent = "Texting view • STEALTH TEXT MODE — " + VERSION + " (Opposite Segment strategy added)";
-  $("send").addEventListener("click", onSend);
-  $("msg").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); onSend(); } });
+  // Send wiring (iOS Safari friendly): submit, click, and touch
+  const form = document.getElementById("composerForm");
+  if(form){
+    form.addEventListener("submit", (e)=>{ e.preventDefault(); onSend(); });
+  }
+  const sendBtn = $("send");
+  if(sendBtn){
+    sendBtn.addEventListener("click", (e)=>{ e.preventDefault(); onSend(); });
+    sendBtn.addEventListener("touchend", (e)=>{ e.preventDefault(); onSend(); }, {passive:false});
+  // Form submit (iOS "Go/Done" can trigger submit) — stop page refresh and treat it as Send
+  try{
+    const form = document.getElementById("composerForm");
+    if(form){
+      form.addEventListener("submit", (e)=>{ e.preventDefault(); onSend(e); });
+    }
+  }catch(_){}
+
+  }
+  const msgIn = $("msg");
+  if(msgIn){
+    msgIn.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); onSend(); } });
+  }
 
   seedIntro();
 })();
