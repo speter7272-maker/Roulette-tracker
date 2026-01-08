@@ -143,6 +143,7 @@
         <div class="hr"></div>
 
         <div style="font-weight:900;margin-bottom:8px">Top 3 strategies right now</div>
+    <div class="muted" style="margin:-2px 0 12px 0;font-size:13px;line-height:1.35" id="top3IndexList"></div>
         <div id="topPlays" class="topplays"></div>
 
         <div class="hr"></div>
@@ -1263,6 +1264,20 @@ const ds = scoreDisappearingStreets(vals); add("Disappearing Streets (Comp Build
 // Sort by score for display
   plays.sort((a,b)=>b.score-a.score);
   const top3 = plays.slice(0,3);
+  // Render Top-3 list WITH index (always show, even if below CASH threshold)
+  const $top3List = document.getElementById("top3IndexList");
+  if ($top3List) {
+    const lines = top3.map((p,i)=>{
+      const ok = (p.score>=CASH_THRESHOLD);
+      const badge = ok ? `<span class="pill" style="margin-left:8px">CASH</span>` : `<span class="pill" style="margin-left:8px;opacity:.75">below ${CASH_THRESHOLD}</span>`;
+      const idx = `<span class="mono" style="font-weight:900">${Math.round(p.score)}</span>`;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0">
+                <div style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i+1}. ${p.name}${badge}</div>
+                <div style="flex:0 0 auto">Index ${idx}</div>
+              </div>`;
+    }).join("");
+    $top3List.innerHTML = lines || `<div class="muted">No strategies scored yet.</div>`;
+  }
 
   // Determine active recommendation with CASH priority rule
   let primary = top3[0] || {name:"Sit out", score:1, why:"No clear edge."};
@@ -1665,6 +1680,90 @@ function render() {
   }
 render();
 });
+// ---- Extra diagnostics: table state, repeats, Hydra cold numbers ----
+function getStreet(n){
+  // Returns street index 1..12 for numbers 1..36, else null for 0/00
+  if (n>=1 && n<=36) return Math.floor((n-1)/3)+1;
+  return null;
+}
+
+function computeRepeatsLast5(history){
+  const last5 = history.slice(-5);
+  // number repeats
+  const numCounts = {};
+  last5.forEach(x=>{ numCounts[x]=(numCounts[x]||0)+1; });
+  const numRepeats = Object.entries(numCounts).filter(([k,v])=>v>=2);
+  // street repeats
+  const streets = last5.map(getStreet).filter(x=>x!==null);
+  const streetCounts = {};
+  streets.forEach(s=>{ streetCounts[s]=(streetCounts[s]||0)+1; });
+  const streetRepeats = Object.entries(streetCounts).filter(([k,v])=>v>=2);
+
+  return {
+    numRepeatCount: numRepeats.reduce((a,[,v])=>a+v-1,0),
+    uniqueNumsRepeated: numRepeats.length,
+    streetRepeatCount: streetRepeats.reduce((a,[,v])=>a+v-1,0),
+    uniqueStreetsRepeated: streetRepeats.length,
+    numRepeats,
+    streetRepeats
+  };
+}
+
+function computeTableState(history, N=15){
+  const win = history.slice(-N);
+  if (win.length < Math.min(N,6)) return "WARMUP";
+  // columns + dozens distribution
+  const col = [0,0,0];
+  const doz = [0,0,0];
+  win.forEach(n=>{
+    if (n>=1 && n<=36){
+      const c = (n-1)%3; col[c]++;
+      const d = Math.floor((n-1)/12); doz[d]++;
+    }
+  });
+  const colMax = Math.max(...col), colMin=Math.min(...col);
+  const dozMax = Math.max(...doz), dozMin=Math.min(...doz);
+
+  // repeats signal (last 10 for stability)
+  const rep = computeRepeatsLast5(history.slice(-10));
+  const heavyRepeats = (rep.uniqueNumsRepeated>=2) || (rep.uniqueStreetsRepeated>=2);
+
+  // thresholds (simple + interpretable)
+  const biasedCol = (colMax - colMin) >= 5;
+  const biasedDoz = (dozMax - dozMin) >= 5;
+
+  if (heavyRepeats && (biasedCol || biasedDoz)) return "REPEATING + BIASED";
+  if (heavyRepeats) return "REPEATING";
+  if (biasedCol || biasedDoz) return "BIASED";
+  return "BALANCED";
+}
+
+function computeHydraColdNumbers(history){
+  // Coldness = spins since last hit (in-session). Larger is colder.
+  // We ignore 0/00 by default for Tier 4 straight-ups; can include if you want.
+  const lastSeen = {};
+  history.forEach((n, idx)=>{ lastSeen[n]=idx; });
+  const L = history.length;
+  const scores = [];
+  for (let n=1; n<=36; n++){
+    const idx = lastSeen[n];
+    const age = (idx===undefined) ? L : (L-1-idx);
+    scores.push({n, age});
+  }
+  scores.sort((a,b)=> b.age - a.age || a.n - b.n);
+  return scores.slice(0,4);
+}
+
+function computeSinceGreen(history){
+  // Returns spins since last 0 or 00 (00 is encoded as 99 in this tracker)
+  // If never seen, returns history length
+  const L = history.length;
+  for (let i=L-1; i>=0; i--){
+    const n = history[i];
+    if (n===0 || n===99) return (L-1-i);
+  }
+  return L;
+}
 </script>
 </body>
 </html>
