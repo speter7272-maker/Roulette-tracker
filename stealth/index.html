@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Roulette Trend Tracker • FULL • Build: 2026-01-07 • CASH PRIORITY v13.9</title>
+  <title>Roulette Trend Tracker • FULL • Build: 2026-01-09 • CASH PRIORITY v14.0</title>
   <style>
     :root{color-scheme:dark; --bg:#0b1220; --card:#0f1a2e; --muted:#94a3b8; --txt:#e5e7eb; --accent:#60a5fa; --warn:#fbbf24; --danger:#ef4444; --ok:#34d399; --chip:#111c33; --border:#1f2a44;}
     *{box-sizing:border-box}
@@ -71,8 +71,8 @@
 <body>
   <div class="wrap">
     <h1>Roulette Trend Tracker</h1>
-    <div id="buildStamp" class="pill" style="display:inline-block;margin-top:6px">Build: 2026-01-07 • FULL • CASH PRIORITY v13.9</div>
-    <div class="build">FULL TRACKER — CASH PRIORITY + NEW STRATEGIES • v13.9</div>
+    <div id="buildStamp" class="pill" style="display:inline-block;margin-top:6px">Build: 2026-01-09 • FULL • CASH PRIORITY v14.0</div>
+    <div class="build">FULL TRACKER — CASH PRIORITY + NEW STRATEGIES • v14.0</div>
     <div class="sub">Build date: <b>2026-01-07</b>. Tap spins on the keypad. Tracks last 10/15/20: columns, dozens, double-streets, red/black, high/low, even/odd, Junko quadrants. Saves on-device.</div>
 
     <div class="card">
@@ -249,6 +249,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const v = Number(n);
     return Number.isFinite(v) ? v : null;
   }
+
+  // Normalize spin inputs across the app:
+  // - Accepts numbers or strings ("00", "0", "99", etc.)
+  // - Treats 99 as "00" (legacy encoding)
+  function normSpin(v) {
+    if (v === null || v === undefined) return null;
+    const s = String(v).trim();
+    if (s === "") return null;
+    if (s === "00" || s === "99") return "00";
+    if (s === "0") return 0;
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    if (Number.isInteger(n) && n >= 0 && n <= 36) return n;
+    return null;
+  }
+  function normalizeSpin(v) { return normSpin(v); }
+
 
   function isGreen(n) { return (n === "00" || Number(n) === 0); }
   function isRed(n)   { return (n !== "00" && RED.has(Number(n))); }
