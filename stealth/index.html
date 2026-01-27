@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Roulette Trend Tracker • FULL • CASH PRIORITY v15.3.2 LOCKED.1.16</title>
+  <title>Roulette Trend Tracker • FULL • CASH PRIORITY v15.3.2 LOCKED.1.17</title>
   <style>
     :root{color-scheme:dark; --bg:#0b1220; --card:#0f1a2e; --muted:#94a3b8; --txt:#e5e7eb; --accent:#60a5fa; --warn:#fbbf24; --danger:#ef4444; --ok:#34d399; --chip:#111c33; --border:#1f2a44;}
     *{box-sizing:border-box}
@@ -76,8 +76,8 @@
 <body>
   <div class="wrap">
     <h1>Roulette Trend Tracker</h1>
-    <div id="buildStamp" class="pill" style="display:inline-block;margin-top:6px">Build: 2026-01-13 • FULL • CASH PRIORITY v15.3.2 LOCKED.1.16</div>
-    <div class="build">FULL TRACKER — CASH PRIORITY + NEW STRATEGIES • v15.3.2 LOCKED.1.16</div>
+    <div id="buildStamp" class="pill" style="display:inline-block;margin-top:6px">Build: 2026-01-13 • FULL • CASH PRIORITY v15.3.2 LOCKED.1.17</div>
+    <div class="build">FULL TRACKER — CASH PRIORITY + NEW STRATEGIES • v15.3.2 LOCKED.1.17</div>
     <div class="sub">Build date: <b>2026-01-09</b>. Tap spins on the keypad. Tracks last 10/15/20: columns, dozens, double-streets, red/black, high/low, even/odd, Junko quadrants. Saves on-device.</div>
 
     <div class="card">
@@ -427,6 +427,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return out;
   }
+
+  // Spins-since-last-hit (within the current window), per column / dozen
+  function colAges(vals){
+    const out={c1:999,c2:999,c3:999};
+    for(let i=0;i<vals.length;i++){
+      const n=vals[i];
+      if(n==null||isGreen(n)) continue;
+      const c=colOf(n);
+      if(c===1 && out.c1===999) out.c1=i;
+      if(c===2 && out.c2===999) out.c2=i;
+      if(c===3 && out.c3===999) out.c3=i;
+    }
+    return out;
+  }
+
+  function dozenAges(vals){
+    const out={d1:999,d2:999,d3:999};
+    for(let i=0;i<vals.length;i++){
+      const n=vals[i];
+      if(n==null||isGreen(n)) continue;
+      const d=dozenOf(n);
+      if(d===1 && out.d1===999) out.d1=i;
+      if(d===2 && out.d2===999) out.d2=i;
+      if(d===3 && out.d3===999) out.d3=i;
+    }
+    return out;
+  }
+
 
   function repeatNumberInfo(vals, lookback) {
     if(vals.length<2) return {flag:false, text:"—"};
@@ -2194,8 +2222,11 @@ function render() {
     $("greenCount").textContent = String(recent.filter(isGreen).length);
 
     const cts = counts(recent);
-    $("cols").textContent = `${cts.c1} / ${cts.c2} / ${cts.c3}`;
-    $("doz").textContent  = `${cts.d1} / ${cts.d2} / ${cts.d3}`;
+    const cAges = colAges(recent);
+    const dAges = dozenAges(recent);
+    const fmtAgeCD = (a) => (a === 999 ? (recent.length + "+") : String(a));
+    $("cols").textContent = `${cts.c1} (${fmtAgeCD(cAges.c1)}) / ${cts.c2} (${fmtAgeCD(cAges.c2)}) / ${cts.c3} (${fmtAgeCD(cAges.c3)})`;
+    $("doz").textContent  = `${cts.d1} (${fmtAgeCD(dAges.d1)}) / ${cts.d2} (${fmtAgeCD(dAges.d2)}) / ${cts.d3} (${fmtAgeCD(dAges.d3)})`;
 
     const dsc = dsCounts(recent);
     $("ds").textContent = `D1 ${dsc.d1[0]}/${dsc.d1[1]}/${dsc.d1[2]} | D2 ${dsc.d2[0]}/${dsc.d2[1]}/${dsc.d2[2]} | D3 ${dsc.d3[0]}/${dsc.d3[1]}/${dsc.d3[2]}`;
