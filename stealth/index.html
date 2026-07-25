@@ -1,493 +1,425 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Roulette Trend Tracker v1.67.0</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roulette Tracker v1.68.0 - Dual Input Mode</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none; /* Prevent accidental text highlights */
+        }
 
-    body {
-      background-color: #121212;
-      color: #e0e0e0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 8px;
-      max-width: 480px;
-      margin: 0 auto;
-    }
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 8px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 8px;
-      margin-bottom: 6px;
-      border-bottom: 1px solid #333;
-    }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #333;
+        }
 
-    h1 {
-      font-size: 1rem;
-      color: #4caf50;
-    }
+        h1 {
+            font-size: 1rem;
+            color: #4caf50;
+        }
 
-    .version-tag {
-      font-size: 0.75rem;
-      color: #888;
-      font-weight: bold;
-    }
+        .version-tag {
+            font-size: 0.75rem;
+            color: #888;
+            font-weight: bold;
+        }
 
-    /* --- SLIM HEADER TOP 1/3 ENTRY CONTAINER --- */
-    #slim-tracker-container {
-      width: 100%;
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 6px;
-      margin-bottom: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
+        /* --- DUAL MODE INPUT BLOCK --- */
+        #slim-tracker-container {
+            width: 100%;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
 
-    .display-box {
-      height: 38px;
-      background: #b71c1c; /* Red top display rectangle */
-      color: #ffffff;
-      font-size: 1.6rem;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
-      border: 1px solid #d32f2f;
-      margin-bottom: 6px;
-      letter-spacing: 2px;
-    }
+        /* 3-Part Readout Bar */
+        .readout-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
 
-    .control-row {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
+        .readout-cell {
+            height: 38px;
+            color: #ffffff;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
 
-    .btn {
-      height: 38px;
-      font-weight: bold;
-      font-size: 0.95rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: manipulation;
-    }
+        /* Readout Labelling */
+        .r-lab { font-size: 0.6rem; color: #888; opacity: 0.7; font-weight: normal; }
+        .r-val { font-size: 1.1rem; }
 
-    .btn-enter {
-      background: #2e7d32;
-      color: #fff;
-      flex: 2;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    .btn-enter:active { background: #1b5e20; }
+        /* Color States: Default (Red/Green) and Session High Mode (Blue) */
+        .c-spin { background: #b71c1c; border: 1px solid #d32f2f; } /* Red for spin mode */
+        .c-high { background: #1565c0; border: 1px solid #1e88e5; } /* Blue for bankroll mode */
+        .c-ent { background: #2e7d32; border: 1px solid #4caf50; font-size: 1.6rem !important;} /* Green for center display */
 
-    .btn-undo {
-      background: #c62828;
-      color: #fff;
-      flex: 1;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    .btn-undo:active { background: #8e0000; }
+        /* Specializing Cell Functions */
+        #spin-counter.c-spin { color: #fff; } /* Left: Always Spin Data count */
+        #input-center.c-ent { color: #fff; }  /* Center: Always Keypad Input */
+        #bankroll.c-high .r-val { color: #fff; } /* Right: Updates session high */
+        #bankroll.c-spin .r-val { color: #ffca28; } /* Amber value for money in normal mode */
 
-    .numpad-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      margin-bottom: 6px;
-    }
+        .control-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
 
-    .numpad-grid button {
-      height: 34px;
-      background: #2a2a2a;
-      color: #fff;
-      border: 1px solid #3d3d3d;
-      border-radius: 5px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      touch-action: manipulation;
-    }
+        .btn {
+            height: 38px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
 
-    .numpad-grid button:active { background: #444; }
-    .numpad-grid .btn-clear { background: #333; color: #ffeb3b; }
+        .btn-enter {
+            background: #2e7d32;
+            color: #fff;
+            flex: 2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .btn-enter:active { background: #1b5e20; }
 
-    /* Recent History Strip (Leftmost = Most Recent) */
-    .history-strip-container {
-      display: flex;
-      align-items: center;
-      background: #0a0a0a;
-      padding: 4px 8px;
-      border-radius: 6px;
-      height: 32px;
-      border: 1px solid #222;
-    }
+        .btn-undo {
+            background: #c62828;
+            color: #fff;
+            flex: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .btn-undo:active { background: #8e0000; }
 
-    .history-label {
-      font-size: 0.7rem;
-      color: #777;
-      margin-right: 8px;
-      font-weight: bold;
-    }
+        .numpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-bottom: 6px;
+        }
 
-    .history-stream {
-      display: flex;
-      gap: 6px;
-      flex-direction: row;
-      overflow-x: auto;
-      width: 100%;
-      align-items: center;
-    }
+        .numpad-grid button {
+            height: 34px;
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #3d3d3d;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            touch-action: manipulation;
+        }
 
-    .spin-chip {
-      min-width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: bold;
-      flex-shrink: 0;
-    }
+        .numpad-grid button:active { background: #444; }
+        .numpad-grid .btn-clear { background: #333; color: #ffeb3b; }
+        
+        /* Keypad Cancel Button color in Mode B */
+        .btn-cancel { background: #1565c0 !important; color: #fff !important; }
 
-    .chip-red { background: #d32f2f; color: #fff; }
-    .chip-black { background: #212121; color: #fff; border: 1px solid #555; }
-    .chip-green { background: #2e7d32; color: #fff; }
-    .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
+        /* Recent History Strip (Leftmost = Most Recent) */
+        .history-strip-container {
+            display: flex;
+            align-items: center;
+            background: #0a0a0a;
+            padding: 4px 8px;
+            border-radius: 6px;
+            height: 32px;
+            border: 1px solid #222;
+        }
 
-    /* --- DASHBOARD & METRICS PANELS --- */
-    .card {
-      background: #1e1e1e;
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 8px;
-      border: 1px solid #2d2d2d;
-    }
+        .history-label {
+            font-size: 0.7rem;
+            color: #777;
+            margin-right: 8px;
+            font-weight: bold;
+        }
 
-    .card-title {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      color: #888;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-    }
+        .history-stream {
+            display: flex;
+            gap: 6px;
+            flex-direction: row;
+            overflow-x: auto;
+            width: 100%;
+            align-items: center;
+        }
 
-    .state-badge {
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 0.75rem;
-    }
+        .spin-chip {
+            min-width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
 
-    .state-balanced { background: #1b5e20; color: #81c784; }
-    .state-imbalance { background: #f57f17; color: #fffde7; }
-    .state-dry { background: #b71c1c; color: #ffcdd2; }
+        .chip-red { background: #d32f2f; color: #fff; }
+        .chip-black { background: #212121; color: #fff; border: 1px solid #555; }
+        .chip-green { background: #2e7d32; color: #fff; }
+        .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
 
-    .grid-2col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .metric-box {
-      background: #141414;
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid #282828;
-    }
-
-    .metric-val {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #fff;
-    }
-
-    .metric-sub {
-      font-size: 0.7rem;
-      color: #777;
-    }
-
-    select {
-      width: 100%;
-      height: 34px;
-      background: #2a2a2a;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 6px;
-      padding: 0 8px;
-      font-size: 0.9rem;
-      margin-bottom: 8px;
-    }
-  </style>
+        /* Placeholder for Metrics (Inactive for this mock) */
+        .metrics-placeholder {
+            border: 1px dashed #333;
+            border-radius: 8px;
+            color: #555;
+            padding: 10px;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <h1>ROULETTE TRACKER</h1>
-    <span class="version-tag">v1.67.0</span>
-  </header>
+    <header>
+        <h1>ROULETTE TRACKER</h1>
+        <span class="version-tag">v1.68.0</span>
+    </header>
 
-  <div id="slim-tracker-container">
-    <div id="number-display" class="display-box">--</div>
+    <!-- DUAL MODE INPUT BLOCK -->
+    <div id="slim-tracker-container">
+        <!-- 3-Part Readout Bar -->
+        <div class="readout-bar">
+            <!-- Left: Spin Counter (Static Readout) -->
+            <div id="spin-counter" class="readout-cell c-spin">
+                <span class="r-lab">TOTAL SPINS</span>
+                <span id="spin-val" class="r-val">0</span>
+            </div>
+            
+            <!-- Center: Main Input Display (Always Keypad) -->
+            <div id="input-center" class="readout-cell c-ent">
+                <span class="r-val" style="font-size: 1.6rem !important;">--</span>
+            </div>
 
-    <div class="control-row">
-      <button id="btn-enter" onclick="submitSpin()" class="btn btn-enter">ENTER</button>
-      <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
+            <!-- Right: Session High (Mode Switchable) -->
+            <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
+                <span class="r-lab">SESSION HIGH</span>
+                <span id="high-val" class="r-val">$ 0</span>
+            </div>
+        </div>
+
+        <div class="control-row">
+            <button id="btn-enter" onclick="submitCommitedValue()" class="btn btn-enter">ENTER</button>
+            <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
+        </div>
+
+        <div class="numpad-grid">
+            <button onclick="appendDigit('1')">1</button>
+            <button onclick="appendDigit('2')">2</button>
+            <button onclick="appendDigit('3')">3</button>
+            <button onclick="appendDigit('4')">4</button>
+            <button onclick="appendDigit('5')">5</button>
+            <button onclick="appendDigit('6')">6</button>
+            <button onclick="appendDigit('7')">7</button>
+            <button onclick="appendDigit('8')">8</button>
+            <button onclick="appendDigit('9')">9</button>
+            <button onclick="appendDigit('0')">0</button>
+            <button onclick="appendDigit('00')">00</button>
+            <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
+        </div>
+
+        <!-- RECENT HISTORY (Most Recent on Left) -->
+        <div class="history-strip-container">
+            <span class="history-label">LAST:</span>
+            <div id="history-stream" class="history-stream">
+                <!-- Chips inserted here by JS -->
+            </div>
+        </div>
     </div>
 
-    <div class="numpad-grid">
-      <button onclick="appendDigit('1')">1</button>
-      <button onclick="appendDigit('2')">2</button>
-      <button onclick="appendDigit('3')">3</button>
-      <button onclick="appendDigit('4')">4</button>
-      <button onclick="appendDigit('5')">5</button>
-      <button onclick="appendDigit('6')">6</button>
-      <button onclick="appendDigit('7')">7</button>
-      <button onclick="appendDigit('8')">8</button>
-      <button onclick="appendDigit('9')">9</button>
-      <button onclick="appendDigit('0')">0</button>
-      <button onclick="appendDigit('00')">00</button>
-      <button onclick="clearDigit()" class="btn-clear">C</button>
+    <!-- METRICS PANEL PLACEHOLDER (Inactive for this interaction check) -->
+    <div class="metrics-placeholder">
+        Metrics and Strategy indicators appear here.<br>
+        Scroll down if content is cut off.
     </div>
 
-    <div class="history-strip-container">
-      <span class="history-label">LAST:</span>
-      <div id="history-stream" class="history-stream"></div>
-    </div>
-  </div>
+    <script>
+        // INPUT MODES
+        const MODE_SPIN = 'SPIN'; // Red/Normal Mode
+        const MODE_HIGH = 'HIGH'; // Blue Mode for Session High
+        
+        let currentMode = MODE_SPIN;
+        let currentInputText = "";
+        let spinHistory = []; // Stack for spins
+        let sessionHigh = 0;
 
-  <div class="card">
-    <div class="card-title">
-      <span>Active Strategy & Table State</span>
-      <span id="state-badge" class="state-badge state-balanced">BALANCED</span>
-    </div>
+        const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-    <select id="strategy-select" onchange="onStrategyChange()">
-      <option value="cassandra">Cassandra v5 (Balanced Safe)</option>
-      <option value="royal_profit">Royal Profit v3 (Comp Builder)</option>
-      <option value="sweet_16">Sweet 16 (Split Recovery)</option>
-      <option value="hydra">Hydra / 10-2-Win (Dry Sector)</option>
-      <option value="tupelo">Tupelo Honey (Dozen Imbalance)</option>
-    </select>
+        // Mode Switching
+        function toggleInputMode() {
+            const bankrollEl = document.getElementById('bankroll');
+            const centerEl = document.getElementById('input-center');
+            const cancelBtn = document.getElementById('btn-cancel');
 
-    <div class="grid-2col">
-      <div class="metric-box">
-        <div class="metric-sub">RECOMMENDED ACTION</div>
-        <div id="recommended-action" class="metric-val" style="color: #81c784; font-size: 0.95rem;">OBSERVE (Spins &lt; 15)</div>
-      </div>
-      <div class="metric-box">
-        <div class="metric-sub">SUGGESTED BET</div>
-        <div id="suggested-bet" class="metric-val" style="color: #ffeb3b; font-size: 0.95rem;">WAIT</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Live Tracking Metrics</div>
-    <div class="grid-2col">
-      <div class="metric-box">
-        <div class="metric-sub">DOZENS (D1 / D2 / D3)</div>
-        <div id="dozens-count" class="metric-val">0 | 0 | 0</div>
-      </div>
-      <div class="metric-box">
-        <div class="metric-sub">COLUMNS (C1 / C2 / C3)</div>
-        <div id="columns-count" class="metric-val">0 | 0 | 0</div>
-      </div>
-      <div class="metric-box" style="margin-top: 6px;">
-        <div class="metric-sub">SINCE GREEN (GDC)</div>
-        <div id="since-green" class="metric-val" style="color: #4caf50;">0</div>
-      </div>
-      <div class="metric-box" style="margin-top: 6px;">
-        <div class="metric-sub">TOTAL SPINS</div>
-        <div id="total-spins" class="metric-val">0</div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let currentInput = "";
-    let historyStack = []; // Index 0 = newest spin
-
-    const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-
-    let metrics = {
-      dozens: [0, 0, 0],
-      columns: [0, 0, 0],
-      sinceGreen: 0
-    };
-
-    function appendDigit(val) {
-      if (val === '00') {
-        currentInput = '00';
-        updateDisplay();
-        return;
-      }
-      if (currentInput === '0' || currentInput === '00') currentInput = '';
-
-      if ((currentInput + val).length <= 2) {
-        let numVal = parseInt(currentInput + val, 10);
-        if (numVal <= 36 || isNaN(numVal)) {
-          currentInput += val;
-        }
-      }
-      updateDisplay();
-    }
-
-    function clearDigit() {
-      currentInput = "";
-      updateDisplay();
-    }
-
-    function updateDisplay() {
-      const disp = document.getElementById('number-display');
-      disp.innerText = currentInput === "" ? "--" : currentInput;
-    }
-
-    function submitSpin() {
-      if (currentInput === "") return;
-
-      let val = currentInput;
-      historyStack.unshift(val); // Insert newest entry at position 0 (leftmost)
-
-      renderHistory();
-      recalculateEngine();
-      clearDigit();
-    }
-
-    function undoSpin() {
-      if (historyStack.length === 0) return;
-      historyStack.shift(); // Remove newest entry from left
-      renderHistory();
-      recalculateEngine();
-    }
-
-    function renderHistory() {
-      const container = document.getElementById('history-stream');
-      container.innerHTML = "";
-
-      // Display up to last 8 numbers
-      const displayList = historyStack.slice(0, 8);
-
-      displayList.forEach((numStr, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'spin-chip';
-
-        if (index === 0) chip.classList.add('chip-latest');
-
-        if (numStr === '0' || numStr === '00' || numStr === '99') {
-          chip.classList.add('chip-green');
-        } else {
-          let n = parseInt(numStr, 10);
-          if (RED_NUMS.includes(n)) {
-            chip.classList.add('chip-red');
-          } else {
-            chip.classList.add('chip-black');
-          }
+            if (currentMode === MODE_SPIN) {
+                // Activate MODE B: Session High
+                currentMode = MODE_HIGH;
+                currentInputText = ""; // Clear existing keypad work
+                
+                bankrollEl.className = 'readout-cell c-high';
+                
+                // Keep center Green for display consistency, update to mode placeholder
+                centerEl.querySelector('.r-val').innerText = '--';
+                
+                // Keypad C changes to Blue Cancel
+                cancelBtn.innerText = 'X';
+                cancelBtn.className = 'btn-cancel';
+            } else {
+                // If already in MODE B, clicking B cancels and returns to A
+                currentMode = MODE_SPIN;
+                currentInputText = "";
+                
+                bankrollEl.className = 'readout-cell c-spin';
+                centerEl.querySelector('.r-val').innerText = '--';
+                
+                // Keypad reverts
+                cancelBtn.innerText = 'C';
+                cancelBtn.className = 'btn-clear';
+            }
         }
 
-        chip.innerText = numStr === '99' ? '00' : numStr;
-        container.appendChild(chip);
-      });
-    }
-
-    function recalculateEngine() {
-      const totalSpins = historyStack.length;
-      document.getElementById('total-spins').innerText = totalSpins;
-
-      let dozens = [0, 0, 0];
-      let columns = [0, 0, 0];
-      let greenCount = 0;
-
-      for (let i = 0; i < historyStack.length; i++) {
-        let val = historyStack[i];
-        if (val === '0' || val === '00' || val === '99') {
-          if (i === 0) greenCount = 0;
-          break;
-        } else {
-          greenCount++;
+        // Keypad Interactions
+        function appendDigit(val) {
+            // Mode A logic for Spin (limit to 36/00)
+            if (currentMode === MODE_SPIN) {
+                if (val === '00') { currentInputText = '00'; updateDisplay(); return; }
+                if (currentInputText === '0' || currentInputText === '00') currentInputText = '';
+                if ((currentInputText + val).length <= 2) {
+                    let numVal = parseInt(currentInputText + val, 10);
+                    if (numVal <= 36 || isNaN(numVal)) { currentInputText += val; }
+                }
+            } 
+            // Mode B logic for Session High (large inputs allowed)
+            else if (currentMode === MODE_HIGH) {
+                // Prevent '00' in bankroll fields typically
+                if (val === '00') val = '0';
+                // Leading zero control
+                if (currentInputText === '0') currentInputText = '';
+                
+                // Allow up to 6 digits (e.g., $999,999)
+                if (currentInputText.length < 6) { currentInputText += val; }
+            }
+            
+            updateDisplay();
         }
-      }
 
-      if (historyStack.length > 0 && !(historyStack[0] === '0' || historyStack[0] === '00' || historyStack[0] === '99')) {
-        metrics.sinceGreen = greenCount;
-      } else if (historyStack.length > 0) {
-        metrics.sinceGreen = 0;
-      } else {
-        metrics.sinceGreen = 0;
-      }
-
-      document.getElementById('since-green').innerText = metrics.sinceGreen;
-
-      // Calculate dozen & column metrics on last 12 spins
-      const recentWindow = historyStack.slice(0, 12);
-      recentWindow.forEach(numStr => {
-        if (numStr !== '0' && numStr !== '00' && numStr !== '99') {
-          let n = parseInt(numStr, 10);
-          
-          // Dozens
-          if (n >= 1 && n <= 12) dozens[0]++;
-          else if (n >= 13 && n <= 24) dozens[1]++;
-          else if (n >= 25 && n <= 36) dozens[2]++;
-
-          // Columns
-          if (n % 3 === 1) columns[0]++;
-          else if (n % 3 === 2) columns[1]++;
-          else if (n % 3 === 0) columns[2]++;
+        function clearDigit() {
+            currentInputText = "";
+            updateDisplay();
         }
-      });
 
-      document.getElementById('dozens-count').innerText = `${dozens[0]} | ${dozens[1]} | ${dozens[2]}`;
-      document.getElementById('columns-count').innerText = `${columns[0]} | ${columns[1]} | ${columns[2]}`;
-
-      // Update Table State & Recommendations
-      const badge = document.getElementById('state-badge');
-      const recAct = document.getElementById('recommended-action');
-      const sugBet = document.getElementById('suggested-bet');
-
-      if (totalSpins < 15) {
-        badge.className = 'state-badge state-balanced';
-        badge.innerText = 'WARM-UP';
-        recAct.innerText = 'OBSERVE';
-        sugBet.innerText = 'WAIT (' + (15 - totalSpins) + ' left)';
-      } else {
-        let maxD = Math.max(...dozens);
-        let minD = Math.min(...dozens);
-
-        if (maxD - minD >= 4) {
-          badge.className = 'state-badge state-imbalance';
-          badge.innerText = 'IMBALANCE';
-          recAct.innerText = 'PLAY CASSANDRA / D2';
-          sugBet.innerText = 'Corner Set + C2 Hedge';
-        } else if (minD === 0 && totalSpins >= 20) {
-          badge.className = 'state-badge state-dry';
-          badge.innerText = 'EXTREME DRY';
-          recAct.innerText = 'HYDRA / 10-2-WIN';
-          sugBet.innerText = 'Target Dry Dozen';
-        } else {
-          badge.className = 'state-badge state-balanced';
-          badge.innerText = 'BALANCED';
-          recAct.innerText = 'ROYAL PROFIT / 4x4';
-          sugBet.innerText = 'Base Units Active';
+        function updateDisplay() {
+            const centerDispVal = document.getElementById('input-center').querySelector('.r-val');
+            centerDispVal.innerText = currentInputText === "" ? "--" : currentInputText;
         }
-      }
-    }
 
-    function onStrategyChange() {
-      recalculateEngine();
-    }
-  </script>
+        // COMMITTING THE VALUE (ENTER PRESSED)
+        function submitCommitedValue() {
+            if (currentMode === MODE_SPIN) {
+                handleSpinSubmission();
+            } else if (currentMode === MODE_HIGH) {
+                handleHighSubmission();
+            }
+        }
+
+        // Logic A: Submit as Spin Data
+        function handleSpinSubmission() {
+            if (currentInputText === "") return;
+            let val = currentInputText;
+            
+            spinHistory.unshift(val); // Insert newest at position 0 (leftmost)
+            if (spinHistory.length > 8) spinHistory.pop(); // Keep last 8 for display
+
+            updateSpinDisplayMetrics();
+            clearDigit();
+        }
+
+        // Logic B: Update Session High
+        function handleHighSubmission() {
+            // Treat empty enter in Mode B as 'Cancel/Exit Mode'
+            if (currentInputText === "") {
+                toggleInputMode(); // Exit back to Spin Mode
+                return;
+            }
+
+            let newHigh = parseInt(currentInputText, 10);
+            if (!isNaN(newHigh) && newHigh >= 0) {
+                sessionHigh = newHigh;
+                document.getElementById('high-val').innerText = `$ ${sessionHigh.toLocaleString()}`;
+            }
+            
+            // Exit back to Mode A
+            toggleInputMode();
+        }
+
+        // Update Spin Counter & History Strips
+        function updateSpinDisplayMetrics() {
+            document.getElementById('spin-val').innerText = spinHistory.length;
+
+            const container = document.getElementById('history-stream');
+            container.innerHTML = "";
+
+            // Display up to last 8 numbers
+            const displayList = spinHistory.slice(0, 8);
+
+            displayList.forEach((numStr, index) => {
+                const chip = document.createElement('div');
+                chip.className = 'spin-chip';
+
+                if (index === 0) chip.classList.add('chip-latest');
+
+                if (numStr === '0' || numStr === '00' || numStr === '99') {
+                    chip.classList.add('chip-green');
+                } else {
+                    let n = parseInt(numStr, 10);
+                    if (RED_NUMS.includes(n)) { chip.classList.add('chip-red'); } 
+                    else { chip.classList.add('chip-black'); }
+                }
+
+                // Handle text variants (e.g., 99=00)
+                chip.innerText = numStr === '99' ? '00' : numStr;
+                container.appendChild(chip);
+            });
+        }
+
+        function undoSpin() {
+            if (currentMode !== MODE_SPIN || spinHistory.length === 0) return;
+            spinHistory.shift(); // Remove newest entry from left
+            updateSpinDisplayMetrics();
+        }
+    </script>
 </body>
 </html>
