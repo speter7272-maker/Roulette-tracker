@@ -3,56 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.68.0 - Dual Input Mode</title>
+    <title>Roulette Tracker v1.69.1</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            user-select: none; /* Prevent accidental text highlights */
+            user-select: none;
         }
 
         body {
-            background-color: #121212;
-            color: #e0e0e0;
+            background-color: #0b1220;
+            color: #e5e7eb;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding: 8px;
+            padding: 0;
             max-width: 480px;
             margin: 0 auto;
+        }
+
+        /* --- STICKY TOP CONTAINER (KEYPAD FIXED) --- */
+        #fixed-keypad-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: #0b1220;
+            padding: 8px 8px 4px 8px;
+            border-bottom: 2px solid #1f2937;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 8px;
-            margin-bottom: 6px;
-            border-bottom: 1px solid #333;
+            padding: 2px 4px 6px 4px;
         }
 
         h1 {
-            font-size: 1rem;
-            color: #4caf50;
+            font-size: 0.95rem;
+            color: #34d399;
+            letter-spacing: 0.5px;
         }
 
         .version-tag {
             font-size: 0.75rem;
-            color: #888;
+            color: #9ca3af;
             font-weight: bold;
         }
 
-        /* --- DUAL MODE INPUT BLOCK --- */
         #slim-tracker-container {
             width: 100%;
-            background: #1e1e1e;
-            border: 1px solid #333;
+            background: #0f1a2e;
+            border: 1px solid #1e293b;
             border-radius: 8px;
             padding: 6px;
-            margin-bottom: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* 3-Part Readout Bar */
         .readout-bar {
             display: grid;
             grid-template-columns: 1fr 1fr 1.2fr;
@@ -73,20 +79,14 @@
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
-        /* Readout Labelling */
-        .r-lab { font-size: 0.6rem; color: #888; opacity: 0.7; font-weight: normal; }
+        .r-lab { font-size: 0.58rem; color: #9ca3af; opacity: 0.85; font-weight: bold; }
         .r-val { font-size: 1.1rem; }
 
-        /* Color States: Default (Red/Green) and Session High Mode (Blue) */
-        .c-spin { background: #b71c1c; border: 1px solid #d32f2f; } /* Red for spin mode */
-        .c-high { background: #1565c0; border: 1px solid #1e88e5; } /* Blue for bankroll mode */
-        .c-ent { background: #2e7d32; border: 1px solid #4caf50; font-size: 1.6rem !important;} /* Green for center display */
+        .c-spin { background: #b71c1c; border: 1px solid #d32f2f; }
+        .c-high { background: #1565c0; border: 1px solid #1e88e5; }
+        .c-ent { background: #1e7e34; border: 1px solid #28a745; }
 
-        /* Specializing Cell Functions */
-        #spin-counter.c-spin { color: #fff; } /* Left: Always Spin Data count */
-        #input-center.c-ent { color: #fff; }  /* Center: Always Keypad Input */
-        #bankroll.c-high .r-val { color: #fff; } /* Right: Updates session high */
-        #bankroll.c-spin .r-val { color: #ffca28; } /* Amber value for money in normal mode */
+        #bankroll.c-spin .r-val { color: #f59e0b; }
 
         .control-row {
             display: flex;
@@ -95,7 +95,7 @@
         }
 
         .btn {
-            height: 38px;
+            height: 36px;
             font-weight: bold;
             font-size: 0.95rem;
             border: none;
@@ -107,21 +107,11 @@
             touch-action: manipulation;
         }
 
-        .btn-enter {
-            background: #2e7d32;
-            color: #fff;
-            flex: 2;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .btn-enter:active { background: #1b5e20; }
+        .btn-enter { background: #16a34a; color: #fff; flex: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .btn-enter:active { background: #15803d; }
 
-        .btn-undo {
-            background: #c62828;
-            color: #fff;
-            flex: 1;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .btn-undo:active { background: #8e0000; }
+        .btn-undo { background: #dc2626; color: #fff; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .btn-undo:active { background: #b91c1c; }
 
         .numpad-grid {
             display: grid;
@@ -131,36 +121,33 @@
         }
 
         .numpad-grid button {
-            height: 34px;
-            background: #2a2a2a;
-            color: #fff;
-            border: 1px solid #3d3d3d;
+            height: 33px;
+            background: #1e293b;
+            color: #f3f4f6;
+            border: 1px solid #334155;
             border-radius: 5px;
             font-size: 1.1rem;
             font-weight: 600;
             touch-action: manipulation;
         }
 
-        .numpad-grid button:active { background: #444; }
-        .numpad-grid .btn-clear { background: #333; color: #ffeb3b; }
-        
-        /* Keypad Cancel Button color in Mode B */
+        .numpad-grid button:active { background: #475569; }
+        .numpad-grid .btn-clear { background: #111827; color: #fbbf24; border-color: #374151; }
         .btn-cancel { background: #1565c0 !important; color: #fff !important; }
 
-        /* Recent History Strip (Leftmost = Most Recent) */
         .history-strip-container {
             display: flex;
             align-items: center;
-            background: #0a0a0a;
+            background: #030712;
             padding: 4px 8px;
             border-radius: 6px;
-            height: 32px;
-            border: 1px solid #222;
+            height: 30px;
+            border: 1px solid #1f2937;
         }
 
         .history-label {
-            font-size: 0.7rem;
-            color: #777;
+            font-size: 0.68rem;
+            color: #6b7280;
             margin-right: 8px;
             font-weight: bold;
         }
@@ -175,145 +162,260 @@
         }
 
         .spin-chip {
-            min-width: 24px;
-            height: 24px;
+            min-width: 22px;
+            height: 22px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: bold;
             flex-shrink: 0;
         }
 
-        .chip-red { background: #d32f2f; color: #fff; }
-        .chip-black { background: #212121; color: #fff; border: 1px solid #555; }
-        .chip-green { background: #2e7d32; color: #fff; }
-        .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
+        .chip-red { background: #dc2626; color: #fff; }
+        .chip-black { background: #111827; color: #fff; border: 1px solid #4b5563; }
+        .chip-green { background: #16a34a; color: #fff; }
+        .chip-latest { outline: 2px solid #fbbf24; transform: scale(1.05); }
 
-        /* Placeholder for Metrics (Inactive for this mock) */
-        .metrics-placeholder {
-            border: 1px dashed #333;
+        /* --- SCROLLABLE BELOW-KEYPAD CONTENT --- */
+        #scrollable-content {
+            padding: 8px;
+        }
+
+        .card {
+            background: #0f1a2e;
             border-radius: 8px;
-            color: #555;
             padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #1e293b;
+        }
+
+        .card-title {
             font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #9ca3af;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .text-input {
+            width: 100%;
+            height: 38px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #fff;
+            padding: 0 10px;
+            font-size: 0.95rem;
+            outline: none;
+            user-select: text;
+        }
+        .text-input:focus { border-color: #60a5fa; }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .sub-btn {
+            background: #1e293b;
+            color: #e5e7eb;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            min-width: 90px;
             text-align: center;
+        }
+        .sub-btn:active { background: #334155; }
+        .btn-danger-outline { border-color: #ef4444; color: #f87171; }
+        .btn-accent { background: #2563eb; color: #fff; border: none; }
+
+        textarea.csv-textarea {
+            width: 100%;
+            height: 80px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e5e7eb;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+            resize: vertical;
+            user-select: text;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.68.0</span>
-    </header>
+    <!-- FIXED TOP KEYPAD SECTION -->
+    <div id="fixed-keypad-wrapper">
+        <header>
+            <h1>ROULETTE TRACKER</h1>
+            <span class="version-tag">v1.69.1</span>
+        </header>
 
-    <!-- DUAL MODE INPUT BLOCK -->
-    <div id="slim-tracker-container">
-        <!-- 3-Part Readout Bar -->
-        <div class="readout-bar">
-            <!-- Left: Spin Counter (Static Readout) -->
-            <div id="spin-counter" class="readout-cell c-spin">
-                <span class="r-lab">TOTAL SPINS</span>
-                <span id="spin-val" class="r-val">0</span>
+        <div id="slim-tracker-container">
+            <!-- Readout Bar -->
+            <div class="readout-bar">
+                <div id="spin-counter" class="readout-cell c-spin">
+                    <span class="r-lab">TOTAL SPINS</span>
+                    <span id="spin-val" class="r-val">0</span>
+                </div>
+                
+                <div id="input-center" class="readout-cell c-ent">
+                    <span class="r-val" style="font-size: 1.6rem !important;">--</span>
+                </div>
+
+                <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
+                    <span class="r-lab">SESSION HIGH</span>
+                    <span id="high-val" class="r-val">$ 0</span>
+                </div>
             </div>
-            
-            <!-- Center: Main Input Display (Always Keypad) -->
-            <div id="input-center" class="readout-cell c-ent">
-                <span class="r-val" style="font-size: 1.6rem !important;">--</span>
+
+            <div class="control-row">
+                <button id="btn-enter" onclick="submitCommitedValue()" class="btn btn-enter">ENTER</button>
+                <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
             </div>
 
-            <!-- Right: Session High (Mode Switchable) -->
-            <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
-                <span class="r-lab">SESSION HIGH</span>
-                <span id="high-val" class="r-val">$ 0</span>
+            <!-- Numpad Grid -->
+            <div class="numpad-grid">
+                <button onclick="appendDigit('1')">1</button>
+                <button onclick="appendDigit('2')">2</button>
+                <button onclick="appendDigit('3')">3</button>
+                <button onclick="appendDigit('4')">4</button>
+                <button onclick="appendDigit('5')">5</button>
+                <button onclick="appendDigit('6')">6</button>
+                <button onclick="appendDigit('7')">7</button>
+                <button onclick="appendDigit('8')">8</button>
+                <button onclick="appendDigit('9')">9</button>
+                <button onclick="appendDigit('0')">0</button>
+                <button onclick="appendDigit('00')">00</button>
+                <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
             </div>
-        </div>
 
-        <div class="control-row">
-            <button id="btn-enter" onclick="submitCommitedValue()" class="btn btn-enter">ENTER</button>
-            <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
-        </div>
-
-        <div class="numpad-grid">
-            <button onclick="appendDigit('1')">1</button>
-            <button onclick="appendDigit('2')">2</button>
-            <button onclick="appendDigit('3')">3</button>
-            <button onclick="appendDigit('4')">4</button>
-            <button onclick="appendDigit('5')">5</button>
-            <button onclick="appendDigit('6')">6</button>
-            <button onclick="appendDigit('7')">7</button>
-            <button onclick="appendDigit('8')">8</button>
-            <button onclick="appendDigit('9')">9</button>
-            <button onclick="appendDigit('0')">0</button>
-            <button onclick="appendDigit('00')">00</button>
-            <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
-        </div>
-
-        <!-- RECENT HISTORY (Most Recent on Left) -->
-        <div class="history-strip-container">
-            <span class="history-label">LAST:</span>
-            <div id="history-stream" class="history-stream">
-                <!-- Chips inserted here by JS -->
+            <!-- Recent History Strip -->
+            <div class="history-strip-container">
+                <span class="history-label">LAST:</span>
+                <div id="history-stream" class="history-stream"></div>
             </div>
         </div>
     </div>
 
-    <!-- METRICS PANEL PLACEHOLDER (Inactive for this interaction check) -->
-    <div class="metrics-placeholder">
-        Metrics and Strategy indicators appear here.<br>
-        Scroll down if content is cut off.
+    <!-- SCROLLABLE CONTENT BELOW KEYPAD -->
+    <div id="scrollable-content">
+
+        <!-- SESSION & CASINO CONTROLS -->
+        <div class="card">
+            <div class="card-title">Session Setup & Controls</div>
+            
+            <div class="form-group">
+                <label class="form-label" for="casino-name">Casino Name:</label>
+                <!-- Input field is blank by default -->
+                <input type="text" id="casino-name" class="text-input" value="" placeholder="Enter casino name...">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Table Mode:</label>
+                <div class="btn-group">
+                    <button id="btn-mode-machine" class="sub-btn btn-accent" onclick="setTableMode('Machine')">Machine • can sit out</button>
+                    <button id="btn-mode-live" class="sub-btn" onclick="setTableMode('Live Table')">Live table • must bet</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">History Window & Reset:</label>
+                <div class="btn-group">
+                    <button class="sub-btn btn-danger-outline" onclick="clearAllSpinData()">Clear Spins</button>
+                    <button class="sub-btn" onclick="setWindowSize(10)">Use last 10</button>
+                    <button class="sub-btn" onclick="setWindowSize(15)">Use last 15</button>
+                    <button class="sub-btn" onclick="setWindowSize(20)">Use last 20</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXPORT & COPY CSV DATA -->
+        <div class="card">
+            <div class="card-title">Export Session CSV Data</div>
+            <p style="font-size: 0.72rem; color: #9ca3af; margin-bottom: 8px;">
+                Format: <code>number,casino,date,time,session_id</code>
+            </p>
+            <div class="btn-group">
+                <button class="sub-btn btn-accent" onclick="copyCSVToClipboard()">Copy CSV to Clipboard</button>
+                <button class="sub-btn" onclick="downloadCSVFile()">Download CSV File</button>
+            </div>
+        </div>
+
+        <!-- IMPORT CSV DATA -->
+        <div class="card">
+            <div class="card-title">Import Session CSV (Append to History)</div>
+            <p style="font-size: 0.72rem; color: #9ca3af; margin-bottom: 6px;">
+                Paste CSV header and records below then tap Import.
+            </p>
+            <textarea id="csv-import-box" class="csv-textarea" placeholder="number,casino,date,time,session_id&#10;14,,2026-07-25,18:30:00,sess_1"></textarea>
+            <div class="btn-group">
+                <button class="sub-btn btn-accent" onclick="importCSVData()">Import CSV</button>
+                <button class="sub-btn" onclick="document.getElementById('csv-import-box').value=''">Clear Import Box</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // INPUT MODES
-        const MODE_SPIN = 'SPIN'; // Red/Normal Mode
-        const MODE_HIGH = 'HIGH'; // Blue Mode for Session High
+        const MODE_SPIN = 'SPIN';
+        const MODE_HIGH = 'HIGH';
         
         let currentMode = MODE_SPIN;
         let currentInputText = "";
-        let spinHistory = []; // Stack for spins
+        let spinHistory = [];
         let sessionHigh = 0;
+        let activeWindowSize = 15;
+        let tableMode = 'Machine';
+        const sessionId = "sess_" + Math.floor(Date.now() / 1000);
 
         const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-        // Mode Switching
         function toggleInputMode() {
             const bankrollEl = document.getElementById('bankroll');
             const centerEl = document.getElementById('input-center');
             const cancelBtn = document.getElementById('btn-cancel');
 
             if (currentMode === MODE_SPIN) {
-                // Activate MODE B: Session High
                 currentMode = MODE_HIGH;
-                currentInputText = ""; // Clear existing keypad work
-                
+                currentInputText = "";
                 bankrollEl.className = 'readout-cell c-high';
-                
-                // Keep center Green for display consistency, update to mode placeholder
                 centerEl.querySelector('.r-val').innerText = '--';
-                
-                // Keypad C changes to Blue Cancel
                 cancelBtn.innerText = 'X';
                 cancelBtn.className = 'btn-cancel';
             } else {
-                // If already in MODE B, clicking B cancels and returns to A
                 currentMode = MODE_SPIN;
                 currentInputText = "";
-                
                 bankrollEl.className = 'readout-cell c-spin';
                 centerEl.querySelector('.r-val').innerText = '--';
-                
-                // Keypad reverts
                 cancelBtn.innerText = 'C';
                 cancelBtn.className = 'btn-clear';
             }
         }
 
-        // Keypad Interactions
         function appendDigit(val) {
-            // Mode A logic for Spin (limit to 36/00)
             if (currentMode === MODE_SPIN) {
                 if (val === '00') { currentInputText = '00'; updateDisplay(); return; }
                 if (currentInputText === '0' || currentInputText === '00') currentInputText = '';
@@ -321,18 +423,11 @@
                     let numVal = parseInt(currentInputText + val, 10);
                     if (numVal <= 36 || isNaN(numVal)) { currentInputText += val; }
                 }
-            } 
-            // Mode B logic for Session High (large inputs allowed)
-            else if (currentMode === MODE_HIGH) {
-                // Prevent '00' in bankroll fields typically
+            } else if (currentMode === MODE_HIGH) {
                 if (val === '00') val = '0';
-                // Leading zero control
                 if (currentInputText === '0') currentInputText = '';
-                
-                // Allow up to 6 digits (e.g., $999,999)
                 if (currentInputText.length < 6) { currentInputText += val; }
             }
-            
             updateDisplay();
         }
 
@@ -346,7 +441,6 @@
             centerDispVal.innerText = currentInputText === "" ? "--" : currentInputText;
         }
 
-        // COMMITTING THE VALUE (ENTER PRESSED)
         function submitCommitedValue() {
             if (currentMode === MODE_SPIN) {
                 handleSpinSubmission();
@@ -355,23 +449,26 @@
             }
         }
 
-        // Logic A: Submit as Spin Data
         function handleSpinSubmission() {
             if (currentInputText === "") return;
-            let val = currentInputText;
             
-            spinHistory.unshift(val); // Insert newest at position 0 (leftmost)
-            if (spinHistory.length > 8) spinHistory.pop(); // Keep last 8 for display
+            const now = new Date();
+            const spinRecord = {
+                number: currentInputText,
+                date: now.toISOString().split('T')[0],
+                time: now.toTimeString().split(' ')[0],
+                casino: document.getElementById('casino-name').value.trim(),
+                sessionId: sessionId
+            };
 
+            spinHistory.unshift(spinRecord);
             updateSpinDisplayMetrics();
             clearDigit();
         }
 
-        // Logic B: Update Session High
         function handleHighSubmission() {
-            // Treat empty enter in Mode B as 'Cancel/Exit Mode'
             if (currentInputText === "") {
-                toggleInputMode(); // Exit back to Spin Mode
+                toggleInputMode();
                 return;
             }
 
@@ -380,27 +477,23 @@
                 sessionHigh = newHigh;
                 document.getElementById('high-val').innerText = `$ ${sessionHigh.toLocaleString()}`;
             }
-            
-            // Exit back to Mode A
             toggleInputMode();
         }
 
-        // Update Spin Counter & History Strips
         function updateSpinDisplayMetrics() {
             document.getElementById('spin-val').innerText = spinHistory.length;
 
             const container = document.getElementById('history-stream');
             container.innerHTML = "";
 
-            // Display up to last 8 numbers
             const displayList = spinHistory.slice(0, 8);
 
-            displayList.forEach((numStr, index) => {
+            displayList.forEach((spinObj, index) => {
                 const chip = document.createElement('div');
                 chip.className = 'spin-chip';
-
                 if (index === 0) chip.classList.add('chip-latest');
 
+                let numStr = spinObj.number;
                 if (numStr === '0' || numStr === '00' || numStr === '99') {
                     chip.classList.add('chip-green');
                 } else {
@@ -409,7 +502,6 @@
                     else { chip.classList.add('chip-black'); }
                 }
 
-                // Handle text variants (e.g., 99=00)
                 chip.innerText = numStr === '99' ? '00' : numStr;
                 container.appendChild(chip);
             });
@@ -417,8 +509,93 @@
 
         function undoSpin() {
             if (currentMode !== MODE_SPIN || spinHistory.length === 0) return;
-            spinHistory.shift(); // Remove newest entry from left
+            spinHistory.shift();
             updateSpinDisplayMetrics();
+        }
+
+        function clearAllSpinData() {
+            if (confirm("Are you sure you want to clear all spin history for this session?")) {
+                spinHistory = [];
+                updateSpinDisplayMetrics();
+            }
+        }
+
+        function setTableMode(mode) {
+            tableMode = mode;
+            const btnMachine = document.getElementById('btn-mode-machine');
+            const btnLive = document.getElementById('btn-mode-live');
+
+            if (mode === 'Machine') {
+                btnMachine.className = 'sub-btn btn-accent';
+                btnLive.className = 'sub-btn';
+            } else {
+                btnMachine.className = 'sub-btn';
+                btnLive.className = 'sub-btn btn-accent';
+            }
+        }
+
+        function setWindowSize(size) {
+            activeWindowSize = size;
+            alert(`Analysis window adjusted to last ${size} spins.`);
+        }
+
+        function generateCSVString() {
+            let csv = "number,casino,date,time,session_id\n";
+            const chronoSpins = [...spinHistory].reverse();
+            chronoSpins.forEach(s => {
+                csv += `${s.number},"${s.casino}",${s.date},${s.time},${s.sessionId}\n`;
+            });
+            return csv;
+        }
+
+        function copyCSVToClipboard() {
+            if (spinHistory.length === 0) { alert("No spin data to copy."); return; }
+            const csvText = generateCSVString();
+            navigator.clipboard.writeText(csvText).then(() => {
+                alert("Session CSV copied to clipboard!");
+            }).catch(() => {
+                alert("Failed to write to clipboard. Try downloading instead.");
+            });
+        }
+
+        function downloadCSVFile() {
+            if (spinHistory.length === 0) { alert("No spin data to download."); return; }
+            const csvText = generateCSVString();
+            const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `roulette_session_${sessionId}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importCSVData() {
+            const raw = document.getElementById('csv-import-box').value.trim();
+            if (!raw) { alert("Please paste CSV data first."); return; }
+
+            const lines = raw.split('\n');
+            let addedCount = 0;
+
+            lines.forEach((line, idx) => {
+                if (idx === 0 && line.includes('number')) return;
+                const parts = line.split(',').map(p => p.trim().replace(/"/g, ''));
+                if (parts.length >= 1 && parts[0] !== "") {
+                    spinHistory.unshift({
+                        number: parts[0],
+                        casino: parts[1] || document.getElementById('casino-name').value.trim(),
+                        date: parts[2] || new Date().toISOString().split('T')[0],
+                        time: parts[3] || new Date().toTimeString().split(' ')[0],
+                        sessionId: parts[4] || sessionId
+                    });
+                    addedCount++;
+                }
+            });
+
+            updateSpinDisplayMetrics();
+            alert(`Successfully imported ${addedCount} spin records!`);
+            document.getElementById('csv-import-box').value = "";
         }
     </script>
 </body>
