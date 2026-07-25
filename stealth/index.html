@@ -1,232 +1,493 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Roulette Trend Tracker • R2 • v1.66.05</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Roulette Trend Tracker v1.67.0</title>
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #0b1220;
-      --card: #0f1a2e;
-      --muted: #94a3b8;
-      --txt: #e5e7eb;
-      --accent: #60a5fa;
-      --warn: #fbbf24;
-      --danger: #ef4444;
-      --ok: #34d399;
-      --chip: #111c33;
-      --border: #1f2a44;
-    }
-
-    * { box-sizing: border-box; }
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(180deg, #070b14, #0b1220 40%, #070b14);
-      color: var(--txt);
+      padding: 0;
     }
 
-    .wrap { max-width: 980px; margin: 0 auto; padding: 18px 14px 40px; }
-    .card { background: rgba(15, 26, 46, .88); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin: 12px 0; box-shadow: 0 8px 28px rgba(0,0,0,.25); }
-    .sectionTitle { font-weight: 900; margin-bottom: 8px; text-transform: uppercase; font-size: 13px; }
-    
-    /* Active Play & Drift Monitor Styles */
-    @keyframes drift-flash {
-      0% { background: rgba(239, 68, 68, 0.1); }
-      50% { background: rgba(239, 68, 68, 0.4); }
-      100% { background: rgba(239, 68, 68, 0.1); }
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 8px;
+      max-width: 480px;
+      margin: 0 auto;
     }
-    .drift-alert-active { animation: drift-flash 1s infinite; border: 2px solid var(--danger) !important; }
-    .play-btn-small { background: var(--ok) !important; color: #000 !important; font-weight: 900; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
-    
-    .btn { appearance: none; border: 1px solid var(--border); background: var(--chip); color: var(--txt); padding: 10px 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-    .btn.danger { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .12); }
-    .pill { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 8px 10px; font-size: 12px; color: var(--muted); }
-    .kbd { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-    .key { padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border); background: #0c1730; color: var(--txt); font-weight: 900; cursor: pointer; }
-    .key.green { background: rgba(16, 185, 129, .16); border-color: rgba(16, 185, 129, .35); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    .topplays { display: grid; grid-template-columns: 1fr; gap: 8px; }
-    .playcard { border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .04); padding: 10px; border-radius: 12px; }
-    .playhdr { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-    .small { font-size: 12px; opacity: .9; line-height: 1.25; }
-    .box { background: #0c1730; border: 1px solid var(--border); border-radius: 14px; padding: 10px; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-    @media(min-width: 860px) { .grid { grid-template-columns: 1.1fr .9fr; } }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #333;
+    }
+
+    h1 {
+      font-size: 1rem;
+      color: #4caf50;
+    }
+
+    .version-tag {
+      font-size: 0.75rem;
+      color: #888;
+      font-weight: bold;
+    }
+
+    /* --- SLIM HEADER TOP 1/3 ENTRY CONTAINER --- */
+    #slim-tracker-container {
+      width: 100%;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 6px;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .display-box {
+      height: 38px;
+      background: #b71c1c; /* Red top display rectangle */
+      color: #ffffff;
+      font-size: 1.6rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 1px solid #d32f2f;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .btn {
+      height: 38px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+
+    .btn-enter {
+      background: #2e7d32;
+      color: #fff;
+      flex: 2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .btn-enter:active { background: #1b5e20; }
+
+    .btn-undo {
+      background: #c62828;
+      color: #fff;
+      flex: 1;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .btn-undo:active { background: #8e0000; }
+
+    .numpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .numpad-grid button {
+      height: 34px;
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #3d3d3d;
+      border-radius: 5px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      touch-action: manipulation;
+    }
+
+    .numpad-grid button:active { background: #444; }
+    .numpad-grid .btn-clear { background: #333; color: #ffeb3b; }
+
+    /* Recent History Strip (Leftmost = Most Recent) */
+    .history-strip-container {
+      display: flex;
+      align-items: center;
+      background: #0a0a0a;
+      padding: 4px 8px;
+      border-radius: 6px;
+      height: 32px;
+      border: 1px solid #222;
+    }
+
+    .history-label {
+      font-size: 0.7rem;
+      color: #777;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+
+    .history-stream {
+      display: flex;
+      gap: 6px;
+      flex-direction: row;
+      overflow-x: auto;
+      width: 100%;
+      align-items: center;
+    }
+
+    .spin-chip {
+      min-width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .chip-red { background: #d32f2f; color: #fff; }
+    .chip-black { background: #212121; color: #fff; border: 1px solid #555; }
+    .chip-green { background: #2e7d32; color: #fff; }
+    .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
+
+    /* --- DASHBOARD & METRICS PANELS --- */
+    .card {
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      border: 1px solid #2d2d2d;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #888;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .state-badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.75rem;
+    }
+
+    .state-balanced { background: #1b5e20; color: #81c784; }
+    .state-imbalance { background: #f57f17; color: #fffde7; }
+    .state-dry { background: #b71c1c; color: #ffcdd2; }
+
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric-box {
+      background: #141414;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #282828;
+    }
+
+    .metric-val {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .metric-sub {
+      font-size: 0.7rem;
+      color: #777;
+    }
+
+    select {
+      width: 100%;
+      height: 34px;
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 0 8px;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Roulette Trend Tracker <span class="pill" style="vertical-align:middle">v1.66.05</span></h1>
 
-    <div class="card">
-      <div style="display:flex; gap:10px; flex-wrap:wrap">
-        <div class="pill">Spins: <b id="spinCount">0</b></div>
-        <div class="pill">Green Drought: <b id="greenDrought">0</b></div>
-        <div class="pill">Table State: <b id="liveState">INITIALIZING</b></div>
-      </div>
+  <header>
+    <h1>ROULETTE TRACKER</h1>
+    <span class="version-tag">v1.67.0</span>
+  </header>
+
+  <div id="slim-tracker-container">
+    <div id="number-display" class="display-box">--</div>
+
+    <div class="control-row">
+      <button id="btn-enter" onclick="submitSpin()" class="btn btn-enter">ENTER</button>
+      <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
     </div>
 
-    <div class="grid">
-      <div class="sidecol">
-        <div class="card">
-          <div class="sectionTitle">Tap Keypad</div>
-          <div class="kbd" id="kbd">
-            </div>
-        </div>
+    <div class="numpad-grid">
+      <button onclick="appendDigit('1')">1</button>
+      <button onclick="appendDigit('2')">2</button>
+      <button onclick="appendDigit('3')">3</button>
+      <button onclick="appendDigit('4')">4</button>
+      <button onclick="appendDigit('5')">5</button>
+      <button onclick="appendDigit('6')">6</button>
+      <button onclick="appendDigit('7')">7</button>
+      <button onclick="appendDigit('8')">8</button>
+      <button onclick="appendDigit('9')">9</button>
+      <button onclick="appendDigit('0')">0</button>
+      <button onclick="appendDigit('00')">00</button>
+      <button onclick="clearDigit()" class="btn-clear">C</button>
+    </div>
 
-        <div id="activePlayDash" class="card" style="display:none; border-color: var(--accent); background: rgba(96,165,250,0.05);">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-              <div class="sectionTitle" style="color: var(--accent);">Currently Playing</div>
-              <div id="lockedStrategyName" style="font-size:18px; font-weight:900">—</div>
-              <div id="lockedTableState" class="pill" style="margin-top:8px; display:inline-block">Frozen State: —</div>
-            </div>
-            <button class="btn danger" id="endStrategyBtn">END STRATEGY</button>
-          </div>
-          <div id="driftWarning" class="box" style="display:none; margin-top:12px; border-color: var(--danger); text-align:center;">
-            <div style="font-weight:900; color: var(--danger);">⚠️ ABORT: TABLE DRIFT DETECTED</div>
-            <div class="small" id="driftReason">Repeating micro-streaks found.</div>
-          </div>
-        </div>
+    <div class="history-strip-container">
+      <span class="history-label">LAST:</span>
+      <div id="history-stream" class="history-stream"></div>
+    </div>
+  </div>
 
-        <div id="topPlaysContainer" class="card">
-          <div class="sectionTitle">Top 5 strategies right now</div>
-          <div id="topPlays" class="topplays"></div>
-        </div>
+  <div class="card">
+    <div class="card-title">
+      <span>Active Strategy & Table State</span>
+      <span id="state-badge" class="state-badge state-balanced">BALANCED</span>
+    </div>
+
+    <select id="strategy-select" onchange="onStrategyChange()">
+      <option value="cassandra">Cassandra v5 (Balanced Safe)</option>
+      <option value="royal_profit">Royal Profit v3 (Comp Builder)</option>
+      <option value="sweet_16">Sweet 16 (Split Recovery)</option>
+      <option value="hydra">Hydra / 10-2-Win (Dry Sector)</option>
+      <option value="tupelo">Tupelo Honey (Dozen Imbalance)</option>
+    </select>
+
+    <div class="grid-2col">
+      <div class="metric-box">
+        <div class="metric-sub">RECOMMENDED ACTION</div>
+        <div id="recommended-action" class="metric-val" style="color: #81c784; font-size: 0.95rem;">OBSERVE (Spins &lt; 15)</div>
       </div>
+      <div class="metric-box">
+        <div class="metric-sub">SUGGESTED BET</div>
+        <div id="suggested-bet" class="metric-val" style="color: #ffeb3b; font-size: 0.95rem;">WAIT</div>
+      </div>
+    </div>
+  </div>
 
-      <div class="sidecol">
-        <div class="card">
-          <div class="sectionTitle">Live Metrics</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
-            <div class="box">
-              <div class="small">Dozens (D1/D2/D3)</div>
-              <div id="doz" class="mono" style="font-weight:900">—</div>
-            </div>
-            <div class="box">
-              <div class="small">Columns (C1/C2/C3)</div>
-              <div id="cols" class="mono" style="font-weight:900">—</div>
-            </div>
-            <div class="box" style="grid-column: 1 / -1">
-              <div class="small">Junko Quadrants</div>
-              <div id="junko" class="mono" style="font-size:11px">—</div>
-            </div>
-          </div>
-          <div class="box" style="margin-top:8px">
-            <div class="small">Greenland Status</div>
-            <div id="greenland" class="mono">—</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="sectionTitle">Spin History</div>
-          <div id="lastList" class="mono small" style="max-height:150px; overflow:auto; word-break:break-all">No spins logged.</div>
-        </div>
+  <div class="card">
+    <div class="card-title">Live Tracking Metrics</div>
+    <div class="grid-2col">
+      <div class="metric-box">
+        <div class="metric-sub">DOZENS (D1 / D2 / D3)</div>
+        <div id="dozens-count" class="metric-val">0 | 0 | 0</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-sub">COLUMNS (C1 / C2 / C3)</div>
+        <div id="columns-count" class="metric-val">0 | 0 | 0</div>
+      </div>
+      <div class="metric-box" style="margin-top: 6px;">
+        <div class="metric-sub">SINCE GREEN (GDC)</div>
+        <div id="since-green" class="metric-val" style="color: #4caf50;">0</div>
+      </div>
+      <div class="metric-box" style="margin-top: 6px;">
+        <div class="metric-sub">TOTAL SPINS</div>
+        <div id="total-spins" class="metric-val">0</div>
       </div>
     </div>
   </div>
 
   <script>
-    let spins = [];
-    let lockedPlayName = null;
-    let frozenTableState = null;
-    let gdc = 0;
+    let currentInput = "";
+    let historyStack = []; // Index 0 = newest spin
 
-    const $ = (id) => document.getElementById(id);
+    const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-    function addSpin(n) {
-      const val = n === "00" ? "00" : Number(n);
-      spins.unshift({ n: val, t: Date.now() });
-      if (val === 0 || val === "00") gdc = 0; else gdc++;
-      render();
-    }
+    let metrics = {
+      dozens: [0, 0, 0],
+      columns: [0, 0, 0],
+      sinceGreen: 0
+    };
 
-    function render() {
-      $("spinCount").textContent = spins.length;
-      $("greenDrought").textContent = gdc;
-      $("lastList").textContent = spins.map(s => s.n).join(", ");
-
-      const recent = spins.slice(0, 15).map(s => s.n);
-      const state = spins.length < 15 ? "WAIT FOR 15" : "STRUCTURED";
-      $("liveState").textContent = lockedPlayName ? "LOCKED: " + frozenTableState : state;
-
-      // Update RESTORED Metrics
-      updateRestoredMetrics(recent);
-
-      // Update Hit-and-Run UI
-      updateStrategyUI(state);
-      checkTableDrift();
-    }
-
-    function updateRestoredMetrics(recent) {
-      const d = {1:0, 2:0, 3:0}, c = {1:0, 2:0, 3:0};
-      recent.forEach(n => {
-        if (n === 0 || n === "00") return;
-        d[n <= 12 ? 1 : (n <= 24 ? 2 : 3)]++;
-        const col = n % 3;
-        c[col === 1 ? 1 : (col === 2 ? 2 : 3)]++;
-      });
-      $("doz").textContent = `${d[1]} / ${d[2]} / ${d[3]}`;
-      $("cols").textContent = `${c[1]} / ${c[2]} / ${c[3]}`;
-      $("junko").textContent = "GN " + d[1] + " | HO " + d[2] + " | LO " + d[3];
-      $("greenland").textContent = "sinceGreen=" + gdc;
-    }
-
-    function updateStrategyUI(state) {
-      const container = $("topPlaysContainer");
-      const activeDash = $("activePlayDash");
-      const list = $("topPlays");
-
-      if (lockedPlayName) {
-        container.style.display = "none"; activeDash.style.display = "block";
-        $("lockedStrategyName").textContent = lockedPlayName;
-        $("lockedTableState").textContent = "Frozen State: " + frozenTableState;
+    function appendDigit(val) {
+      if (val === '00') {
+        currentInput = '00';
+        updateDisplay();
         return;
       }
+      if (currentInput === '0' || currentInput === '00') currentInput = '';
 
-      container.style.display = "block"; activeDash.style.display = "none";
-      list.innerHTML = "";
+      if ((currentInput + val).length <= 2) {
+        let numVal = parseInt(currentInput + val, 10);
+        if (numVal <= 36 || isNaN(numVal)) {
+          currentInput += val;
+        }
+      }
+      updateDisplay();
+    }
 
-      const strategies = [
-        { name: "Cassandra Corners", why: "Strong Dozen imbalance detected." },
-        { name: "12 Soldiers", why: "Vertical column pattern emerging." },
-        { name: "6 Diamonds", why: "Table is in a cold/drought state." },
-        { name: "Easy Street", why: "Even street distribution bias." },
-        { name: "WB-RTB", why: "Balanced/Choppy table grind." }
-      ];
+    function clearDigit() {
+      currentInput = "";
+      updateDisplay();
+    }
 
-      strategies.slice(0, 5).forEach((p, idx) => {
-        const div = document.createElement("div");
-        div.className = "playcard";
-        div.innerHTML = `<div class="playhdr"><div><div style="font-weight:900">${idx+1}. ${p.name}</div><div class="small">${p.why}</div></div><button class="play-btn-small" onclick="lockStrategy('${p.name}', '${state}')">PLAY</button></div>`;
-        list.appendChild(div);
+    function updateDisplay() {
+      const disp = document.getElementById('number-display');
+      disp.innerText = currentInput === "" ? "--" : currentInput;
+    }
+
+    function submitSpin() {
+      if (currentInput === "") return;
+
+      let val = currentInput;
+      historyStack.unshift(val); // Insert newest entry at position 0 (leftmost)
+
+      renderHistory();
+      recalculateEngine();
+      clearDigit();
+    }
+
+    function undoSpin() {
+      if (historyStack.length === 0) return;
+      historyStack.shift(); // Remove newest entry from left
+      renderHistory();
+      recalculateEngine();
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('history-stream');
+      container.innerHTML = "";
+
+      // Display up to last 8 numbers
+      const displayList = historyStack.slice(0, 8);
+
+      displayList.forEach((numStr, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'spin-chip';
+
+        if (index === 0) chip.classList.add('chip-latest');
+
+        if (numStr === '0' || numStr === '00' || numStr === '99') {
+          chip.classList.add('chip-green');
+        } else {
+          let n = parseInt(numStr, 10);
+          if (RED_NUMS.includes(n)) {
+            chip.classList.add('chip-red');
+          } else {
+            chip.classList.add('chip-black');
+          }
+        }
+
+        chip.innerText = numStr === '99' ? '00' : numStr;
+        container.appendChild(chip);
       });
     }
 
-    window.lockStrategy = (name, state) => { lockedPlayName = name; frozenTableState = state; render(); };
-    $("endStrategyBtn").onclick = () => { lockedPlayName = null; frozenTableState = null; render(); };
+    function recalculateEngine() {
+      const totalSpins = historyStack.length;
+      document.getElementById('total-spins').innerText = totalSpins;
 
-    function checkTableDrift() {
-      if (!lockedPlayName || spins.length < 6) return;
-      const last5 = spins.slice(0, 5).map(s => s.n);
-      const unique = new Set(last5);
-      const warnBox = $("driftWarning");
-      if (unique.size <= 3) {
-        warnBox.style.display = "block"; warnBox.classList.add("drift-alert-active");
-      } else { warnBox.style.display = "none"; }
+      let dozens = [0, 0, 0];
+      let columns = [0, 0, 0];
+      let greenCount = 0;
+
+      for (let i = 0; i < historyStack.length; i++) {
+        let val = historyStack[i];
+        if (val === '0' || val === '00' || val === '99') {
+          if (i === 0) greenCount = 0;
+          break;
+        } else {
+          greenCount++;
+        }
+      }
+
+      if (historyStack.length > 0 && !(historyStack[0] === '0' || historyStack[0] === '00' || historyStack[0] === '99')) {
+        metrics.sinceGreen = greenCount;
+      } else if (historyStack.length > 0) {
+        metrics.sinceGreen = 0;
+      } else {
+        metrics.sinceGreen = 0;
+      }
+
+      document.getElementById('since-green').innerText = metrics.sinceGreen;
+
+      // Calculate dozen & column metrics on last 12 spins
+      const recentWindow = historyStack.slice(0, 12);
+      recentWindow.forEach(numStr => {
+        if (numStr !== '0' && numStr !== '00' && numStr !== '99') {
+          let n = parseInt(numStr, 10);
+          
+          // Dozens
+          if (n >= 1 && n <= 12) dozens[0]++;
+          else if (n >= 13 && n <= 24) dozens[1]++;
+          else if (n >= 25 && n <= 36) dozens[2]++;
+
+          // Columns
+          if (n % 3 === 1) columns[0]++;
+          else if (n % 3 === 2) columns[1]++;
+          else if (n % 3 === 0) columns[2]++;
+        }
+      });
+
+      document.getElementById('dozens-count').innerText = `${dozens[0]} | ${dozens[1]} | ${dozens[2]}`;
+      document.getElementById('columns-count').innerText = `${columns[0]} | ${columns[1]} | ${columns[2]}`;
+
+      // Update Table State & Recommendations
+      const badge = document.getElementById('state-badge');
+      const recAct = document.getElementById('recommended-action');
+      const sugBet = document.getElementById('suggested-bet');
+
+      if (totalSpins < 15) {
+        badge.className = 'state-badge state-balanced';
+        badge.innerText = 'WARM-UP';
+        recAct.innerText = 'OBSERVE';
+        sugBet.innerText = 'WAIT (' + (15 - totalSpins) + ' left)';
+      } else {
+        let maxD = Math.max(...dozens);
+        let minD = Math.min(...dozens);
+
+        if (maxD - minD >= 4) {
+          badge.className = 'state-badge state-imbalance';
+          badge.innerText = 'IMBALANCE';
+          recAct.innerText = 'PLAY CASSANDRA / D2';
+          sugBet.innerText = 'Corner Set + C2 Hedge';
+        } else if (minD === 0 && totalSpins >= 20) {
+          badge.className = 'state-badge state-dry';
+          badge.innerText = 'EXTREME DRY';
+          recAct.innerText = 'HYDRA / 10-2-WIN';
+          sugBet.innerText = 'Target Dry Dozen';
+        } else {
+          badge.className = 'state-badge state-balanced';
+          badge.innerText = 'BALANCED';
+          recAct.innerText = 'ROYAL PROFIT / 4x4';
+          sugBet.innerText = 'Base Units Active';
+        }
+      }
     }
 
-    // Build Keypad
-    const kbd = $("kbd");
-    ["00", 0, ...Array.from({length: 36}, (_, i) => i + 1)].forEach(k => {
-      const b = document.createElement("button");
-      b.className = "key" + (k === 0 || k === "00" ? " green" : "");
-      b.textContent = k;
-      b.onclick = () => addSpin(k);
-      kbd.appendChild(b);
-    });
+    function onStrategyChange() {
+      recalculateEngine();
+    }
   </script>
 </body>
 </html>
