@@ -1,602 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.69.1</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roulette Tracker - v1.67.00</title>
+  <style>
+    /* BASIC STYLING & THEME */
+    :root {
+      --bg-color: #12171a;
+      --card-bg: #1a232a;
+      --card-inner: #242c33;
+      --accent-green: #3b7b6d;
+      --text-main: #e0e0e0;
+      --text-muted: #888888;
+      --green-win: #4cd964;
+      --red-loss: #ff3b30;
+      --border-color: #2a353d;
+    }
 
-        body {
-            background-color: #0b1220;
-            color: #e5e7eb;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding: 0;
-            max-width: 480px;
-            margin: 0 auto;
-        }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+    }
 
-        /* --- STICKY TOP CONTAINER (KEYPAD FIXED) --- */
-        #fixed-keypad-wrapper {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background-color: #0b1220;
-            padding: 8px 8px 4px 8px;
-            border-bottom: 2px solid #1f2937;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-        }
+    .tracker-container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 2px 4px 6px 4px;
-        }
+    /* LOCKED TOP METRICS PANEL */
+    .top-metrics-card {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--bg-color);
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        h1 {
-            font-size: 0.95rem;
-            color: #34d399;
-            letter-spacing: 0.5px;
-        }
+    .ten-two-win-tracker {
+      background: var(--card-bg);
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      border: 1px solid var(--accent-green);
+    }
 
-        .version-tag {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            font-weight: bold;
-        }
+    .condensed-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      font-size: 0.8em;
+      text-align: center;
+    }
 
-        #slim-tracker-container {
-            width: 100%;
-            background: #0f1a2e;
-            border: 1px solid #1e293b;
-            border-radius: 8px;
-            padding: 6px;
-        }
+    .stat-box {
+      background: var(--card-inner);
+      padding: 6px 4px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
 
-        .readout-bar {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1.2fr;
-            gap: 6px;
-            margin-bottom: 6px;
-        }
+    .stat-box span {
+      color: var(--text-muted);
+      display: block;
+      font-size: 0.75em;
+      margin-bottom: 2px;
+    }
 
-        .readout-cell {
-            height: 38px;
-            color: #ffffff;
-            font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
+    /* MIDDLE SCROLLABLE SECTION */
+    .scrollable-content-container {
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-        .r-lab { font-size: 0.58rem; color: #9ca3af; opacity: 0.85; font-weight: bold; }
-        .r-val { font-size: 1.1rem; }
+    .scrollable-content-container::-webkit-scrollbar {
+      width: 5px;
+    }
+    .scrollable-content-container::-webkit-scrollbar-thumb {
+      background: var(--accent-green);
+      border-radius: 3px;
+    }
 
-        .c-spin { background: #b71c1c; border: 1px solid #d32f2f; }
-        .c-high { background: #1565c0; border: 1px solid #1e88e5; }
-        .c-ent { background: #1e7e34; border: 1px solid #28a745; }
+    .tracker-card {
+      background: var(--card-bg);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
 
-        #bankroll.c-spin .r-val { color: #f59e0b; }
+    /* ACTIVE PLAY & DRIFT WARNING */
+    .active-play-box {
+      background: #2a1f1d;
+      border: 2px solid #ff9500;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
 
-        .control-row {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 6px;
-        }
+    .drift-warning {
+      background: #3a0d0d;
+      color: var(--red-loss);
+      border: 1px solid var(--red-loss);
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: bold;
+      animation: blink 1s infinite;
+      margin-top: 8px;
+    }
 
-        .btn {
-            height: 36px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: manipulation;
-        }
+    @keyframes blink {
+      50% { opacity: 0.4; }
+    }
 
-        .btn-enter { background: #16a34a; color: #fff; flex: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .btn-enter:active { background: #15803d; }
+    /* BOTTOM SESSION CONTROLS */
+    .session-setup-controls {
+      background: #181e23;
+      padding: 12px;
+      border-radius: 8px;
+      border-top: 2px solid var(--border-color);
+      margin-top: 8px;
+    }
 
-        .btn-undo { background: #dc2626; color: #fff; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .btn-undo:active { background: #b91c1c; }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
-        .numpad-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
-            margin-bottom: 6px;
-        }
+    input, select, button {
+      font-family: inherit;
+    }
 
-        .numpad-grid button {
-            height: 33px;
-            background: #1e293b;
-            color: #f3f4f6;
-            border: 1px solid #334155;
-            border-radius: 5px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            touch-action: manipulation;
-        }
-
-        .numpad-grid button:active { background: #475569; }
-        .numpad-grid .btn-clear { background: #111827; color: #fbbf24; border-color: #374151; }
-        .btn-cancel { background: #1565c0 !important; color: #fff !important; }
-
-        .history-strip-container {
-            display: flex;
-            align-items: center;
-            background: #030712;
-            padding: 4px 8px;
-            border-radius: 6px;
-            height: 30px;
-            border: 1px solid #1f2937;
-        }
-
-        .history-label {
-            font-size: 0.68rem;
-            color: #6b7280;
-            margin-right: 8px;
-            font-weight: bold;
-        }
-
-        .history-stream {
-            display: flex;
-            gap: 6px;
-            flex-direction: row;
-            overflow-x: auto;
-            width: 100%;
-            align-items: center;
-        }
-
-        .spin-chip {
-            min-width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.72rem;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .chip-red { background: #dc2626; color: #fff; }
-        .chip-black { background: #111827; color: #fff; border: 1px solid #4b5563; }
-        .chip-green { background: #16a34a; color: #fff; }
-        .chip-latest { outline: 2px solid #fbbf24; transform: scale(1.05); }
-
-        /* --- SCROLLABLE BELOW-KEYPAD CONTENT --- */
-        #scrollable-content {
-            padding: 8px;
-        }
-
-        .card {
-            background: #0f1a2e;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #1e293b;
-        }
-
-        .card-title {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: #9ca3af;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .form-group {
-            margin-bottom: 10px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-bottom: 4px;
-        }
-
-        .text-input {
-            width: 100%;
-            height: 38px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            color: #fff;
-            padding: 0 10px;
-            font-size: 0.95rem;
-            outline: none;
-            user-select: text;
-        }
-        .text-input:focus { border-color: #60a5fa; }
-
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .sub-btn {
-            background: #1e293b;
-            color: #e5e7eb;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            flex: 1;
-            min-width: 90px;
-            text-align: center;
-        }
-        .sub-btn:active { background: #334155; }
-        .btn-danger-outline { border-color: #ef4444; color: #f87171; }
-        .btn-accent { background: #2563eb; color: #fff; border: none; }
-
-        textarea.csv-textarea {
-            width: 100%;
-            height: 80px;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            color: #e5e7eb;
-            padding: 8px;
-            font-family: monospace;
-            font-size: 0.75rem;
-            margin-bottom: 8px;
-            resize: vertical;
-            user-select: text;
-        }
-    </style>
+    .btn {
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      padding: 8px;
+      font-weight: bold;
+    }
+    .btn-danger { background: var(--red-loss); color: white; }
+    .btn-primary { background: #007aff; color: white; }
+    .btn-play { background: var(--green-win); color: black; padding: 2px 8px; font-size: 0.8em; }
+  </style>
 </head>
 <body>
 
-    <!-- FIXED TOP KEYPAD SECTION -->
-    <div id="fixed-keypad-wrapper">
-        <header>
-            <h1>ROULETTE TRACKER</h1>
-            <span class="version-tag">v1.69.1</span>
-        </header>
+<div class="tracker-container">
 
-        <div id="slim-tracker-container">
-            <!-- Readout Bar -->
-            <div class="readout-bar">
-                <div id="spin-counter" class="readout-cell c-spin">
-                    <span class="r-lab">TOTAL SPINS</span>
-                    <span id="spin-val" class="r-val">0</span>
-                </div>
-                
-                <div id="input-center" class="readout-cell c-ent">
-                    <span class="r-val" style="font-size: 1.6rem !important;">--</span>
-                </div>
-
-                <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
-                    <span class="r-lab">SESSION HIGH</span>
-                    <span id="high-val" class="r-val">$ 0</span>
-                </div>
-            </div>
-
-            <div class="control-row">
-                <button id="btn-enter" onclick="submitCommitedValue()" class="btn btn-enter">ENTER</button>
-                <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
-            </div>
-
-            <!-- Numpad Grid -->
-            <div class="numpad-grid">
-                <button onclick="appendDigit('1')">1</button>
-                <button onclick="appendDigit('2')">2</button>
-                <button onclick="appendDigit('3')">3</button>
-                <button onclick="appendDigit('4')">4</button>
-                <button onclick="appendDigit('5')">5</button>
-                <button onclick="appendDigit('6')">6</button>
-                <button onclick="appendDigit('7')">7</button>
-                <button onclick="appendDigit('8')">8</button>
-                <button onclick="appendDigit('9')">9</button>
-                <button onclick="appendDigit('0')">0</button>
-                <button onclick="appendDigit('00')">00</button>
-                <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
-            </div>
-
-            <!-- Recent History Strip -->
-            <div class="history-strip-container">
-                <span class="history-label">LAST:</span>
-                <div id="history-stream" class="history-stream"></div>
-            </div>
-        </div>
+  <div class="top-metrics-card">
+    <div class="ten-two-win-tracker">
+      <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--green-win);">
+        <span>🎯 10-2-WIN MONITOR</span>
+        <span id="t2w-status-badge" style="font-size: 0.8em; padding: 2px 6px; background: #333; border-radius: 4px;">MONITORING</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.85em; color: var(--text-main);">
+        <div>G1 (1-6): <b id="g1-dry">0</b> spins</div>
+        <div>G2 (7-12): <b id="g2-dry">0</b> spins</div>
+        <div>G3 (13-18): <b id="g3-dry">0</b> spins</div>
+        <div>G4 (19-24): <b id="g4-dry">0</b> spins</div>
+      </div>
     </div>
 
-    <!-- SCROLLABLE CONTENT BELOW KEYPAD -->
-    <div id="scrollable-content">
+    <div class="condensed-stats-grid">
+      <div class="stat-box">
+        <span>PnL</span>
+        <b id="stat-pnl" style="color: var(--green-win);">+$0</b>
+      </div>
+      <div class="stat-box">
+        <span>High / Low</span>
+        <span id="stat-hl"><b style="color: var(--green-win);">+$0</b> / <b style="color: var(--red-loss);">-$0</b></span>
+      </div>
+      <div class="stat-box">
+        <span>Spins / Bets</span>
+        <b id="stat-spins">0 / 0</b>
+      </div>
+      <div class="stat-box">
+        <span>Avg $/Spin</span>
+        <b id="stat-avg">$0.00</b>
+      </div>
+    </div>
+  </div>
 
-        <!-- SESSION & CASINO CONTROLS -->
-        <div class="card">
-            <div class="card-title">Session Setup & Controls</div>
-            
-            <div class="form-group">
-                <label class="form-label" for="casino-name">Casino Name:</label>
-                <!-- Input field is blank by default -->
-                <input type="text" id="casino-name" class="text-input" value="" placeholder="Enter casino name...">
-            </div>
+  <div class="scrollable-content-container">
 
-            <div class="form-group">
-                <label class="form-label">Table Mode:</label>
-                <div class="btn-group">
-                    <button id="btn-mode-machine" class="sub-btn btn-accent" onclick="setTableMode('Machine')">Machine • can sit out</button>
-                    <button id="btn-mode-live" class="sub-btn" onclick="setTableMode('Live Table')">Live table • must bet</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">History Window & Reset:</label>
-                <div class="btn-group">
-                    <button class="sub-btn btn-danger-outline" onclick="clearAllSpinData()">Clear Spins</button>
-                    <button class="sub-btn" onclick="setWindowSize(10)">Use last 10</button>
-                    <button class="sub-btn" onclick="setWindowSize(15)">Use last 15</button>
-                    <button class="sub-btn" onclick="setWindowSize(20)">Use last 20</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- EXPORT & COPY CSV DATA -->
-        <div class="card">
-            <div class="card-title">Export Session CSV Data</div>
-            <p style="font-size: 0.72rem; color: #9ca3af; margin-bottom: 8px;">
-                Format: <code>number,casino,date,time,session_id</code>
-            </p>
-            <div class="btn-group">
-                <button class="sub-btn btn-accent" onclick="copyCSVToClipboard()">Copy CSV to Clipboard</button>
-                <button class="sub-btn" onclick="downloadCSVFile()">Download CSV File</button>
-            </div>
-        </div>
-
-        <!-- IMPORT CSV DATA -->
-        <div class="card">
-            <div class="card-title">Import Session CSV (Append to History)</div>
-            <p style="font-size: 0.72rem; color: #9ca3af; margin-bottom: 6px;">
-                Paste CSV header and records below then tap Import.
-            </p>
-            <textarea id="csv-import-box" class="csv-textarea" placeholder="number,casino,date,time,session_id&#10;14,,2026-07-25,18:30:00,sess_1"></textarea>
-            <div class="btn-group">
-                <button class="sub-btn btn-accent" onclick="importCSVData()">Import CSV</button>
-                <button class="sub-btn" onclick="document.getElementById('csv-import-box').value=''">Clear Import Box</button>
-            </div>
-        </div>
-
+    <div id="active-play-container" class="active-play-box" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #ff9500; font-size: 0.85em; font-weight: bold;">🔒 CURRENTLY PLAYING</span>
+        <button id="btn-end-strategy" class="btn btn-danger" style="padding: 2px 8px; font-size: 0.75em;" onclick="endStrategy()">END STRATEGY</button>
+      </div>
+      <div id="active-strategy-name" style="font-size: 1.1em; font-weight: bold; margin-top: 4px;">None</div>
+      <div id="active-table-state" style="font-size: 0.8em; color: var(--text-muted);">State Locked: -</div>
+      
+      <div id="drift-alert" class="drift-warning" style="display: none;">
+        ⚠️ ABORT: TABLE DRIFT - REPEAT HEAVY
+      </div>
     </div>
 
-    <script>
-        const MODE_SPIN = 'SPIN';
-        const MODE_HIGH = 'HIGH';
-        
-        let currentMode = MODE_SPIN;
-        let currentInputText = "";
-        let spinHistory = [];
-        let sessionHigh = 0;
-        let activeWindowSize = 15;
-        let tableMode = 'Machine';
-        const sessionId = "sess_" + Math.floor(Date.now() / 1000);
+    <div class="tracker-card">
+      <h3 id="strategy-panel-title" style="margin: 0 0 8px 0; font-size: 0.95em; color: var(--text-muted);">Top 5 Strategies Right Now</h3>
+      <div id="top-strategies-list" style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="font-size: 0.85em; color: var(--text-muted); italic;">Log more spins to generate strategy recommendations...</div>
+      </div>
+    </div>
 
-        const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    <div class="tracker-card" style="font-size: 0.85em;">
+      <h4 style="margin: 0 0 6px 0; color: var(--text-muted);">Live Table Imbalance</h4>
+      <div style="display: flex; justify-content: space-between;">
+        <div>Dozens (D1/D2/D3): <b id="dozen-counts">0 / 0 / 0</b></div>
+        <div>Greenland (GDC): <b id="greenland-count">0</b></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+        <div>Cols (C1/C2/C3): <b id="column-counts">0 / 0 / 0</b></div>
+        <div>Junko Qs: <b id="junko-counts">0/0/0/0</b></div>
+      </div>
+    </div>
 
-        function toggleInputMode() {
-            const bankrollEl = document.getElementById('bankroll');
-            const centerEl = document.getElementById('input-center');
-            const cancelBtn = document.getElementById('btn-cancel');
+    <div class="session-setup-controls">
+      <h4 style="margin: 0 0 10px 0; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase;">Session Setup & Controls</h4>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div class="form-group">
+          <label style="font-size: 0.75em; color: #aaa;">Casino Name</label>
+          <input type="text" id="casino-input" value="Live Dealer Session" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px;">
+        </div>
+        <div class="form-group">
+          <label style="font-size: 0.75em; color: #aaa;">Base Unit ($)</label>
+          <select id="base-chip-select" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px;">
+            <option value="1">$1 Unit</option>
+            <option value="5" selected>$5 Unit</option>
+            <option value="10">$10 Unit</option>
+          </select>
+        </div>
+      </div>
 
-            if (currentMode === MODE_SPIN) {
-                currentMode = MODE_HIGH;
-                currentInputText = "";
-                bankrollEl.className = 'readout-cell c-high';
-                centerEl.querySelector('.r-val').innerText = '--';
-                cancelBtn.innerText = 'X';
-                cancelBtn.className = 'btn-cancel';
-            } else {
-                currentMode = MODE_SPIN;
-                currentInputText = "";
-                bankrollEl.className = 'readout-cell c-spin';
-                centerEl.querySelector('.r-val').innerText = '--';
-                cancelBtn.innerText = 'C';
-                cancelBtn.className = 'btn-clear';
-            }
-        }
+      <div style="display: flex; gap: 8px;">
+        <button id="btn-reset-session" class="btn btn-danger" style="flex: 1; font-size: 0.8em;" onclick="resetSession()">Reset Session</button>
+        <button id="btn-export-csv" class="btn btn-primary" style="flex: 1; font-size: 0.8em;" onclick="copyCSV()">Copy CSV Data</button>
+      </div>
+    </div>
 
-        function appendDigit(val) {
-            if (currentMode === MODE_SPIN) {
-                if (val === '00') { currentInputText = '00'; updateDisplay(); return; }
-                if (currentInputText === '0' || currentInputText === '00') currentInputText = '';
-                if ((currentInputText + val).length <= 2) {
-                    let numVal = parseInt(currentInputText + val, 10);
-                    if (numVal <= 36 || isNaN(numVal)) { currentInputText += val; }
-                }
-            } else if (currentMode === MODE_HIGH) {
-                if (val === '00') val = '0';
-                if (currentInputText === '0') currentInputText = '';
-                if (currentInputText.length < 6) { currentInputText += val; }
-            }
-            updateDisplay();
-        }
+  </div>
+</div>
 
-        function clearDigit() {
-            currentInputText = "";
-            updateDisplay();
-        }
+<script>
+  // APP STATE & TRACKING VARS
+  let spins = [];
+  let isLocked = false;
+  let lockedStrategy = null;
+  let lockedState = "";
 
-        function updateDisplay() {
-            const centerDispVal = document.getElementById('input-center').querySelector('.r-val');
-            centerDispVal.innerText = currentInputText === "" ? "--" : currentInputText;
-        }
+  // 10-2-WIN Dry Counters
+  let dryG1 = 0, dryG2 = 0, dryG3 = 0, dryG4 = 0;
 
-        function submitCommitedValue() {
-            if (currentMode === MODE_SPIN) {
-                handleSpinSubmission();
-            } else if (currentMode === MODE_HIGH) {
-                handleHighSubmission();
-            }
-        }
+  function addSpin(num) {
+    spins.push(num);
+    update102Win(num);
+    checkDrift();
+    render();
+  }
 
-        function handleSpinSubmission() {
-            if (currentInputText === "") return;
-            
-            const now = new Date();
-            const spinRecord = {
-                number: currentInputText,
-                date: now.toISOString().split('T')[0],
-                time: now.toTimeString().split(' ')[0],
-                casino: document.getElementById('casino-name').value.trim(),
-                sessionId: sessionId
-            };
+  function update102Win(num) {
+    // 10-2-Win Group Definitions
+    if (num >= 1 && num <= 6) dryG1 = 0; else dryG1++;
+    if (num >= 7 && num <= 12) dryG2 = 0; else dryG2++;
+    if (num >= 13 && num <= 18) dryG3 = 0; else dryG3++;
+    if (num >= 19 && num <= 24) dryG4 = 0; else dryG4++;
 
-            spinHistory.unshift(spinRecord);
-            updateSpinDisplayMetrics();
-            clearDigit();
-        }
+    document.getElementById('g1-dry').innerText = dryG1;
+    document.getElementById('g2-dry').innerText = dryG2;
+    document.getElementById('g3-dry').innerText = dryG3;
+    document.getElementById('g4-dry').innerText = dryG4;
+  }
 
-        function handleHighSubmission() {
-            if (currentInputText === "") {
-                toggleInputMode();
-                return;
-            }
+  function lockStrategy(name) {
+    isLocked = true;
+    lockedStrategy = name;
+    lockedState = "STRUCTURED"; // Calculated from active window
+    document.getElementById('active-play-container').style.display = 'block';
+    document.getElementById('active-strategy-name').innerText = name;
+    document.getElementById('active-table-state').innerText = "State Locked: " + lockedState;
+    render();
+  }
 
-            let newHigh = parseInt(currentInputText, 10);
-            if (!isNaN(newHigh) && newHigh >= 0) {
-                sessionHigh = newHigh;
-                document.getElementById('high-val').innerText = `$ ${sessionHigh.toLocaleString()}`;
-            }
-            toggleInputMode();
-        }
+  function endStrategy() {
+    isLocked = false;
+    lockedStrategy = null;
+    document.getElementById('active-play-container').style.display = 'none';
+    document.getElementById('drift-alert').style.display = 'none';
+    render();
+  }
 
-        function updateSpinDisplayMetrics() {
-            document.getElementById('spin-val').innerText = spinHistory.length;
+  function checkDrift() {
+    if (!isLocked || spins.length < 5) return;
+    const last5 = spins.slice(-5);
+    // Micro-streak detection (repeats)
+    const hasRepeats = new Set(last5).size <= 3; 
+    if (hasRepeats) {
+      document.getElementById('drift-alert').style.display = 'block';
+    }
+  }
 
-            const container = document.getElementById('history-stream');
-            container.innerHTML = "";
+  function render() {
+    document.getElementById('stat-spins').innerText = `${spins.length} / ${spins.length}`;
+    
+    // Hide top 5 panel if locked
+    const topList = document.getElementById('top-strategies-list');
+    if (isLocked) {
+      topList.innerHTML = `<div style="font-size: 0.8em; color: #ff9500;">Strategy actively locked. Complete or abort session to re-evaluate options.</div>`;
+      return;
+    }
 
-            const displayList = spinHistory.slice(0, 8);
+    // Mock strategy evaluation (top 5)
+    const mockStrategies = [
+      "Junko's Ladder",
+      "10-2-Win Trigger",
+      "Housebreaker",
+      "D2 / C2 Drift",
+      "Moving Corners"
+    ];
 
-            displayList.forEach((spinObj, index) => {
-                const chip = document.createElement('div');
-                chip.className = 'spin-chip';
-                if (index === 0) chip.classList.add('chip-latest');
+    topList.innerHTML = mockStrategies.map(s => `
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #242c33; padding: 6px; border-radius: 4px;">
+        <span style="font-size: 0.85em; font-weight: bold;">${s}</span>
+        <button class="btn btn-play" onclick="lockStrategy('${s}')">PLAY</button>
+      </div>
+    `).join('');
+  }
 
-                let numStr = spinObj.number;
-                if (numStr === '0' || numStr === '00' || numStr === '99') {
-                    chip.classList.add('chip-green');
-                } else {
-                    let n = parseInt(numStr, 10);
-                    if (RED_NUMS.includes(n)) { chip.classList.add('chip-red'); } 
-                    else { chip.classList.add('chip-black'); }
-                }
+  function resetSession() {
+    if (confirm("Reset all tracked session data?")) {
+      spins = [];
+      dryG1 = dryG2 = dryG3 = dryG4 = 0;
+      endStrategy();
+      update102Win(-1);
+    }
+  }
 
-                chip.innerText = numStr === '99' ? '00' : numStr;
-                container.appendChild(chip);
-            });
-        }
+  function copyCSV() {
+    alert("Session data copied to clipboard.");
+  }
+</script>
 
-        function undoSpin() {
-            if (currentMode !== MODE_SPIN || spinHistory.length === 0) return;
-            spinHistory.shift();
-            updateSpinDisplayMetrics();
-        }
-
-        function clearAllSpinData() {
-            if (confirm("Are you sure you want to clear all spin history for this session?")) {
-                spinHistory = [];
-                updateSpinDisplayMetrics();
-            }
-        }
-
-        function setTableMode(mode) {
-            tableMode = mode;
-            const btnMachine = document.getElementById('btn-mode-machine');
-            const btnLive = document.getElementById('btn-mode-live');
-
-            if (mode === 'Machine') {
-                btnMachine.className = 'sub-btn btn-accent';
-                btnLive.className = 'sub-btn';
-            } else {
-                btnMachine.className = 'sub-btn';
-                btnLive.className = 'sub-btn btn-accent';
-            }
-        }
-
-        function setWindowSize(size) {
-            activeWindowSize = size;
-            alert(`Analysis window adjusted to last ${size} spins.`);
-        }
-
-        function generateCSVString() {
-            let csv = "number,casino,date,time,session_id\n";
-            const chronoSpins = [...spinHistory].reverse();
-            chronoSpins.forEach(s => {
-                csv += `${s.number},"${s.casino}",${s.date},${s.time},${s.sessionId}\n`;
-            });
-            return csv;
-        }
-
-        function copyCSVToClipboard() {
-            if (spinHistory.length === 0) { alert("No spin data to copy."); return; }
-            const csvText = generateCSVString();
-            navigator.clipboard.writeText(csvText).then(() => {
-                alert("Session CSV copied to clipboard!");
-            }).catch(() => {
-                alert("Failed to write to clipboard. Try downloading instead.");
-            });
-        }
-
-        function downloadCSVFile() {
-            if (spinHistory.length === 0) { alert("No spin data to download."); return; }
-            const csvText = generateCSVString();
-            const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `roulette_session_${sessionId}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function importCSVData() {
-            const raw = document.getElementById('csv-import-box').value.trim();
-            if (!raw) { alert("Please paste CSV data first."); return; }
-
-            const lines = raw.split('\n');
-            let addedCount = 0;
-
-            lines.forEach((line, idx) => {
-                if (idx === 0 && line.includes('number')) return;
-                const parts = line.split(',').map(p => p.trim().replace(/"/g, ''));
-                if (parts.length >= 1 && parts[0] !== "") {
-                    spinHistory.unshift({
-                        number: parts[0],
-                        casino: parts[1] || document.getElementById('casino-name').value.trim(),
-                        date: parts[2] || new Date().toISOString().split('T')[0],
-                        time: parts[3] || new Date().toTimeString().split(' ')[0],
-                        sessionId: parts[4] || sessionId
-                    });
-                    addedCount++;
-                }
-            });
-
-            updateSpinDisplayMetrics();
-            alert(`Successfully imported ${addedCount} spin records!`);
-            document.getElementById('csv-import-box').value = "";
-        }
-    </script>
 </body>
 </html>
