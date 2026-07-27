@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Tracker - v1.70.0</title>
+  <title>Roulette Tracker - v1.71.0</title>
   <style>
     /* BASIC STYLING & THEME */
     :root {
@@ -16,6 +16,7 @@
       --btn-green: #22c55e;
       --btn-red: #ef4444;
       --btn-yellow: #f59e0b;
+      --btn-blue: #1d4ed8;
       --border-color: #1e293b;
       --key-bg: #16202a;
       
@@ -88,10 +89,12 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      user-select: none;
     }
 
     .box-red { background: var(--num-red); color: white; }
     .box-green { background: var(--num-green); color: white; font-size: 1.2em; font-weight: bold; }
+    .box-blue { background: var(--btn-blue) !important; color: white !important; border: 2px solid #60a5fa; }
 
     .box-label {
       font-size: 0.65em;
@@ -222,7 +225,7 @@
       border: 1px solid var(--border-color);
     }
 
-    /* 🎯 JUNKO QUADRANTS MONITOR */
+    /* 🎯 JUNKO QUADRANTS & GREEN MONITOR */
     .junko-quad-tracker {
       background: var(--card-inner);
       padding: 8px 10px;
@@ -232,7 +235,7 @@
 
     .quad-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 4px;
       margin-top: 6px;
       text-align: center;
@@ -252,21 +255,21 @@
     .quad-box.active-selected { border-color: #38bdf8; background: #1a3042; }
 
     .quad-title {
-      font-size: 0.85em;
+      font-size: 0.8em;
       font-weight: 800;
       color: #e2e8f0;
     }
 
     .quad-stats {
-      font-size: 0.8em;
+      font-size: 0.75em;
       font-weight: bold;
       margin-top: 2px;
     }
 
     /* AGE COLOR ALERTS */
     .age-normal { color: var(--text-muted); }
-    .age-watch { color: var(--btn-yellow); font-weight: 900; }  /* Age 5 to 8 */
-    .age-prime { color: var(--btn-green); font-weight: 900; }   /* Age > 8 */
+    .age-watch { color: var(--btn-yellow); font-weight: 900; }  
+    .age-prime { color: var(--btn-green); font-weight: 900; }   
 
     /* QUADRANT NUMBERS EXPANSION DISPLAY */
     .quad-numbers-panel {
@@ -351,7 +354,7 @@
   <div class="fixed-keypad-card">
     <div class="header-title-bar">
       <span class="app-title">ROULETTE TRACKER</span>
-      <span class="version-tag">v1.70.0</span>
+      <span class="version-tag">v1.71.0</span>
     </div>
 
     <div class="display-row">
@@ -362,8 +365,8 @@
       <div class="display-box box-green">
         <span id="display-current-input">--</span>
       </div>
-      <div class="display-box box-red">
-        <span class="box-label">SESSION HIGH</span>
+      <div id="session-high-box" class="display-box box-red" onclick="toggleSessionHighMode()" style="cursor: pointer;">
+        <span id="sh-box-label" class="box-label">SESSION HIGH</span>
         <span id="display-session-high" class="box-value" style="color: #f59e0b;">$ 0</span>
       </div>
     </div>
@@ -399,7 +402,7 @@
     <div class="tracker-card">
       <div class="junko-quad-tracker">
         <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
-          <span style="color: var(--btn-green); font-size: 0.85em;">🧩 JUNKO QUADRANTS (Window: Last 15)</span>
+          <span style="color: var(--btn-green); font-size: 0.85em;">🧩 QUADRANTS & GREEN (Window: 15)</span>
           <span style="font-size: 0.7em; color: var(--text-muted);">Tap box for numbers</span>
         </div>
 
@@ -419,6 +422,10 @@
           <div id="box-m" class="quad-box" onclick="toggleQuadNumbers('M')">
             <div class="quad-title">M</div>
             <div class="quad-stats"><span id="m-count">0</span> (<span id="m-age-badge" class="age-normal">0+</span>)</div>
+          </div>
+          <div id="box-gr" class="quad-box" onclick="toggleQuadNumbers('GR')">
+            <div class="quad-title" style="color: var(--btn-green);">0/00</div>
+            <div class="quad-stats"><span id="gr-count">0</span> (<span id="gr-age-badge" class="age-normal">0+</span>)</div>
           </div>
         </div>
 
@@ -509,12 +516,13 @@
   const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
   const GREEN_NUMS = ["0","00"];
 
-  // JUNKO QUADRANTS DEFINITIONS
+  // JUNKO QUADRANTS & GROUPS DEFINITIONS
   const JUNKO_QUADS = {
     GN: ["00","0","1","2","9","10","13","14","27","28"],
     HO: ["23","24","25","26","29","30","33","34","35","36"],
     LO: ["3","4","8","11","12","15","16","22","23","24"],
-    M:  ["5","6","7","17","18","19","20","21","31","32"]
+    M:  ["5","6","7","17","18","19","20","21","31","32"],
+    GR: ["0","00"]
   };
 
   function getNumColorClass(numStr) {
@@ -527,196 +535,20 @@
   let spins = [];
   let currentInput = "";
   let sessionHigh = 0;
+  let isSessionHighMode = false; // Toggles when blue box is active
+  let sessionHighInput = "";
+  
   let isLocked = false;
   let lockedStrategy = null;
   let selectedQuadView = null; // Track clicked quadrant numbers
 
-  // KEYPAD ACTIONS
-  function pressKey(val) {
-    if (currentInput === "--") currentInput = "";
-    if (val === '00' && currentInput === '') currentInput = '00';
-    else if (currentInput.length < 2) currentInput += val;
+  // TOGGLE SESSION HIGH INPUT MODE
+  function toggleSessionHighMode() {
+    isSessionHighMode = !isSessionHighMode;
+    const box = document.getElementById('session-high-box');
+    const label = document.getElementById('sh-box-label');
     
-    document.getElementById('display-current-input').innerText = currentInput;
-  }
-
-  function pressClear() {
-    currentInput = "--";
-    document.getElementById('display-current-input').innerText = "--";
-  }
-
-  function pressEnter() {
-    if (currentInput === "" || currentInput === "--") return;
-    
-    spins.push(currentInput);
-    checkDrift();
-    
-    currentInput = "--";
-    document.getElementById('display-current-input').innerText = "--";
-    render();
-  }
-
-  function pressUndo() {
-    if (spins.length === 0) return;
-    spins.pop();
-    render();
-  }
-
-  // JUNKO QUADRANTS CALCULATIONS
-  function updateJunkoQuadrants() {
-    const last15 = spins.slice(-15);
-
-    // Calculate window counts (last 15)
-    let counts = { GN: 0, HO: 0, LO: 0, M: 0 };
-    last15.forEach(s => {
-      for (const [key, numList] of Object.entries(JUNKO_QUADS)) {
-        if (numList.includes(s)) counts[key]++;
-      }
-    });
-
-    // Calculate Age (consecutive spins since last hit)
-    let age = { GN: 0, HO: 0, LO: 0, M: 0 };
-    for (const key of Object.keys(JUNKO_QUADS)) {
-      let drySpins = 0;
-      for (let i = spins.length - 1; i >= 0; i--) {
-        if (JUNKO_QUADS[key].includes(spins[i])) {
-          break;
-        }
-        drySpins++;
-      }
-      age[key] = drySpins;
-    }
-
-    // Update DOM Text & Alert Colors
-    ['GN', 'HO', 'LO', 'M'].forEach(q => {
-      const quadKey = q.toLowerCase();
-      document.getElementById(`${quadKey}-count`).innerText = counts[q];
-      
-      const ageEl = document.getElementById(`${quadKey}-age-badge`);
-      const quadAge = age[q];
-      ageEl.innerText = `${quadAge}+`;
-
-      // Apply Dynamic Alert Colors
-      ageEl.className = ""; // Reset
-      if (quadAge >= 9) {
-        ageEl.classList.add("age-prime"); // Green Prime Alert (> 8)
-      } else if (quadAge >= 5) {
-        ageEl.classList.add("age-watch"); // Yellow Watch Alert (5-8)
-      } else {
-        ageEl.classList.add("age-normal");
-      }
-    });
-
-    document.getElementById('junko-counts').innerText = `${counts.GN}/${counts.HO}/${counts.LO}/${counts.M}`;
-  }
-
-  // INTERACTIVE NUMBERS TOGGLE FOR QUADRANTS
-  function toggleQuadNumbers(quadKey) {
-    const panel = document.getElementById('quad-numbers-panel');
-    
-    // Clear previously active border highlight
-    ['gn', 'ho', 'lo', 'm'].forEach(k => {
-      document.getElementById(`box-${k}`).classList.remove('active-selected');
-    });
-
-    if (selectedQuadView === quadKey) {
-      // Toggle Off
-      selectedQuadView = null;
-      panel.style.display = 'none';
-      panel.innerHTML = '';
-    } else {
-      // Toggle On
-      selectedQuadView = quadKey;
-      document.getElementById(`box-${quadKey.toLowerCase()}`).classList.add('active-selected');
-      panel.style.display = 'block';
-      panel.innerHTML = `<b>${quadKey} BET NUMBERS:</b><br/>${JUNKO_QUADS[quadKey].join(', ')}`;
-    }
-  }
-
-  // STRATEGY LOCKING
-  function lockStrategy(name) {
-    isLocked = true;
-    lockedStrategy = name;
-    document.getElementById('active-play-container').style.display = 'block';
-    document.getElementById('active-strategy-name').innerText = name;
-    render();
-  }
-
-  function endStrategy() {
-    isLocked = false;
-    lockedStrategy = null;
-    document.getElementById('active-play-container').style.display = 'none';
-    document.getElementById('drift-alert').style.display = 'none';
-    render();
-  }
-
-  function checkDrift() {
-    if (!isLocked || spins.length < 5) return;
-    const last5 = spins.slice(-5);
-    const hasRepeats = new Set(last5).size <= 3; 
-    if (hasRepeats) {
-      document.getElementById('drift-alert').style.display = 'block';
-    }
-  }
-
-  // RENDER APP STATE
-  function render() {
-    document.getElementById('display-total-spins').innerText = spins.length;
-    document.getElementById('stat-spins').innerText = `${spins.length} / ${spins.length}`;
-    
-    // Update Junko Quadrants Metric Card
-    updateJunkoQuadrants();
-
-    // Render Last 10 Spins with Circular Color Badges
-    const historyContainer = document.getElementById('last-spins-history');
-    if (spins.length === 0) {
-      historyContainer.innerHTML = "-";
-    } else {
-      const last10 = spins.slice(-10).reverse();
-      historyContainer.innerHTML = last10.map(s => {
-        const colorClass = getNumColorClass(s);
-        return `<span class="history-pill ${colorClass}">${s}</span>`;
-      }).join('');
-    }
-
-    const topList = document.getElementById('top-strategies-list');
-    if (isLocked) {
-      topList.innerHTML = `<div style="font-size: 0.8em; color: #ff9500;">Strategy actively locked. Complete or abort session to re-evaluate options.</div>`;
-      return;
-    }
-
-    const mockStrategies = [
-      "Junko's Ladder",
-      "10-2-Win Trigger",
-      "Housebreaker",
-      "D2 / C2 Drift",
-      "Moving Corners"
-    ];
-
-    topList.innerHTML = mockStrategies.map(s => `
-      <div style="display: flex; justify-content: space-between; align-items: center; background: #1a2530; padding: 6px; border-radius: 4px;">
-        <span style="font-size: 0.85em; font-weight: bold;">${s}</span>
-        <button class="btn btn-play" onclick="lockStrategy('${s}')">PLAY</button>
-      </div>
-    `).join('');
-  }
-
-  function resetSession() {
-    if (confirm("Reset all tracked session data?")) {
-      spins = [];
-      currentInput = "--";
-      selectedQuadView = null;
-      document.getElementById('quad-numbers-panel').style.display = 'none';
-      pressClear();
-      endStrategy();
-      render();
-    }
-  }
-
-  function copyCSV() {
-    alert("Session data copied to clipboard.");
-  }
-</script>
-
-</body>
-</html>
+    if (isSessionHighMode) {
+      box.classList.add('box-blue');
+      label.innerText = "INPUT HIGH ($)";
+      sessionHighInput = "";
