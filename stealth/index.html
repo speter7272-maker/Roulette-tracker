@@ -3,699 +3,363 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Tracker - v1.73.0</title>
+  <title>Roulette Tracker v1.72.1</title>
   <style>
-    /* BASIC STYLING & THEME */
     :root {
-      --bg-color: #0b1117;
-      --card-bg: #111a22;
-      --card-inner: #1a2530;
-      --accent-green: #3b7b6d;
-      --text-main: #e0e0e0;
-      --text-muted: #888888;
-      --btn-green: #22c55e;
-      --btn-red: #ef4444;
-      --btn-yellow: #f59e0b;
-      --btn-blue: #1d4ed8;
-      --border-color: #1e293b;
-      --key-bg: #16202a;
-      
-      /* ROULETTE COLOR SCHEME */
-      --num-red: #991b1b;
-      --num-black: #151c24;
-      --num-green: #15803d;
+      --bg-dark: #0f172a;
+      --panel-bg: #1e293b;
+      --text-light: #f8fafc;
+      --red-pill: #991b1b;
+      --green-pill: #15803d;
+      --black-pill: #151c24;
+      --amber-alert: #f59e0b;
+      --green-alert: #22c55e;
+      --blue-active: #1d4ed8;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-light); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 8px;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-    }
+    /* LOCKED TOP SECTION */
+    #top-locked { background: var(--panel-bg); padding: 10px; border-bottom: 2px solid #334155; flex-shrink: 0; }
+    
+    .history-bar { display: flex; align-items: center; gap: 6px; overflow-x: auto; margin-bottom: 8px; padding-bottom: 4px; }
+    .history-label { font-size: 0.75rem; font-weight: bold; color: #94a3b8; }
+    .chip { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; }
+    .chip.red { background: var(--red-pill); }
+    .chip.black { background: var(--black-pill); border: 1px solid #334155; }
+    .chip.green { background: var(--green-pill); }
 
-    .tracker-container {
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    /* KEYPAD */
+    .keypad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .btn-key { background: var(--black-pill); color: white; border: 1px solid #334155; padding: 12px 0; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; text-align: center; }
+    .btn-key:active { opacity: 0.7; }
+    .btn-action { background: #475569; }
+    .btn-enter { background: var(--green-pill); }
 
-    /* 🔒 FIXED KEYPAD HEADER (STICKY AT TOP) */
-    .fixed-keypad-card {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      background-color: var(--bg-color);
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border-color);
-    }
+    /* SCROLLABLE MAIN SECTION */
+    #main-scroll { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 12px; }
 
-    .header-title-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 2px 0;
-    }
+    /* STATS HEADER */
+    .stats-header { display: flex; justify-content: space-between; align-items: center; background: #1a2234; padding: 8px 12px; border-radius: 8px; }
+    .stat-box { text-align: center; }
+    .stat-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
+    .stat-val { font-size: 0.95rem; font-weight: bold; }
+    .btn-session-high { background: var(--red-pill); padding: 6px 10px; border-radius: 6px; cursor: pointer; text-align: center; }
+    .btn-session-high.active { background: var(--blue-active); }
 
-    .app-title {
-      color: #22c55e;
-      font-weight: 800;
-      font-size: 1.1em;
-      letter-spacing: 0.5px;
-    }
+    /* JUNKO QUADRANTS */
+    .junko-card { background: var(--panel-bg); padding: 10px; border-radius: 8px; }
+    .junko-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
+    .quad-badge { background: #0f172a; padding: 8px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #334155; }
+    .quad-title { font-size: 0.7rem; font-weight: bold; color: #94a3b8; }
+    .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
+    
+    /* Dynamic Colors */
+    .alert-yellow { color: var(--amber-alert); }
+    .alert-green { color: var(--green-alert); }
 
-    .version-tag {
-      color: var(--text-muted);
-      font-size: 0.8em;
-    }
+    .bet-numbers-panel { margin-top: 8px; background: #0f172a; padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #38bdf8; word-break: break-word; display: none; }
 
-    /* TOP DISPLAY ROW */
-    .display-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
-      margin-top: 4px;
-    }
+    /* BOTTOM CONTROLS */
+    .controls-card { background: var(--panel-bg); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }
+    .input-group { display: flex; flex-direction: column; gap: 4px; }
+    .input-group label { font-size: 0.75rem; color: #94a3b8; }
+    .input-group input { background: #0f172a; border: 1px solid #334155; color: white; padding: 8px; border-radius: 4px; }
 
-    .display-box {
-      border-radius: 6px;
-      padding: 6px 4px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      user-select: none;
-    }
-
-    .box-red { background: var(--num-red); color: white; }
-    .box-green { background: var(--num-green); color: white; font-size: 1.2em; font-weight: bold; }
-    .box-blue { background: var(--btn-blue) !important; color: white !important; border: 2px solid #60a5fa; }
-
-    .box-label {
-      font-size: 0.65em;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      opacity: 0.85;
-      text-transform: uppercase;
-    }
-
-    .box-value {
-      font-size: 1.2em;
-      font-weight: bold;
-    }
-
-    /* ENTER / UNDO CONTROL ROW */
-    .control-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .btn-enter {
-      background: var(--btn-green);
-      color: white;
-      font-weight: 900;
-      border: none;
-      border-radius: 6px;
-      padding: 10px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-
-    .btn-undo {
-      background: var(--btn-red);
-      color: white;
-      font-weight: 900;
-      border: none;
-      border-radius: 6px;
-      padding: 10px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-
-    /* NUMERIC KEYPAD GRID */
-    .num-keypad-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .num-key {
-      background: var(--key-bg);
-      border: 1px solid var(--border-color);
-      color: #fff;
-      font-weight: 700;
-      font-size: 1.1em;
-      padding: 10px 0;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: center;
-      touch-action: manipulation;
-    }
-
-    .num-key:active { background: #222f3e; }
-    .num-key.clear { color: var(--btn-yellow); }
-
-    /* LAST 10 SPINS CIRCULAR COLOR CHIPS */
-    .last-spin-bar {
-      background: #060a0e;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      margin-top: 6px;
-      padding: 6px 8px;
-      font-size: 0.75em;
-      color: var(--text-muted);
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      overflow-x: auto;
-    }
-
-    .history-pills-container {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .history-pill {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      color: #fff;
-      font-weight: 800;
-      font-size: 0.85em;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .history-pill.red { background: var(--num-red); }
-    .history-pill.black { background: var(--num-black); border: 1px solid #334155; }
-    .history-pill.green { background: var(--num-green); }
-
-    /* 📜 MIDDLE & BOTTOM DASHBOARD SECTION */
-    .dashboard-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .tracker-card {
-      background: var(--card-bg);
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-
-    /* 🎯 JUNKO QUADRANTS & GREEN MONITOR */
-    .junko-quad-tracker {
-      background: var(--card-inner);
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid var(--accent-green);
-    }
-
-    .quad-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 4px;
-      margin-top: 6px;
-      text-align: center;
-    }
-
-    .quad-box {
-      background: #0d151c;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 6px 2px;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .quad-box:hover { background: #162430; }
-    .quad-box.active-selected { border-color: #38bdf8; background: #1a3042; }
-
-    .quad-title {
-      font-size: 0.8em;
-      font-weight: 800;
-      color: #e2e8f0;
-    }
-
-    .quad-stats {
-      font-size: 0.75em;
-      font-weight: bold;
-      margin-top: 2px;
-    }
-
-    /* AGE COLOR ALERTS */
-    .age-normal { color: var(--text-muted); }
-    .age-watch { color: var(--btn-yellow); font-weight: 900; }  
-    .age-prime { color: var(--btn-green); font-weight: 900; }   
-
-    /* QUADRANT NUMBERS EXPANSION DISPLAY */
-    .quad-numbers-panel {
-      background: #090e13;
-      border: 1px dashed #38bdf8;
-      border-radius: 6px;
-      padding: 8px;
-      margin-top: 8px;
-      font-size: 0.8em;
-      color: #7dd3fc;
-      line-height: 1.4;
-      display: none;
-    }
-
-    .condensed-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-      font-size: 0.78em;
-      text-align: center;
-      margin-top: 8px;
-    }
-
-    .stat-box {
-      background: var(--bg-color);
-      padding: 5px 2px;
-      border-radius: 4px;
-      border: 1px solid var(--border-color);
-    }
-    .stat-box span { color: var(--text-muted); display: block; font-size: 0.7em; }
-
-    /* ACTIVE PLAY & DRIFT WARNING */
-    .active-play-box {
-      background: #2a1f1d;
-      border: 2px solid #ff9500;
-      border-radius: 6px;
-      padding: 10px;
-    }
-
-    .drift-warning {
-      background: #3a0d0d;
-      color: var(--btn-red);
-      border: 1px solid var(--btn-red);
-      padding: 6px;
-      border-radius: 4px;
-      text-align: center;
-      font-weight: bold;
-      animation: blink 1s infinite;
-      margin-top: 6px;
-      font-size: 0.8em;
-    }
-
-    @keyframes blink { 50% { opacity: 0.4; } }
-
-    /* ⚙️ BOTTOM SESSION CONTROLS */
-    .session-setup-controls {
-      background: #0f172a;
-      padding: 12px;
-      border-radius: 8px;
-      border-top: 2px solid var(--border-color);
-      margin-top: 6px;
-      margin-bottom: 20px;
-    }
-
-    .form-group { display: flex; flex-direction: column; gap: 2px; }
-
-    .btn {
-      cursor: pointer;
-      border: none;
-      border-radius: 4px;
-      padding: 8px;
-      font-weight: bold;
-    }
-    .btn-danger { background: var(--btn-red); color: white; }
-    .btn-primary { background: #007aff; color: white; }
-    .btn-play { background: var(--btn-green); color: black; padding: 2px 8px; font-size: 0.8em; }
+    .action-row { display: flex; gap: 8px; }
+    .action-row button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; font-size: 0.8rem; }
+    .btn-reset { background: #ef4444; }
+    .btn-copy { background: #2563eb; }
+    .btn-dl { background: #16a34a; }
   </style>
 </head>
 <body>
 
-<div class="tracker-container">
-
-  <div class="fixed-keypad-card">
-    <div class="header-title-bar">
-      <span class="app-title">ROULETTE TRACKER</span>
-      <span class="version-tag">v1.73.0</span>
+  <div id="top-locked">
+    <div class="history-bar">
+      <span class="history-label">LAST:</span>
+      <div id="history-chips" style="display:flex; gap:4px;"></div>
     </div>
 
-    <div class="display-row">
-      <div class="display-box box-red">
-        <span class="box-label">TOTAL SPINS</span>
-        <span id="display-total-spins" class="box-value">0</span>
+    <div class="keypad-grid">
+      <button class="btn-key" onclick="pressKey('1')">1</button>
+      <button class="btn-key" onclick="pressKey('2')">2</button>
+      <button class="btn-key" onclick="pressKey('3')">3</button>
+      <button class="btn-key btn-action" onclick="clearInput()">C</button>
+      <button class="btn-key" onclick="pressKey('4')">4</button>
+      <button class="btn-key" onclick="pressKey('5')">5</button>
+      <button class="btn-key" onclick="pressKey('6')">6</button>
+      <button class="btn-key" onclick="pressKey('0')">0</button>
+      <button class="btn-key" onclick="pressKey('7')">7</button>
+      <button class="btn-key" onclick="pressKey('8')">8</button>
+      <button class="btn-key" onclick="pressKey('9')">9</button>
+      <button class="btn-key" onclick="pressKey('00')">00</button>
+      <div style="grid-column: span 3; display: flex; align-items: center; justify-content: center; background: #0f172a; border-radius: 6px; border: 1px solid #334155;">
+        <span id="input-buffer" style="font-size: 1.2rem; font-weight: bold;">--</span>
       </div>
-      <div class="display-box box-green">
-        <span id="display-current-input">--</span>
-      </div>
-      <div id="session-high-box" class="display-box box-red" onclick="toggleSessionHighMode()" style="cursor: pointer;">
-        <span id="sh-box-label" class="box-label">SESSION HIGH</span>
-        <span id="display-session-high" class="box-value" style="color: #f59e0b;">$ 0</span>
-      </div>
-    </div>
-
-    <div class="control-row">
-      <button class="btn-enter" onclick="pressEnter()">ENTER</button>
-      <button class="btn-undo" onclick="pressUndo()">UNDO</button>
-    </div>
-
-    <div class="num-keypad-grid">
-      <button class="num-key" onclick="pressKey('1')">1</button>
-      <button class="num-key" onclick="pressKey('2')">2</button>
-      <button class="num-key" onclick="pressKey('3')">3</button>
-      <button class="num-key" onclick="pressKey('4')">4</button>
-      <button class="num-key" onclick="pressKey('5')">5</button>
-      <button class="num-key" onclick="pressKey('6')">6</button>
-      <button class="num-key" onclick="pressKey('7')">7</button>
-      <button class="num-key" onclick="pressKey('8')">8</button>
-      <button class="num-key" onclick="pressKey('9')">9</button>
-      <button class="num-key" onclick="pressKey('0')">0</button>
-      <button class="num-key" onclick="pressKey('00')">00</button>
-      <button class="num-key clear" onclick="pressClear()">C</button>
-    </div>
-
-    <div class="last-spin-bar">
-      <span>LAST:</span>
-      <div id="last-spins-history" class="history-pills-container">-</div>
+      <button class="btn-key btn-enter" onclick="submitSpin()">ENTER</button>
     </div>
   </div>
 
-  <div class="dashboard-section">
-
-    <div class="tracker-card">
-      <div class="junko-quad-tracker">
-        <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
-          <span style="color: var(--btn-green); font-size: 0.85em;">🧩 QUADRANTS & GREEN (Window: 15)</span>
-          <span style="font-size: 0.7em; color: var(--text-muted);">Tap box for numbers</span>
-        </div>
-
-        <div class="quad-grid">
-          <div id="box-gn" class="quad-box" onclick="toggleQuadNumbers('GN')">
-            <div class="quad-title">GN</div>
-            <div class="quad-stats"><span id="gn-count">0</span> (<span id="gn-age-badge" class="age-normal">0+</span>)</div>
-          </div>
-          <div id="box-ho" class="quad-box" onclick="toggleQuadNumbers('HO')">
-            <div class="quad-title">HO</div>
-            <div class="quad-stats"><span id="ho-count">0</span> (<span id="ho-age-badge" class="age-normal">0+</span>)</div>
-          </div>
-          <div id="box-lo" class="quad-box" onclick="toggleQuadNumbers('LO')">
-            <div class="quad-title">LO</div>
-            <div class="quad-stats"><span id="lo-count">0</span> (<span id="lo-age-badge" class="age-normal">0+</span>)</div>
-          </div>
-          <div id="box-m" class="quad-box" onclick="toggleQuadNumbers('M')">
-            <div class="quad-title">M</div>
-            <div class="quad-stats"><span id="m-count">0</span> (<span id="m-age-badge" class="age-normal">0+</span>)</div>
-          </div>
-          <div id="box-gr" class="quad-box" onclick="toggleQuadNumbers('GR')">
-            <div class="quad-title" style="color: var(--btn-green);">0/00</div>
-            <div class="quad-stats"><span id="gr-count">0</span> (<span id="gr-age-badge" class="age-normal">0+</span>)</div>
-          </div>
-        </div>
-
-        <div id="quad-numbers-panel" class="quad-numbers-panel"></div>
+  <div id="main-scroll">
+    
+    <div class="stats-header">
+      <div class="stat-box">
+        <div class="stat-label">Spins</div>
+        <div id="stat-spins" class="stat-val">0</div>
       </div>
-
-      <div class="condensed-stats-grid">
-        <div class="stat-box">
-          <span>PnL</span>
-          <b id="stat-pnl" style="color: var(--btn-green);">+$0</b>
-        </div>
-        <div class="stat-box">
-          <span>High / Low</span>
-          <span id="stat-hl"><b style="color: var(--btn-green);">+$0</b> / <b style="color: var(--btn-red);">-$0</b></span>
-        </div>
-        <div class="stat-box">
-          <span>Spins / Bets</span>
-          <b id="stat-spins">0 / 0</b>
-        </div>
-        <div class="stat-box">
-          <span>Avg $/Spin</span>
-          <b id="stat-avg">$0.00</b>
-        </div>
+      <div class="stat-box">
+        <div class="stat-label">PnL</div>
+        <div id="stat-pnl" class="stat-val">$0</div>
+      </div>
+      <div id="btn-high-mode" class="btn-session-high" onclick="toggleSessionHighMode()">
+        <div class="stat-label" style="color:white;">Session High</div>
+        <div id="stat-high" class="stat-val">$0</div>
       </div>
     </div>
 
-    <div id="active-play-container" class="active-play-box" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: #ff9500; font-size: 0.85em; font-weight: bold;">🔒 CURRENTLY PLAYING</span>
-        <button id="btn-end-strategy" class="btn btn-danger" style="padding: 2px 8px; font-size: 0.75em;" onclick="endStrategy()">END STRATEGY</button>
-      </div>
-      <div id="active-strategy-name" style="font-size: 1.1em; font-weight: bold; margin-top: 4px;">None</div>
-      <div id="active-table-state" style="font-size: 0.8em; color: var(--text-muted);">State Locked: -</div>
-      
-      <div id="drift-alert" class="drift-warning" style="display: none;">
-        ⚠️ ABORT: TABLE DRIFT - REPEAT HEAVY
-      </div>
-    </div>
-
-    <div class="tracker-card">
-      <h3 id="strategy-panel-title" style="margin: 0 0 8px 0; font-size: 0.9em; color: var(--text-muted);">Top 5 Strategies Right Now</h3>
-      <div id="top-strategies-list" style="display: flex; flex-direction: column; gap: 6px;">
-        <div style="font-size: 0.85em; color: var(--text-muted); font-style: italic;">Log spins using keypad & tap ENTER to calculate recommendations...</div>
-      </div>
-    </div>
-
-    <div class="tracker-card" style="font-size: 0.85em;">
-      <h4 style="margin: 0 0 6px 0; color: var(--text-muted);">Live Table Imbalance</h4>
-      <div style="display: flex; justify-content: space-between;">
-        <div>Dozens (D1/D2/D3): <b id="dozen-counts">0 / 0 / 0</b></div>
-        <div>Greenland (GDC): <b id="greenland-count">0</b></div>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 4px;">
-        <div>Cols (C1/C2/C3): <b id="column-counts">0 / 0 / 0</b></div>
-        <div>Junko Qs: <b id="junko-counts">0/0/0/0</b></div>
-      </div>
-    </div>
-
-    <div class="session-setup-controls">
-      <h4 style="margin: 0 0 8px 0; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase;">Session Setup & Controls</h4>
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-        <div class="form-group">
-          <label style="font-size: 0.75em; color: #aaa;">Casino Name</label>
-          <input type="text" id="casino-input" value="RM smokeshow" style="background: #060a0e; border: 1px solid var(--border-color); color: #fff; padding: 6px; border-radius: 4px; font-size: 0.85em;">
+    <div class="junko-card">
+      <div style="font-size: 0.75rem; font-weight: bold; color: #94a3b8; margin-bottom: 6px;">JUNKO QUADRANTS (W=15)</div>
+      <div class="junko-grid">
+        <div class="quad-badge" onclick="toggleBetNumbers('GN')">
+          <div class="quad-title">GN</div>
+          <div id="stat-gn" class="quad-stats">0 (0+)</div>
         </div>
-        <div class="form-group">
-          <label style="font-size: 0.75em; color: #aaa;">Base Unit ($)</label>
-          <select id="base-chip-select" style="background: #060a0e; border: 1px solid var(--border-color); color: #fff; padding: 6px; border-radius: 4px; font-size: 0.85em;">
-            <option value="1">$1 Unit</option>
-            <option value="5" selected>$5 Unit</option>
-            <option value="10">$10 Unit</option>
-          </select>
+        <div class="quad-badge" onclick="toggleBetNumbers('HO')">
+          <div class="quad-title">HO</div>
+          <div id="stat-ho" class="quad-stats">0 (0+)</div>
+        </div>
+        <div class="quad-badge" onclick="toggleBetNumbers('LO')">
+          <div class="quad-title">LO</div>
+          <div id="stat-lo" class="quad-stats">0 (0+)</div>
+        </div>
+        <div class="quad-badge" onclick="toggleBetNumbers('M')">
+          <div class="quad-title">M</div>
+          <div id="stat-m" class="quad-stats">0 (0+)</div>
+        </div>
+        <div class="quad-badge" onclick="toggleBetNumbers('GR')">
+          <div class="quad-title">GR</div>
+          <div id="stat-gr" class="quad-stats">0 (0+)</div>
         </div>
       </div>
+      <div id="bet-numbers-display" class="bet-numbers-panel"></div>
+    </div>
 
-      <div style="display: flex; gap: 6px;">
-        <button id="btn-reset-session" class="btn btn-danger" style="flex: 1; font-size: 0.8em; padding: 8px 4px;" onclick="resetSession()">Clear/Reset</button>
-        <button id="btn-export-csv" class="btn btn-primary" style="flex: 1; font-size: 0.8em; padding: 8px 4px;" onclick="copyCSV()">Copy CSV</button>
-        <button id="btn-download-csv" class="btn" style="flex: 1; font-size: 0.8em; padding: 8px 4px; background: var(--btn-green); color: #000; font-weight: 800;" onclick="downloadCSV()">Download CSV</button>
+    <div class="controls-card">
+      <div class="input-group">
+        <label for="casino-input">Casino Name</label>
+        <input type="text" id="casino-input" value="RM Smokeshow" placeholder="Enter casino name...">
+      </div>
+
+      <div class="action-row">
+        <button class="btn-reset" onclick="resetSession()">Clear</button>
+        <button class="btn-copy" onclick="copyCSV()">Copy CSV</button>
+        <button class="btn-dl" onclick="downloadCSV()">Download CSV</button>
       </div>
     </div>
 
   </div>
-</div>
 
-<script>
-  // ROULETTE COLOR MAP
-  const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
-  const GREEN_NUMS = ["0","00"];
+  <script>
+    // State Tracking Variables
+    let spins = [];
+    let currentInput = "";
+    let isHighMode = false;
+    let sessionHigh = 0;
+    let activeQuad = null;
+    let sessionId = "SESS-" + Math.floor(1000 + Math.random() * 9000);
 
-  // JUNKO QUADRANTS & GROUPS DEFINITIONS
-  const JUNKO_QUADS = {
-    GN: ["00","0","1","2","9","10","13","14","27","28"],
-    HO: ["23","24","25","26","29","30","33","34","35","36"],
-    LO: ["3","4","8","11","12","15","16","22","23","24"],
-    M:  ["5","6","7","17","18","19","20","21","31","32"],
-    GR: ["0","00"]
-  };
+    const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
+    const GREEN_NUMS = ["0","00"];
 
-  function getNumColorClass(numStr) {
-    if (GREEN_NUMS.includes(numStr)) return "green";
-    if (RED_NUMS.includes(numStr)) return "red";
-    return "black";
-  }
+    const QUADRANTS = {
+      GN: ["00","0","1","2","9","10","13","14","27","28"],
+      HO: ["23","24","25","26","29","30","33","34","35","36"],
+      LO: ["3","4","8","11","12","15","16","22"],
+      M:  ["5","6","7","17","18","19","20","21","31","32"],
+      GR: ["0","00"]
+    };
 
-  // STATE MANAGEMENT
-  let spins = [];
-  let spinRecords = []; 
-  let sessionId = Date.now();
-  let currentInput = "";
-  let sessionHigh = 0;
-  let isSessionHighMode = false;
-  let sessionHighInput = "";
-  
-  let isLocked = false;
-  let lockedStrategy = null;
-  let selectedQuadView = null;
-
-  // TOGGLE SESSION HIGH INPUT MODE
-  function toggleSessionHighMode() {
-    isSessionHighMode = !isSessionHighMode;
-    const box = document.getElementById('session-high-box');
-    const label = document.getElementById('sh-box-label');
-    
-    if (isSessionHighMode) {
-      box.classList.add('box-blue');
-      label.innerText = "INPUT HIGH ($)";
-      sessionHighInput = "";
-      document.getElementById('display-current-input').innerText = "HIGH";
-    } else {
-      box.classList.remove('box-blue');
-      label.innerText = "SESSION HIGH";
-      currentInput = "--";
-      document.getElementById('display-current-input').innerText = "--";
-    }
-  }
-
-  // KEYPAD ACTIONS
-  function pressKey(val) {
-    if (isSessionHighMode) {
-      if (val === '00') return;
-      if (sessionHighInput.length < 4) sessionHighInput += val;
-      document.getElementById('display-session-high').innerText = `$ ${sessionHighInput || '0'}`;
-      return;
+    function getNumColor(num) {
+      if (GREEN_NUMS.includes(num)) return "green";
+      if (RED_NUMS.includes(num)) return "red";
+      return "black";
     }
 
-    if (currentInput === "--") currentInput = "";
-    if (val === '00' && currentInput === '') currentInput = '00';
-    else if (currentInput.length < 2) currentInput += val;
-    
-    document.getElementById('display-current-input').innerText = currentInput;
-  }
-
-  function pressClear() {
-    if (isSessionHighMode) {
-      sessionHighInput = "";
-      document.getElementById('display-session-high').innerText = "$ 0";
-      return;
-    }
-    currentInput = "--";
-    document.getElementById('display-current-input').innerText = "--";
-  }
-
-  function pressEnter() {
-    if (isSessionHighMode) {
-      if (sessionHighInput !== "") {
-        sessionHigh = parseInt(sessionHighInput, 10);
+    function pressKey(val) {
+      if (currentInput.length < 3) {
+        currentInput += val;
+        document.getElementById("input-buffer").innerText = currentInput;
       }
-      toggleSessionHighMode();
-      render();
-      return;
     }
 
-    if (currentInput === "" || currentInput === "--") return;
-    
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.toTimeString().split(' ')[0];
-    const casinoEl = document.getElementById('casino-input');
-    const casinoName = (casinoEl && casinoEl.value) ? casinoEl.value : "Live Session";
-
-    spinRecords.push({
-      number: currentInput,
-      casino: casinoName,
-      date: dateStr,
-      time: timeStr,
-      session_id: sessionId
-    });
-
-    spins.push(currentInput);
-    checkDrift();
-    
-    currentInput = "--";
-    document.getElementById('display-current-input').innerText = "--";
-    render();
-  }
-
-  function pressUndo() {
-    if (isSessionHighMode) {
-      sessionHighInput = sessionHighInput.slice(0, -1);
-      document.getElementById('display-session-high').innerText = `$ ${sessionHighInput || '0'}`;
-      return;
+    function clearInput() {
+      currentInput = "";
+      document.getElementById("input-buffer").innerText = "--";
     }
 
-    if (spins.length === 0) return;
-    spins.pop();
-    spinRecords.pop();
-    render();
-  }
-
-  // JUNKO QUADRANTS & GREEN CALCULATIONS
-  function updateJunkoQuadrants() {
-    const last15 = spins.slice(-15);
-
-    let counts = { GN: 0, HO: 0, LO: 0, M: 0, GR: 0 };
-    last15.forEach(s => {
-      for (const [key, numList] of Object.entries(JUNKO_QUADS)) {
-        if (numList.includes(s)) counts[key]++;
-      }
-    });
-
-    let age = { GN: 0, HO: 0, LO: 0, M: 0, GR: 0 };
-    for (const key of Object.keys(JUNKO_QUADS)) {
-      let drySpins = 0;
-      for (let i = spins.length - 1; i >= 0; i--) {
-        if (JUNKO_QUADS[key].includes(spins[i])) {
-          break;
-        }
-        drySpins++;
-      }
-      age[key] = drySpins;
-    }
-
-    ['GN', 'HO', 'LO', 'M'].forEach(q => {
-      const quadKey = q.toLowerCase();
-      const countEl = document.getElementById(`${quadKey}-count`);
-      const ageEl = document.getElementById(`${quadKey}-age-badge`);
-      
-      if (countEl) countEl.innerText = counts[q];
-      if (ageEl) {
-        const quadAge = age[q];
-        ageEl.innerText = `${quadAge}+`;
-        ageEl.className = "";
-        if (quadAge >= 9) {
-          ageEl.classList.add("age-prime");
-        } else if (quadAge >= 5) {
-          ageEl.classList.add("age-watch");
-        } else {
-          ageEl.classList.add("age-normal");
-        }
-      }
-    });
-
-    const grCountEl = document.getElementById('gr-count');
-    const grAgeEl = document.getElementById('gr-age-badge');
-    if (grCountEl) grCountEl.innerText = counts.GR;
-    if (grAgeEl) {
-      const grAge = age.GR;
-      grAgeEl.innerText = `${grAge}+`;
-      grAgeEl.className = "";
-      if (grAge > 15) {
-        grAgeEl.classList.add("age-prime");
-      } else if (grAge >= 9) {
-        grAgeEl.classList.add("age-watch");
+    function toggleSessionHighMode() {
+      isHighMode = !isHighMode;
+      const btn = document.getElementById("btn-high-mode");
+      if (isHighMode) {
+        btn.classList.add("active");
+        clearInput();
       } else {
-        grAgeEl.classList.add("age-normal");
+        btn.classList.remove("active");
       }
     }
 
-    const junkoEl = document.getElementById('junko-counts');
-    if (junkoEl) junkoEl.innerText = `${counts.GN}/${counts.HO}/${counts.LO}/${counts.M}`;
-  }
+    function submitSpin() {
+      if (!currentInput) return;
 
-  function toggleQuadNumbers(quadKey) {
-    const panel = document.getElementById('quad-numbers-panel');
-    
-    ['gn', 'ho', 'lo', 'm', 'gr'].forEach(k => {
-      const el = document.getElementById(`box-${k}`);
-      if (el
+      if (isHighMode) {
+        sessionHigh = parseInt(currentInput) || sessionHigh;
+        document.getElementById("stat-high").innerText = "$" + sessionHigh;
+        toggleSessionHighMode();
+        clearInput();
+        return;
+      }
+
+      const now = new Date();
+      const spinData = {
+        number: currentInput,
+        casino: document.getElementById("casino-input").value || "Unknown",
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().split(' ')[0],
+        session_id: sessionId
+      };
+
+      spins.unshift(spinData);
+      clearInput();
+      updateUI();
+    }
+
+    function updateUI() {
+      // 1. Update Condensed Stats
+      document.getElementById("stat-spins").innerText = spins.length;
+
+      // 2. Render Circular Recent History Chips (Max 10)
+      const historyContainer = document.getElementById("history-chips");
+      historyContainer.innerHTML = "";
+      const recentSpins = spins.slice(0, 10);
+      recentSpins.forEach(spin => {
+        const chip = document.createElement("div");
+        chip.className = `chip ${getNumColor(spin.number)}`;
+        chip.innerText = spin.number;
+        historyContainer.appendChild(chip);
+      });
+
+      // 3. Update Junko Quadrants (Window = Last 15)
+      const window15 = spins.slice(0, 15).map(s => s.number);
+      
+      Object.keys(QUADRANTS).forEach(key => {
+        const nums = QUADRANTS[key];
+        const count = window15.filter(n => nums.includes(n)).length;
+        
+        // Calculate Age (Spins since last hit)
+        let age = 0;
+        for (let i = 0; i < spins.length; i++) {
+          if (nums.includes(spins[i].number)) break;
+          age++;
+        }
+
+        const el = document.getElementById(`stat-${key.toLowerCase()}`);
+        el.innerText = `${count} (${age}+)`;
+
+        // Apply Threshold Color Alerts
+        el.className = "quad-stats";
+        if (key === "GR") {
+          if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
+          else if (age > 15) el.classList.add("alert-green");
+        } else {
+          if (age >= 5 && age <= 8) el.classList.add("alert-yellow");
+          else if (age > 8) el.classList.add("alert-green");
+        }
+      });
+    }
+
+    function toggleBetNumbers(quadKey) {
+      const panel = document.getElementById("bet-numbers-display");
+      if (activeQuad === quadKey) {
+        panel.style.display = "none";
+        activeQuad = null;
+      } else {
+        activeQuad = quadKey;
+        panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
+        panel.style.display = "block";
+      }
+    }
+
+    function generateCSVString() {
+      if (spins.length === 0) return "";
+      const headers = ["number", "casino", "date", "time", "session_id"];
+      const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
+      return [headers.join(","), ...rows].join("\n");
+    }
+
+    function copyCSV() {
+      const csvText = generateCSVString();
+      if (!csvText) {
+        alert("No spin data to copy.");
+        return;
+      }
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(csvText).then(() => {
+          alert("CSV copied to clipboard!");
+        }).catch(() => fallbackCopy(csvText));
+      } else {
+        fallbackCopy(csvText);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert("CSV copied to clipboard!");
+      } catch (err) {
+        alert("Failed to copy CSV.");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function downloadCSV() {
+      const csvText = generateCSVString();
+      if (!csvText) {
+        alert("No spin data to download.");
+        return;
+      }
+
+      const casinoName = (document.getElementById("casino-input").value || "casino")
+        .toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const dateStr = new Date().toISOString().split('T')[0];
+      const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
+
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function resetSession() {
+      if (confirm("Clear all session spins and reset tracking?")) {
+        spins = [];
+        sessionHigh = 0;
+        document.getElementById("stat-high").innerText = "$0";
+        clearInput();
+        updateUI();
+      }
+    }
+  </script>
+</body>
+</html>
