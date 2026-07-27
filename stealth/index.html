@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Tracker v1.72.2</title>
+  <title>Roulette Tracker v1.72.3</title>
   <style>
     :root {
       --bg-dark: #0f172a;
@@ -41,7 +41,7 @@
     #main-scroll { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 12px; }
 
     /* STATS HEADER */
-    .stats-header { display: flex; justify-space-between; align-items: center; background: #1a2234; padding: 8px 12px; border-radius: 8px; }
+    .stats-header { display: flex; justify-content: space-between; align-items: center; background: #1a2234; padding: 8px 12px; border-radius: 8px; }
     .stat-box { text-align: center; }
     .stat-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
     .stat-val { font-size: 0.95rem; font-weight: bold; }
@@ -357,16 +357,20 @@
       const dateStr = new Date().toISOString().split('T')[0];
       const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
 
-      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      // Data URI conversion guarantees compatibility across Safari/iOS webviews
+      const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvText);
+
       const link = document.createElement("a");
-      const url = URL.URL.createObjectURL ? URL.createObjectURL(blob) : null;
-      if (url) {
-        link.setAttribute("href", url);
-        link.setAttribute("download", filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+
+      try {
         link.click();
         document.body.removeChild(link);
+      } catch (err) {
+        document.body.removeChild(link);
+        window.open(encodedUri, '_blank');
       }
     }
 
