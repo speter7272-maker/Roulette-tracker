@@ -3,22 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Tracker - v1.68.00</title>
+  <title>Roulette Tracker - v1.69.2</title>
   <style>
     /* BASIC STYLING & THEME */
     :root {
-      --bg-color: #12171a;
-      --card-bg: #1a232a;
-      --card-inner: #242c33;
+      --bg-color: #0b1117;
+      --card-bg: #111a22;
+      --card-inner: #1a2530;
       --accent-green: #3b7b6d;
       --text-main: #e0e0e0;
       --text-muted: #888888;
-      --green-win: #4cd964;
-      --red-loss: #ff3b30;
-      --border-color: #2a353d;
-      --key-red: rgba(239, 68, 68, 0.2);
-      --key-black: rgba(30, 41, 59, 0.8);
-      --key-green: rgba(16, 185, 129, 0.25);
+      --btn-green: #22c55e;
+      --btn-red: #ef4444;
+      --btn-yellow: #f59e0b;
+      --border-color: #1e293b;
+      --key-bg: #16202a;
     }
 
     * { box-sizing: border-box; }
@@ -35,14 +34,14 @@
 
     .tracker-container {
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       display: flex;
       flex-direction: column;
-      height: 98vh; /* Lock container to viewport height */
+      height: 98vh;
       overflow: hidden;
     }
 
-    /* 🔒 FIXED TOP KEYPAD SECTION */
+    /* 🔒 FIXED ORIGINAL V1.69.1 KEYPAD HEADER */
     .fixed-keypad-card {
       background-color: var(--bg-color);
       padding-bottom: 8px;
@@ -50,36 +49,122 @@
       flex-shrink: 0;
     }
 
-    .keypad-grid {
+    .header-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+    }
+
+    .app-title {
+      color: #22c55e;
+      font-weight: 800;
+      font-size: 1.1em;
+      letter-spacing: 0.5px;
+    }
+
+    .version-tag {
+      color: var(--text-muted);
+      font-size: 0.8em;
+    }
+
+    /* TOP DISPLAY ROW */
+    .display-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
       margin-top: 4px;
     }
 
-    .zero-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px;
-      margin-bottom: 4px;
+    .display-box {
+      border-radius: 6px;
+      padding: 6px 4px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    .key {
-      padding: 10px 4px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
+    .box-red { background: #991b1b; color: white; }
+    .box-green { background: #15803d; color: white; font-size: 1.2em; font-weight: bold; }
+
+    .box-label {
+      font-size: 0.65em;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      opacity: 0.85;
+      text-transform: uppercase;
+    }
+
+    .box-value {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    /* ENTER / UNDO CONTROL ROW */
+    .control-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn-enter {
+      background: var(--btn-green);
+      color: white;
       font-weight: 900;
-      font-size: 0.9em;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    .btn-undo {
+      background: var(--btn-red);
+      color: white;
+      font-weight: 900;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    /* NUMERIC KEYPAD GRID */
+    .num-keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .num-key {
+      background: var(--key-bg);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1em;
+      padding: 10px 0;
+      border-radius: 6px;
       cursor: pointer;
       text-align: center;
-      user-select: none;
       touch-action: manipulation;
     }
-    .key:active { transform: translateY(1px); }
-    .key.red { background: var(--key-red); border-color: rgba(239, 68, 68, 0.5); }
-    .key.black { background: var(--key-black); border-color: rgba(255, 255, 255, 0.15); }
-    .key.green { background: var(--key-green); border-color: rgba(16, 185, 129, 0.5); }
+
+    .num-key:active { background: #222f3e; }
+    .num-key.clear { color: var(--btn-yellow); }
+
+    .last-spin-bar {
+      background: #060a0e;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      margin-top: 6px;
+      padding: 6px 8px;
+      font-size: 0.75em;
+      color: var(--text-muted);
+      font-weight: bold;
+    }
 
     /* 📜 MIDDLE SCROLLABLE CONTENT CONTAINER */
     .scrollable-content-container {
@@ -92,9 +177,7 @@
       gap: 10px;
     }
 
-    .scrollable-content-container::-webkit-scrollbar {
-      width: 5px;
-    }
+    .scrollable-content-container::-webkit-scrollbar { width: 5px; }
     .scrollable-content-container::-webkit-scrollbar-thumb {
       background: var(--accent-green);
       border-radius: 3px;
@@ -109,7 +192,7 @@
 
     /* 10-2-WIN & METRICS */
     .ten-two-win-tracker {
-      background: var(--card-bg);
+      background: var(--card-inner);
       padding: 8px 10px;
       border-radius: 6px;
       border: 1px solid var(--accent-green);
@@ -125,12 +208,12 @@
     }
 
     .stat-box {
-      background: var(--card-inner);
+      background: var(--bg-color);
       padding: 5px 2px;
       border-radius: 4px;
       border: 1px solid var(--border-color);
     }
-    .stat-box span { color: var(--text-muted); display: block; font-size: 0.72em; }
+    .stat-box span { color: var(--text-muted); display: block; font-size: 0.7em; }
 
     /* ACTIVE PLAY & DRIFT WARNING */
     .active-play-box {
@@ -142,8 +225,8 @@
 
     .drift-warning {
       background: #3a0d0d;
-      color: var(--red-loss);
-      border: 1px solid var(--red-loss);
+      color: var(--btn-red);
+      border: 1px solid var(--btn-red);
       padding: 6px;
       border-radius: 4px;
       text-align: center;
@@ -157,7 +240,7 @@
 
     /* ⚙️ BOTTOM SESSION CONTROLS */
     .session-setup-controls {
-      background: #181e23;
+      background: #0f172a;
       padding: 10px;
       border-radius: 8px;
       border-top: 2px solid var(--border-color);
@@ -173,66 +256,72 @@
       padding: 8px;
       font-weight: bold;
     }
-    .btn-danger { background: var(--red-loss); color: white; }
+    .btn-danger { background: var(--btn-red); color: white; }
     .btn-primary { background: #007aff; color: white; }
-    .btn-play { background: var(--green-win); color: black; padding: 2px 8px; font-size: 0.8em; }
+    .btn-play { background: var(--btn-green); color: black; padding: 2px 8px; font-size: 0.8em; }
   </style>
 </head>
 <body>
 
 <div class="tracker-container">
 
+  <!-- 🔒 FIXED KEYPAD & CONTROL HEADER (ORIGINAL V1.69.1 LOOK) -->
   <div class="fixed-keypad-card">
-    <div class="zero-row">
-      <button class="key green" onclick="addSpin('0')">0</button>
-      <button class="key green" onclick="addSpin('00')">00</button>
+    <div class="header-title-bar">
+      <span class="app-title">ROULETTE TRACKER</span>
+      <span class="version-tag">v1.69.2</span>
     </div>
-    
-    <div class="keypad-grid">
-      <button class="key red" onclick="addSpin('1')">1</button>
-      <button class="key black" onclick="addSpin('2')">2</button>
-      <button class="key red" onclick="addSpin('3')">3</button>
-      <button class="key black" onclick="addSpin('4')">4</button>
-      <button class="key red" onclick="addSpin('5')">5</button>
-      <button class="key black" onclick="addSpin('6')">6</button>
-      <button class="key red" onclick="addSpin('7')">7</button>
-      <button class="key black" onclick="addSpin('8')">8</button>
-      <button class="key red" onclick="addSpin('9')">9</button>
-      <button class="key black" onclick="addSpin('10')">10</button>
-      <button class="key black" onclick="addSpin('11')">11</button>
-      <button class="key red" onclick="addSpin('12')">12</button>
-      <button class="key black" onclick="addSpin('13')">13</button>
-      <button class="key red" onclick="addSpin('14')">14</button>
-      <button class="key black" onclick="addSpin('15')">15</button>
-      <button class="key red" onclick="addSpin('16')">16</button>
-      <button class="key black" onclick="addSpin('17')">17</button>
-      <button class="key red" onclick="addSpin('18')">18</button>
-      <button class="key red" onclick="addSpin('19')">19</button>
-      <button class="key black" onclick="addSpin('20')">20</button>
-      <button class="key red" onclick="addSpin('21')">21</button>
-      <button class="key black" onclick="addSpin('22')">22</button>
-      <button class="key red" onclick="addSpin('23')">23</button>
-      <button class="key black" onclick="addSpin('24')">24</button>
-      <button class="key red" onclick="addSpin('25')">25</button>
-      <button class="key black" onclick="addSpin('26')">26</button>
-      <button class="key red" onclick="addSpin('27')">27</button>
-      <button class="key black" onclick="addSpin('28')">28</button>
-      <button class="key black" onclick="addSpin('29')">29</button>
-      <button class="key red" onclick="addSpin('30')">30</button>
-      <button class="key black" onclick="addSpin('31')">31</button>
-      <button class="key red" onclick="addSpin('32')">32</button>
-      <button class="key black" onclick="addSpin('33')">33</button>
-      <button class="key red" onclick="addSpin('34')">34</button>
-      <button class="key black" onclick="addSpin('35')">35</button>
-      <button class="key red" onclick="addSpin('36')">36</button>
+
+    <!-- Displays: Total Spins | Selected Num | Session High -->
+    <div class="display-row">
+      <div class="display-box box-red">
+        <span class="box-label">TOTAL SPINS</span>
+        <span id="display-total-spins" class="box-value">0</span>
+      </div>
+      <div class="display-box box-green">
+        <span id="display-current-input">--</span>
+      </div>
+      <div class="display-box box-red">
+        <span class="box-label">SESSION HIGH</span>
+        <span id="display-session-high" class="box-value" style="color: #f59e0b;">$ 0</span>
+      </div>
+    </div>
+
+    <!-- Action Buttons: ENTER & UNDO -->
+    <div class="control-row">
+      <button class="btn-enter" onclick="pressEnter()">ENTER</button>
+      <button class="btn-undo" onclick="pressUndo()">UNDO</button>
+    </div>
+
+    <!-- 3x4 Number Keypad -->
+    <div class="num-keypad-grid">
+      <button class="num-key" onclick="pressKey('1')">1</button>
+      <button class="num-key" onclick="pressKey('2')">2</button>
+      <button class="num-key" onclick="pressKey('3')">3</button>
+      <button class="num-key" onclick="pressKey('4')">4</button>
+      <button class="num-key" onclick="pressKey('5')">5</button>
+      <button class="num-key" onclick="pressKey('6')">6</button>
+      <button class="num-key" onclick="pressKey('7')">7</button>
+      <button class="num-key" onclick="pressKey('8')">8</button>
+      <button class="num-key" onclick="pressKey('9')">9</button>
+      <button class="num-key" onclick="pressKey('0')">0</button>
+      <button class="num-key" onclick="pressKey('00')">00</button>
+      <button class="num-key clear" onclick="pressClear()">C</button>
+    </div>
+
+    <!-- Last Spin Log Bar -->
+    <div class="last-spin-bar">
+      LAST: <span id="last-spins-history" style="color:#fff;">-</span>
     </div>
   </div>
 
+  <!-- 📜 MAIN SCROLLABLE CONTENT AREA (EVERYTHING BELOW KEYPAD) -->
   <div class="scrollable-content-container">
 
+    <!-- 🎯 10-2-WIN MONITOR & CONDENSED STATS -->
     <div class="tracker-card">
       <div class="ten-two-win-tracker">
-        <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--green-win);">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--btn-green);">
           <span>🎯 10-2-WIN MONITOR</span>
           <span id="t2w-status-badge" style="font-size: 0.8em; padding: 2px 6px; background: #333; border-radius: 4px;">MONITORING</span>
         </div>
@@ -244,14 +333,15 @@
         </div>
       </div>
 
+      <!-- Condensed Session Stats Grid -->
       <div class="condensed-stats-grid">
         <div class="stat-box">
           <span>PnL</span>
-          <b id="stat-pnl" style="color: var(--green-win);">+$0</b>
+          <b id="stat-pnl" style="color: var(--btn-green);">+$0</b>
         </div>
         <div class="stat-box">
           <span>High / Low</span>
-          <span id="stat-hl"><b style="color: var(--green-win);">+$0</b> / <b style="color: var(--red-loss);">-$0</b></span>
+          <span id="stat-hl"><b style="color: var(--btn-green);">+$0</b> / <b style="color: var(--btn-red);">-$0</b></span>
         </div>
         <div class="stat-box">
           <span>Spins / Bets</span>
@@ -264,6 +354,7 @@
       </div>
     </div>
 
+    <!-- Active Play Dashboard (Locked Strategy View) -->
     <div id="active-play-container" class="active-play-box" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span style="color: #ff9500; font-size: 0.85em; font-weight: bold;">🔒 CURRENTLY PLAYING</span>
@@ -272,18 +363,21 @@
       <div id="active-strategy-name" style="font-size: 1.1em; font-weight: bold; margin-top: 4px;">None</div>
       <div id="active-table-state" style="font-size: 0.8em; color: var(--text-muted);">State Locked: -</div>
       
+      <!-- Drift Alarm Alert -->
       <div id="drift-alert" class="drift-warning" style="display: none;">
         ⚠️ ABORT: TABLE DRIFT - REPEAT HEAVY
       </div>
     </div>
 
+    <!-- Strategy Panel / Top 5 Plays -->
     <div class="tracker-card">
       <h3 id="strategy-panel-title" style="margin: 0 0 8px 0; font-size: 0.9em; color: var(--text-muted);">Top 5 Strategies Right Now</h3>
       <div id="top-strategies-list" style="display: flex; flex-direction: column; gap: 6px;">
-        <div style="font-size: 0.85em; color: var(--text-muted); font-style: italic;">Log more spins using the keypad to generate strategy recommendations...</div>
+        <div style="font-size: 0.85em; color: var(--text-muted); font-style: italic;">Log spins using keypad & tap ENTER to calculate recommendations...</div>
       </div>
     </div>
 
+    <!-- Live Imbalance Breakdown -->
     <div class="tracker-card" style="font-size: 0.85em;">
       <h4 style="margin: 0 0 6px 0; color: var(--text-muted);">Live Table Imbalance</h4>
       <div style="display: flex; justify-content: space-between;">
@@ -296,17 +390,18 @@
       </div>
     </div>
 
+    <!-- ⚙️ VERY BOTTOM: SESSION SETUP AND CONTROLS -->
     <div class="session-setup-controls">
       <h4 style="margin: 0 0 8px 0; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase;">Session Setup & Controls</h4>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
         <div class="form-group">
           <label style="font-size: 0.75em; color: #aaa;">Casino Name</label>
-          <input type="text" id="casino-input" value="Live Session" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px; font-size: 0.85em;">
+          <input type="text" id="casino-input" value="RM smokeshow" style="background: #060a0e; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px; font-size: 0.85em;">
         </div>
         <div class="form-group">
           <label style="font-size: 0.75em; color: #aaa;">Base Unit ($)</label>
-          <select id="base-chip-select" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px; font-size: 0.85em;">
+          <select id="base-chip-select" style="background: #060a0e; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px; font-size: 0.85em;">
             <option value="1">$1 Unit</option>
             <option value="5" selected>$5 Unit</option>
             <option value="10">$10 Unit</option>
@@ -315,7 +410,7 @@
       </div>
 
       <div style="display: flex; gap: 8px;">
-        <button id="btn-reset-session" class="btn btn-danger" style="flex: 1; font-size: 0.8em;" onclick="resetSession()">Reset Session</button>
+        <button id="btn-reset-session" class="btn btn-danger" style="flex: 1; font-size: 0.8em;" onclick="resetSession()">Clear / Reset</button>
         <button id="btn-export-csv" class="btn btn-primary" style="flex: 1; font-size: 0.8em;" onclick="copyCSV()">Copy CSV Data</button>
       </div>
     </div>
@@ -324,32 +419,58 @@
 </div>
 
 <script>
-  // APP STATE & TRACKING VARS
+  // STATE MANAGEMENT
   let spins = [];
+  let currentInput = "";
+  let sessionHigh = 0;
   let isLocked = false;
   let lockedStrategy = null;
-  let lockedState = "";
 
-  // 10-2-WIN Dry Counters
+  // 10-2-WIN Counters
   let dryG1 = 0, dryG2 = 0, dryG3 = 0, dryG4 = 0;
 
-  function addSpin(num) {
-    spins.push(num);
-    update102Win(num);
+  // KEYPAD ACTIONS
+  function pressKey(val) {
+    if (currentInput === "--") currentInput = "";
+    if (val === '00' && currentInput === '') currentInput = '00';
+    else if (currentInput.length < 2) currentInput += val;
+    
+    document.getElementById('display-current-input').innerText = currentInput;
+  }
+
+  function pressClear() {
+    currentInput = "--";
+    document.getElementById('display-current-input').innerText = "--";
+  }
+
+  function pressEnter() {
+    if (currentInput === "" || currentInput === "--") return;
+    
+    spins.push(currentInput);
+    update102Win(currentInput);
     checkDrift();
+    
+    currentInput = "--";
+    document.getElementById('display-current-input').innerText = "--";
     render();
   }
 
-  function update102Win(num) {
-    if (num === -1) {
-      dryG1 = dryG2 = dryG3 = dryG4 = 0;
-    } else {
-      const n = parseInt(num, 10);
-      if (n >= 1 && n <= 6) dryG1 = 0; else dryG1++;
-      if (n >= 7 && n <= 12) dryG2 = 0; else dryG2++;
-      if (n >= 13 && n <= 18) dryG3 = 0; else dryG3++;
-      if (n >= 19 && n <= 24) dryG4 = 0; else dryG4++;
-    }
+  function pressUndo() {
+    if (spins.length === 0) return;
+    spins.pop();
+    recalculate102Win();
+    render();
+  }
+
+  // 10-2-WIN LOGIC
+  function update102Win(numStr) {
+    const num = parseInt(numStr, 10);
+    if (isNaN(num)) return;
+
+    if (num >= 1 && num <= 6) dryG1 = 0; else dryG1++;
+    if (num >= 7 && num <= 12) dryG2 = 0; else dryG2++;
+    if (num >= 13 && num <= 18) dryG3 = 0; else dryG3++;
+    if (num >= 19 && num <= 24) dryG4 = 0; else dryG4++;
 
     document.getElementById('g1-dry').innerText = dryG1;
     document.getElementById('g2-dry').innerText = dryG2;
@@ -357,13 +478,17 @@
     document.getElementById('g4-dry').innerText = dryG4;
   }
 
+  function recalculate102Win() {
+    dryG1 = dryG2 = dryG3 = dryG4 = 0;
+    spins.forEach(s => update102Win(s));
+  }
+
+  // STRATEGY LOCKING
   function lockStrategy(name) {
     isLocked = true;
     lockedStrategy = name;
-    lockedState = "STRUCTURED";
     document.getElementById('active-play-container').style.display = 'block';
     document.getElementById('active-strategy-name').innerText = name;
-    document.getElementById('active-table-state').innerText = "State Locked: " + lockedState;
     render();
   }
 
@@ -384,9 +509,12 @@
     }
   }
 
+  // RENDER APP STATE
   function render() {
+    document.getElementById('display-total-spins').innerText = spins.length;
     document.getElementById('stat-spins').innerText = `${spins.length} / ${spins.length}`;
-    
+    document.getElementById('last-spins-history').innerText = spins.slice(-6).reverse().join(', ') || '-';
+
     const topList = document.getElementById('top-strategies-list');
     if (isLocked) {
       topList.innerHTML = `<div style="font-size: 0.8em; color: #ff9500;">Strategy actively locked. Complete or abort session to re-evaluate options.</div>`;
@@ -402,7 +530,7 @@
     ];
 
     topList.innerHTML = mockStrategies.map(s => `
-      <div style="display: flex; justify-content: space-between; align-items: center; background: #242c33; padding: 6px; border-radius: 4px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #1a2530; padding: 6px; border-radius: 4px;">
         <span style="font-size: 0.85em; font-weight: bold;">${s}</span>
         <button class="btn btn-play" onclick="lockStrategy('${s}')">PLAY</button>
       </div>
@@ -412,8 +540,10 @@
   function resetSession() {
     if (confirm("Reset all tracked session data?")) {
       spins = [];
+      currentInput = "--";
+      pressClear();
       endStrategy();
-      update102Win(-1);
+      recalculate102Win();
       render();
     }
   }
