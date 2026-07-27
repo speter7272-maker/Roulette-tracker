@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Tracker - v1.67.00</title>
+  <title>Roulette Tracker - v1.68.00</title>
   <style>
     /* BASIC STYLING & THEME */
     :root {
@@ -16,14 +16,19 @@
       --green-win: #4cd964;
       --red-loss: #ff3b30;
       --border-color: #2a353d;
+      --key-red: rgba(239, 68, 68, 0.2);
+      --key-black: rgba(30, 41, 59, 0.8);
+      --key-green: rgba(16, 185, 129, 0.25);
     }
+
+    * { box-sizing: border-box; }
 
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 12px;
+      padding: 8px;
       display: flex;
       justify-content: center;
     }
@@ -33,57 +38,58 @@
       max-width: 500px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      height: 98vh; /* Lock container to viewport height */
+      overflow: hidden;
     }
 
-    /* LOCKED TOP METRICS PANEL */
-    .top-metrics-card {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    /* 🔒 FIXED TOP KEYPAD SECTION */
+    .fixed-keypad-card {
       background-color: var(--bg-color);
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border-color);
+      flex-shrink: 0;
     }
 
-    .ten-two-win-tracker {
-      background: var(--card-bg);
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      border: 1px solid var(--accent-green);
-    }
-
-    .condensed-stats-grid {
+    .keypad-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      font-size: 0.8em;
-      text-align: center;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 4px;
     }
 
-    .stat-box {
-      background: var(--card-inner);
-      padding: 6px 4px;
-      border-radius: 4px;
+    .zero-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .key {
+      padding: 10px 4px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-weight: 900;
+      font-size: 0.9em;
+      cursor: pointer;
+      text-align: center;
+      user-select: none;
+      touch-action: manipulation;
     }
+    .key:active { transform: translateY(1px); }
+    .key.red { background: var(--key-red); border-color: rgba(239, 68, 68, 0.5); }
+    .key.black { background: var(--key-black); border-color: rgba(255, 255, 255, 0.15); }
+    .key.green { background: var(--key-green); border-color: rgba(16, 185, 129, 0.5); }
 
-    .stat-box span {
-      color: var(--text-muted);
-      display: block;
-      font-size: 0.75em;
-      margin-bottom: 2px;
-    }
-
-    /* MIDDLE SCROLLABLE SECTION */
+    /* 📜 MIDDLE SCROLLABLE CONTENT CONTAINER */
     .scrollable-content-container {
-      max-height: 60vh;
+      flex-grow: 1;
       overflow-y: auto;
+      padding-top: 8px;
       padding-right: 4px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .scrollable-content-container::-webkit-scrollbar {
@@ -96,10 +102,35 @@
 
     .tracker-card {
       background: var(--card-bg);
-      padding: 12px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
     }
+
+    /* 10-2-WIN & METRICS */
+    .ten-two-win-tracker {
+      background: var(--card-bg);
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-green);
+    }
+
+    .condensed-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      font-size: 0.78em;
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .stat-box {
+      background: var(--card-inner);
+      padding: 5px 2px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+    .stat-box span { color: var(--text-muted); display: block; font-size: 0.72em; }
 
     /* ACTIVE PLAY & DRIFT WARNING */
     .active-play-box {
@@ -107,43 +138,33 @@
       border: 2px solid #ff9500;
       border-radius: 6px;
       padding: 10px;
-      margin-bottom: 8px;
     }
 
     .drift-warning {
       background: #3a0d0d;
       color: var(--red-loss);
       border: 1px solid var(--red-loss);
-      padding: 8px;
+      padding: 6px;
       border-radius: 4px;
       text-align: center;
       font-weight: bold;
       animation: blink 1s infinite;
-      margin-top: 8px;
+      margin-top: 6px;
+      font-size: 0.8em;
     }
 
-    @keyframes blink {
-      50% { opacity: 0.4; }
-    }
+    @keyframes blink { 50% { opacity: 0.4; } }
 
-    /* BOTTOM SESSION CONTROLS */
+    /* ⚙️ BOTTOM SESSION CONTROLS */
     .session-setup-controls {
       background: #181e23;
-      padding: 12px;
+      padding: 10px;
       border-radius: 8px;
       border-top: 2px solid var(--border-color);
-      margin-top: 8px;
+      margin-top: 4px;
     }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    input, select, button {
-      font-family: inherit;
-    }
+    .form-group { display: flex; flex-direction: column; gap: 2px; }
 
     .btn {
       cursor: pointer;
@@ -161,41 +182,87 @@
 
 <div class="tracker-container">
 
-  <div class="top-metrics-card">
-    <div class="ten-two-win-tracker">
-      <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--green-win);">
-        <span>🎯 10-2-WIN MONITOR</span>
-        <span id="t2w-status-badge" style="font-size: 0.8em; padding: 2px 6px; background: #333; border-radius: 4px;">MONITORING</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.85em; color: var(--text-main);">
-        <div>G1 (1-6): <b id="g1-dry">0</b> spins</div>
-        <div>G2 (7-12): <b id="g2-dry">0</b> spins</div>
-        <div>G3 (13-18): <b id="g3-dry">0</b> spins</div>
-        <div>G4 (19-24): <b id="g4-dry">0</b> spins</div>
-      </div>
+  <div class="fixed-keypad-card">
+    <div class="zero-row">
+      <button class="key green" onclick="addSpin('0')">0</button>
+      <button class="key green" onclick="addSpin('00')">00</button>
     </div>
-
-    <div class="condensed-stats-grid">
-      <div class="stat-box">
-        <span>PnL</span>
-        <b id="stat-pnl" style="color: var(--green-win);">+$0</b>
-      </div>
-      <div class="stat-box">
-        <span>High / Low</span>
-        <span id="stat-hl"><b style="color: var(--green-win);">+$0</b> / <b style="color: var(--red-loss);">-$0</b></span>
-      </div>
-      <div class="stat-box">
-        <span>Spins / Bets</span>
-        <b id="stat-spins">0 / 0</b>
-      </div>
-      <div class="stat-box">
-        <span>Avg $/Spin</span>
-        <b id="stat-avg">$0.00</b>
-      </div>
+    
+    <div class="keypad-grid">
+      <button class="key red" onclick="addSpin('1')">1</button>
+      <button class="key black" onclick="addSpin('2')">2</button>
+      <button class="key red" onclick="addSpin('3')">3</button>
+      <button class="key black" onclick="addSpin('4')">4</button>
+      <button class="key red" onclick="addSpin('5')">5</button>
+      <button class="key black" onclick="addSpin('6')">6</button>
+      <button class="key red" onclick="addSpin('7')">7</button>
+      <button class="key black" onclick="addSpin('8')">8</button>
+      <button class="key red" onclick="addSpin('9')">9</button>
+      <button class="key black" onclick="addSpin('10')">10</button>
+      <button class="key black" onclick="addSpin('11')">11</button>
+      <button class="key red" onclick="addSpin('12')">12</button>
+      <button class="key black" onclick="addSpin('13')">13</button>
+      <button class="key red" onclick="addSpin('14')">14</button>
+      <button class="key black" onclick="addSpin('15')">15</button>
+      <button class="key red" onclick="addSpin('16')">16</button>
+      <button class="key black" onclick="addSpin('17')">17</button>
+      <button class="key red" onclick="addSpin('18')">18</button>
+      <button class="key red" onclick="addSpin('19')">19</button>
+      <button class="key black" onclick="addSpin('20')">20</button>
+      <button class="key red" onclick="addSpin('21')">21</button>
+      <button class="key black" onclick="addSpin('22')">22</button>
+      <button class="key red" onclick="addSpin('23')">23</button>
+      <button class="key black" onclick="addSpin('24')">24</button>
+      <button class="key red" onclick="addSpin('25')">25</button>
+      <button class="key black" onclick="addSpin('26')">26</button>
+      <button class="key red" onclick="addSpin('27')">27</button>
+      <button class="key black" onclick="addSpin('28')">28</button>
+      <button class="key black" onclick="addSpin('29')">29</button>
+      <button class="key red" onclick="addSpin('30')">30</button>
+      <button class="key black" onclick="addSpin('31')">31</button>
+      <button class="key red" onclick="addSpin('32')">32</button>
+      <button class="key black" onclick="addSpin('33')">33</button>
+      <button class="key red" onclick="addSpin('34')">34</button>
+      <button class="key black" onclick="addSpin('35')">35</button>
+      <button class="key red" onclick="addSpin('36')">36</button>
     </div>
   </div>
 
   <div class="scrollable-content-container">
+
+    <div class="tracker-card">
+      <div class="ten-two-win-tracker">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--green-win);">
+          <span>🎯 10-2-WIN MONITOR</span>
+          <span id="t2w-status-badge" style="font-size: 0.8em; padding: 2px 6px; background: #333; border-radius: 4px;">MONITORING</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.85em; color: var(--text-main);">
+          <div>G1 (1-6): <b id="g1-dry">0</b></div>
+          <div>G2 (7-12): <b id="g2-dry">0</b></div>
+          <div>G3 (13-18): <b id="g3-dry">0</b></div>
+          <div>G4 (19-24): <b id="g4-dry">0</b></div>
+        </div>
+      </div>
+
+      <div class="condensed-stats-grid">
+        <div class="stat-box">
+          <span>PnL</span>
+          <b id="stat-pnl" style="color: var(--green-win);">+$0</b>
+        </div>
+        <div class="stat-box">
+          <span>High / Low</span>
+          <span id="stat-hl"><b style="color: var(--green-win);">+$0</b> / <b style="color: var(--red-loss);">-$0</b></span>
+        </div>
+        <div class="stat-box">
+          <span>Spins / Bets</span>
+          <b id="stat-spins">0 / 0</b>
+        </div>
+        <div class="stat-box">
+          <span>Avg $/Spin</span>
+          <b id="stat-avg">$0.00</b>
+        </div>
+      </div>
+    </div>
 
     <div id="active-play-container" class="active-play-box" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -211,9 +278,9 @@
     </div>
 
     <div class="tracker-card">
-      <h3 id="strategy-panel-title" style="margin: 0 0 8px 0; font-size: 0.95em; color: var(--text-muted);">Top 5 Strategies Right Now</h3>
+      <h3 id="strategy-panel-title" style="margin: 0 0 8px 0; font-size: 0.9em; color: var(--text-muted);">Top 5 Strategies Right Now</h3>
       <div id="top-strategies-list" style="display: flex; flex-direction: column; gap: 6px;">
-        <div style="font-size: 0.85em; color: var(--text-muted); italic;">Log more spins to generate strategy recommendations...</div>
+        <div style="font-size: 0.85em; color: var(--text-muted); font-style: italic;">Log more spins using the keypad to generate strategy recommendations...</div>
       </div>
     </div>
 
@@ -230,16 +297,16 @@
     </div>
 
     <div class="session-setup-controls">
-      <h4 style="margin: 0 0 10px 0; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase;">Session Setup & Controls</h4>
+      <h4 style="margin: 0 0 8px 0; font-size: 0.85em; color: var(--text-muted); text-transform: uppercase;">Session Setup & Controls</h4>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
         <div class="form-group">
           <label style="font-size: 0.75em; color: #aaa;">Casino Name</label>
-          <input type="text" id="casino-input" value="Live Dealer Session" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px;">
+          <input type="text" id="casino-input" value="Live Session" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px; font-size: 0.85em;">
         </div>
         <div class="form-group">
           <label style="font-size: 0.75em; color: #aaa;">Base Unit ($)</label>
-          <select id="base-chip-select" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px;">
+          <select id="base-chip-select" style="background: #0f1418; border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px; font-size: 0.85em;">
             <option value="1">$1 Unit</option>
             <option value="5" selected>$5 Unit</option>
             <option value="10">$10 Unit</option>
@@ -274,11 +341,15 @@
   }
 
   function update102Win(num) {
-    // 10-2-Win Group Definitions
-    if (num >= 1 && num <= 6) dryG1 = 0; else dryG1++;
-    if (num >= 7 && num <= 12) dryG2 = 0; else dryG2++;
-    if (num >= 13 && num <= 18) dryG3 = 0; else dryG3++;
-    if (num >= 19 && num <= 24) dryG4 = 0; else dryG4++;
+    if (num === -1) {
+      dryG1 = dryG2 = dryG3 = dryG4 = 0;
+    } else {
+      const n = parseInt(num, 10);
+      if (n >= 1 && n <= 6) dryG1 = 0; else dryG1++;
+      if (n >= 7 && n <= 12) dryG2 = 0; else dryG2++;
+      if (n >= 13 && n <= 18) dryG3 = 0; else dryG3++;
+      if (n >= 19 && n <= 24) dryG4 = 0; else dryG4++;
+    }
 
     document.getElementById('g1-dry').innerText = dryG1;
     document.getElementById('g2-dry').innerText = dryG2;
@@ -289,7 +360,7 @@
   function lockStrategy(name) {
     isLocked = true;
     lockedStrategy = name;
-    lockedState = "STRUCTURED"; // Calculated from active window
+    lockedState = "STRUCTURED";
     document.getElementById('active-play-container').style.display = 'block';
     document.getElementById('active-strategy-name').innerText = name;
     document.getElementById('active-table-state').innerText = "State Locked: " + lockedState;
@@ -307,7 +378,6 @@
   function checkDrift() {
     if (!isLocked || spins.length < 5) return;
     const last5 = spins.slice(-5);
-    // Micro-streak detection (repeats)
     const hasRepeats = new Set(last5).size <= 3; 
     if (hasRepeats) {
       document.getElementById('drift-alert').style.display = 'block';
@@ -317,14 +387,12 @@
   function render() {
     document.getElementById('stat-spins').innerText = `${spins.length} / ${spins.length}`;
     
-    // Hide top 5 panel if locked
     const topList = document.getElementById('top-strategies-list');
     if (isLocked) {
       topList.innerHTML = `<div style="font-size: 0.8em; color: #ff9500;">Strategy actively locked. Complete or abort session to re-evaluate options.</div>`;
       return;
     }
 
-    // Mock strategy evaluation (top 5)
     const mockStrategies = [
       "Junko's Ladder",
       "10-2-Win Trigger",
@@ -344,9 +412,9 @@
   function resetSession() {
     if (confirm("Reset all tracked session data?")) {
       spins = [];
-      dryG1 = dryG2 = dryG3 = dryG4 = 0;
       endStrategy();
       update102Win(-1);
+      render();
     }
   }
 
