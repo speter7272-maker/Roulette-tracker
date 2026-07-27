@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Tracker - v1.69.4</title>
+  <title>Roulette Tracker - v1.70.0</title>
   <style>
     /* BASIC STYLING & THEME */
     :root {
@@ -58,7 +58,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
+      padding: 2px 0;
     }
 
     .app-title {
@@ -136,7 +136,7 @@
       cursor: pointer;
     }
 
-    /* NUMERIC KEYPAD GRID (ALL BLACK DIGIT KEYS) */
+    /* NUMERIC KEYPAD GRID */
     .num-keypad-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -222,12 +222,63 @@
       border: 1px solid var(--border-color);
     }
 
-    /* 10-2-WIN & METRICS */
-    .ten-two-win-tracker {
+    /* 🎯 JUNKO QUADRANTS MONITOR */
+    .junko-quad-tracker {
       background: var(--card-inner);
       padding: 8px 10px;
       border-radius: 6px;
       border: 1px solid var(--accent-green);
+    }
+
+    .quad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    .quad-box {
+      background: #0d151c;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 2px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .quad-box:hover { background: #162430; }
+    .quad-box.active-selected { border-color: #38bdf8; background: #1a3042; }
+
+    .quad-title {
+      font-size: 0.85em;
+      font-weight: 800;
+      color: #e2e8f0;
+    }
+
+    .quad-stats {
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+
+    /* AGE COLOR ALERTS */
+    .age-normal { color: var(--text-muted); }
+    .age-watch { color: var(--btn-yellow); font-weight: 900; }  /* Age 5 to 8 */
+    .age-prime { color: var(--btn-green); font-weight: 900; }   /* Age > 8 */
+
+    /* QUADRANT NUMBERS EXPANSION DISPLAY */
+    .quad-numbers-panel {
+      background: #090e13;
+      border: 1px dashed #38bdf8;
+      border-radius: 6px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 0.8em;
+      color: #7dd3fc;
+      line-height: 1.4;
+      display: none;
     }
 
     .condensed-stats-grid {
@@ -236,7 +287,7 @@
       gap: 4px;
       font-size: 0.78em;
       text-align: center;
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
     .stat-box {
@@ -300,7 +351,7 @@
   <div class="fixed-keypad-card">
     <div class="header-title-bar">
       <span class="app-title">ROULETTE TRACKER</span>
-      <span class="version-tag">v1.69.4</span>
+      <span class="version-tag">v1.70.0</span>
     </div>
 
     <div class="display-row">
@@ -346,17 +397,32 @@
   <div class="scrollable-content-container">
 
     <div class="tracker-card">
-      <div class="ten-two-win-tracker">
-        <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--btn-green);">
-          <span>🎯 10-2-WIN MONITOR</span>
-          <span id="t2w-status-badge" style="font-size: 0.8em; padding: 2px 6px; background: #333; border-radius: 4px;">MONITORING</span>
+      <div class="junko-quad-tracker">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+          <span style="color: var(--btn-green); font-size: 0.85em;">🧩 JUNKO QUADRANTS (Window: Last 15)</span>
+          <span style="font-size: 0.7em; color: var(--text-muted);">Tap box for numbers</span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.85em; color: var(--text-main);">
-          <div>G1 (1-6): <b id="g1-dry">0</b></div>
-          <div>G2 (7-12): <b id="g2-dry">0</b></div>
-          <div>G3 (13-18): <b id="g3-dry">0</b></div>
-          <div>G4 (19-24): <b id="g4-dry">0</b></div>
+
+        <div class="quad-grid">
+          <div id="box-gn" class="quad-box" onclick="toggleQuadNumbers('GN')">
+            <div class="quad-title">GN</div>
+            <div class="quad-stats"><span id="gn-count">0</span> (<span id="gn-age-badge" class="age-normal">0+</span>)</div>
+          </div>
+          <div id="box-ho" class="quad-box" onclick="toggleQuadNumbers('HO')">
+            <div class="quad-title">HO</div>
+            <div class="quad-stats"><span id="ho-count">0</span> (<span id="ho-age-badge" class="age-normal">0+</span>)</div>
+          </div>
+          <div id="box-lo" class="quad-box" onclick="toggleQuadNumbers('LO')">
+            <div class="quad-title">LO</div>
+            <div class="quad-stats"><span id="lo-count">0</span> (<span id="lo-age-badge" class="age-normal">0+</span>)</div>
+          </div>
+          <div id="box-m" class="quad-box" onclick="toggleQuadNumbers('M')">
+            <div class="quad-title">M</div>
+            <div class="quad-stats"><span id="m-count">0</span> (<span id="m-age-badge" class="age-normal">0+</span>)</div>
+          </div>
         </div>
+
+        <div id="quad-numbers-panel" class="quad-numbers-panel"></div>
       </div>
 
       <div class="condensed-stats-grid">
@@ -443,6 +509,14 @@
   const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
   const GREEN_NUMS = ["0","00"];
 
+  // JUNKO QUADRANTS DEFINITIONS
+  const JUNKO_QUADS = {
+    GN: ["00","0","1","2","9","10","13","14","27","28"],
+    HO: ["23","24","25","26","29","30","33","34","35","36"],
+    LO: ["3","4","8","11","12","15","16","22","23","24"],
+    M:  ["5","6","7","17","18","19","20","21","31","32"]
+  };
+
   function getNumColorClass(numStr) {
     if (GREEN_NUMS.includes(numStr)) return "green";
     if (RED_NUMS.includes(numStr)) return "red";
@@ -455,9 +529,7 @@
   let sessionHigh = 0;
   let isLocked = false;
   let lockedStrategy = null;
-
-  // 10-2-WIN Counters
-  let dryG1 = 0, dryG2 = 0, dryG3 = 0, dryG4 = 0;
+  let selectedQuadView = null; // Track clicked quadrant numbers
 
   // KEYPAD ACTIONS
   function pressKey(val) {
@@ -477,7 +549,6 @@
     if (currentInput === "" || currentInput === "--") return;
     
     spins.push(currentInput);
-    update102Win(currentInput);
     checkDrift();
     
     currentInput = "--";
@@ -488,29 +559,78 @@
   function pressUndo() {
     if (spins.length === 0) return;
     spins.pop();
-    recalculate102Win();
     render();
   }
 
-  // 10-2-WIN LOGIC
-  function update102Win(numStr) {
-    const num = parseInt(numStr, 10);
-    if (isNaN(num)) return;
+  // JUNKO QUADRANTS CALCULATIONS
+  function updateJunkoQuadrants() {
+    const last15 = spins.slice(-15);
 
-    if (num >= 1 && num <= 6) dryG1 = 0; else dryG1++;
-    if (num >= 7 && num <= 12) dryG2 = 0; else dryG2++;
-    if (num >= 13 && num <= 18) dryG3 = 0; else dryG3++;
-    if (num >= 19 && num <= 24) dryG4 = 0; else dryG4++;
+    // Calculate window counts (last 15)
+    let counts = { GN: 0, HO: 0, LO: 0, M: 0 };
+    last15.forEach(s => {
+      for (const [key, numList] of Object.entries(JUNKO_QUADS)) {
+        if (numList.includes(s)) counts[key]++;
+      }
+    });
 
-    document.getElementById('g1-dry').innerText = dryG1;
-    document.getElementById('g2-dry').innerText = dryG2;
-    document.getElementById('g3-dry').innerText = dryG3;
-    document.getElementById('g4-dry').innerText = dryG4;
+    // Calculate Age (consecutive spins since last hit)
+    let age = { GN: 0, HO: 0, LO: 0, M: 0 };
+    for (const key of Object.keys(JUNKO_QUADS)) {
+      let drySpins = 0;
+      for (let i = spins.length - 1; i >= 0; i--) {
+        if (JUNKO_QUADS[key].includes(spins[i])) {
+          break;
+        }
+        drySpins++;
+      }
+      age[key] = drySpins;
+    }
+
+    // Update DOM Text & Alert Colors
+    ['GN', 'HO', 'LO', 'M'].forEach(q => {
+      const quadKey = q.toLowerCase();
+      document.getElementById(`${quadKey}-count`).innerText = counts[q];
+      
+      const ageEl = document.getElementById(`${quadKey}-age-badge`);
+      const quadAge = age[q];
+      ageEl.innerText = `${quadAge}+`;
+
+      // Apply Dynamic Alert Colors
+      ageEl.className = ""; // Reset
+      if (quadAge >= 9) {
+        ageEl.classList.add("age-prime"); // Green Prime Alert (> 8)
+      } else if (quadAge >= 5) {
+        ageEl.classList.add("age-watch"); // Yellow Watch Alert (5-8)
+      } else {
+        ageEl.classList.add("age-normal");
+      }
+    });
+
+    document.getElementById('junko-counts').innerText = `${counts.GN}/${counts.HO}/${counts.LO}/${counts.M}`;
   }
 
-  function recalculate102Win() {
-    dryG1 = dryG2 = dryG3 = dryG4 = 0;
-    spins.forEach(s => update102Win(s));
+  // INTERACTIVE NUMBERS TOGGLE FOR QUADRANTS
+  function toggleQuadNumbers(quadKey) {
+    const panel = document.getElementById('quad-numbers-panel');
+    
+    // Clear previously active border highlight
+    ['gn', 'ho', 'lo', 'm'].forEach(k => {
+      document.getElementById(`box-${k}`).classList.remove('active-selected');
+    });
+
+    if (selectedQuadView === quadKey) {
+      // Toggle Off
+      selectedQuadView = null;
+      panel.style.display = 'none';
+      panel.innerHTML = '';
+    } else {
+      // Toggle On
+      selectedQuadView = quadKey;
+      document.getElementById(`box-${quadKey.toLowerCase()}`).classList.add('active-selected');
+      panel.style.display = 'block';
+      panel.innerHTML = `<b>${quadKey} BET NUMBERS:</b><br/>${JUNKO_QUADS[quadKey].join(', ')}`;
+    }
   }
 
   // STRATEGY LOCKING
@@ -544,6 +664,9 @@
     document.getElementById('display-total-spins').innerText = spins.length;
     document.getElementById('stat-spins').innerText = `${spins.length} / ${spins.length}`;
     
+    // Update Junko Quadrants Metric Card
+    updateJunkoQuadrants();
+
     // Render Last 10 Spins with Circular Color Badges
     const historyContainer = document.getElementById('last-spins-history');
     if (spins.length === 0) {
@@ -582,9 +705,10 @@
     if (confirm("Reset all tracked session data?")) {
       spins = [];
       currentInput = "--";
+      selectedQuadView = null;
+      document.getElementById('quad-numbers-panel').style.display = 'none';
       pressClear();
       endStrategy();
-      recalculate102Win();
       render();
     }
   }
