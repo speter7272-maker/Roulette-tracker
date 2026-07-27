@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Tracker - v1.69.3</title>
+  <title>Roulette Tracker - v1.69.4</title>
   <style>
     /* BASIC STYLING & THEME */
     :root {
@@ -17,6 +17,7 @@
       --btn-red: #ef4444;
       --btn-yellow: #f59e0b;
       --border-color: #1e293b;
+      --key-bg: #16202a;
       
       /* ROULETTE COLOR SCHEME */
       --num-red: #991b1b;
@@ -135,7 +136,7 @@
       cursor: pointer;
     }
 
-    /* NUMERIC KEYPAD GRID WITH ROULETTE COLORS */
+    /* NUMERIC KEYPAD GRID (ALL BLACK DIGIT KEYS) */
     .num-keypad-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -144,6 +145,7 @@
     }
 
     .num-key {
+      background: var(--key-bg);
       border: 1px solid var(--border-color);
       color: #fff;
       font-weight: 700;
@@ -155,13 +157,10 @@
       touch-action: manipulation;
     }
 
-    .num-key:active { filter: brightness(1.2); }
-    .num-key.red-key { background: var(--num-red); border-color: #b91c1c; }
-    .num-key.black-key { background: var(--num-black); border-color: #334155; }
-    .num-key.green-key { background: var(--num-green); border-color: #16a34a; }
-    .num-key.clear { background: #1a2530; color: var(--btn-yellow); border-color: var(--border-color); }
+    .num-key:active { background: #222f3e; }
+    .num-key.clear { color: var(--btn-yellow); }
 
-    /* LAST 10 SPINS COLOR BADGES */
+    /* LAST 10 SPINS CIRCULAR COLOR CHIPS */
     .last-spin-bar {
       background: #060a0e;
       border: 1px solid var(--border-color);
@@ -173,24 +172,27 @@
       font-weight: bold;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       overflow-x: auto;
     }
 
     .history-pills-container {
       display: flex;
-      gap: 4px;
+      gap: 6px;
       align-items: center;
     }
 
     .history-pill {
-      padding: 2px 6px;
-      border-radius: 4px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
       color: #fff;
       font-weight: 800;
       font-size: 0.85em;
-      min-width: 22px;
-      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
     .history-pill.red { background: var(--num-red); }
     .history-pill.black { background: var(--num-black); border: 1px solid #334155; }
@@ -298,7 +300,7 @@
   <div class="fixed-keypad-card">
     <div class="header-title-bar">
       <span class="app-title">ROULETTE TRACKER</span>
-      <span class="version-tag">v1.69.3</span>
+      <span class="version-tag">v1.69.4</span>
     </div>
 
     <div class="display-row">
@@ -321,17 +323,17 @@
     </div>
 
     <div class="num-keypad-grid">
-      <button class="num-key red-key" onclick="pressKey('1')">1</button>
-      <button class="num-key black-key" onclick="pressKey('2')">2</button>
-      <button class="num-key red-key" onclick="pressKey('3')">3</button>
-      <button class="num-key black-key" onclick="pressKey('4')">4</button>
-      <button class="num-key red-key" onclick="pressKey('5')">5</button>
-      <button class="num-key black-key" onclick="pressKey('6')">6</button>
-      <button class="num-key red-key" onclick="pressKey('7')">7</button>
-      <button class="num-key black-key" onclick="pressKey('8')">8</button>
-      <button class="num-key red-key" onclick="pressKey('9')">9</button>
-      <button class="num-key green-key" onclick="pressKey('0')">0</button>
-      <button class="num-key green-key" onclick="pressKey('00')">00</button>
+      <button class="num-key" onclick="pressKey('1')">1</button>
+      <button class="num-key" onclick="pressKey('2')">2</button>
+      <button class="num-key" onclick="pressKey('3')">3</button>
+      <button class="num-key" onclick="pressKey('4')">4</button>
+      <button class="num-key" onclick="pressKey('5')">5</button>
+      <button class="num-key" onclick="pressKey('6')">6</button>
+      <button class="num-key" onclick="pressKey('7')">7</button>
+      <button class="num-key" onclick="pressKey('8')">8</button>
+      <button class="num-key" onclick="pressKey('9')">9</button>
+      <button class="num-key" onclick="pressKey('0')">0</button>
+      <button class="num-key" onclick="pressKey('00')">00</button>
       <button class="num-key clear" onclick="pressClear()">C</button>
     </div>
 
@@ -542,7 +544,7 @@
     document.getElementById('display-total-spins').innerText = spins.length;
     document.getElementById('stat-spins').innerText = `${spins.length} / ${spins.length}`;
     
-    // Render Last 10 Spins with Colors
+    // Render Last 10 Spins with Circular Color Badges
     const historyContainer = document.getElementById('last-spins-history');
     if (spins.length === 0) {
       historyContainer.innerHTML = "-";
