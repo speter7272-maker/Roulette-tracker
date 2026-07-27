@@ -1,36 +1,384 @@
-function submitSpin() {
-  if (!currentInput) return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roulette Tracker v1.72.2</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: #1e293b;
+      --text-light: #f8fafc;
+      --red-pill: #991b1b;
+      --green-pill: #15803d;
+      --black-pill: #151c24;
+      --amber-alert: #f59e0b;
+      --green-alert: #22c55e;
+      --blue-active: #1d4ed8;
+    }
 
-  // 1. If Session High mode is toggled, accept any valid dollar amount
-  if (isHighMode) {
-    sessionHigh = parseInt(currentInput) || sessionHigh;
-    document.getElementById("stat-high").innerText = "$" + sessionHigh;
-    toggleSessionHighMode();
-    clearInput();
-    return;
-  }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-light); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-  // 2. Validate Roulette Numbers (0-36, or "00")
-  const numVal = parseInt(currentInput, 10);
-  const isValidSpin = currentInput === "00" || (!isNaN(numVal) && numVal >= 0 && numVal <= 36);
+    /* LOCKED TOP SECTION */
+    #top-locked { background: var(--panel-bg); padding: 10px; border-bottom: 2px solid #334155; flex-shrink: 0; }
+    
+    .history-bar { display: flex; align-items: center; gap: 6px; overflow-x: auto; margin-bottom: 8px; padding-bottom: 4px; }
+    .history-label { font-size: 0.75rem; font-weight: bold; color: #94a3b8; }
+    .chip { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; flex-shrink: 0; }
+    .chip.red { background: var(--red-pill); }
+    .chip.black { background: var(--black-pill); border: 1px solid #334155; }
+    .chip.green { background: var(--green-pill); }
 
-  if (!isValidSpin) {
-    alert("Invalid spin number! Please enter a number between 0 and 36, or 00.");
-    clearInput();
-    return;
-  }
+    /* KEYPAD */
+    .keypad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .btn-key { background: var(--black-pill); color: white; border: 1px solid #334155; padding: 12px 0; border-radius: 6px; font-size: 1.1rem; font-weight: bold; cursor: pointer; text-align: center; }
+    .btn-key:active { opacity: 0.7; }
+    .btn-action { background: #475569; }
+    .btn-enter { background: var(--green-pill); }
 
-  // 3. Process Valid Spin
-  const now = new Date();
-  const spinData = {
-    number: currentInput,
-    casino: document.getElementById("casino-input").value || "Unknown",
-    date: now.toISOString().split('T')[0],
-    time: now.toTimeString().split(' ')[0],
-    session_id: sessionId
-  };
+    /* SCROLLABLE MAIN SECTION */
+    #main-scroll { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 12px; }
 
-  spins.unshift(spinData);
-  clearInput();
-  updateUI();
-}
+    /* STATS HEADER */
+    .stats-header { display: flex; justify-space-between; align-items: center; background: #1a2234; padding: 8px 12px; border-radius: 8px; }
+    .stat-box { text-align: center; }
+    .stat-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
+    .stat-val { font-size: 0.95rem; font-weight: bold; }
+    .btn-session-high { background: var(--red-pill); padding: 6px 10px; border-radius: 6px; cursor: pointer; text-align: center; }
+    .btn-session-high.active { background: var(--blue-active); }
+
+    /* JUNKO QUADRANTS */
+    .junko-card { background: var(--panel-bg); padding: 10px; border-radius: 8px; }
+    .junko-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
+    .quad-badge { background: #0f172a; padding: 8px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #334155; }
+    .quad-title { font-size: 0.7rem; font-weight: bold; color: #94a3b8; }
+    .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
+    
+    /* Dynamic Colors */
+    .alert-yellow { color: var(--amber-alert); }
+    .alert-green { color: var(--green-alert); }
+
+    .bet-numbers-panel { margin-top: 8px; background: #0f172a; padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #38bdf8; word-break: break-word; display: none; }
+
+    /* BOTTOM CONTROLS */
+    .controls-card { background: var(--panel-bg); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }
+    .input-group { display: flex; flex-direction: column; gap: 4px; }
+    .input-group label { font-size: 0.75rem; color: #94a3b8; }
+    .input-group input { background: #0f172a; border: 1px solid #334155; color: white; padding: 8px; border-radius: 4px; }
+
+    .action-row { display: flex; gap: 8px; }
+    .action-row button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; font-size: 0.8rem; }
+    .btn-reset { background: #ef4444; }
+    .btn-copy { background: #2563eb; }
+    .btn-dl { background: #16a34a; }
+  </style>
+</head>
+<body>
+
+  <!-- LOCKED KEYPAD & HISTORY HEADER -->
+  <div id="top-locked">
+    <div class="history-bar">
+      <span class="history-label">LAST:</span>
+      <div id="history-chips" style="display:flex; gap:4px;"></div>
+    </div>
+
+    <div class="keypad-grid">
+      <button class="btn-key" onclick="pressKey('1')">1</button>
+      <button class="btn-key" onclick="pressKey('2')">2</button>
+      <button class="btn-key" onclick="pressKey('3')">3</button>
+      <button class="btn-key btn-action" onclick="clearInput()">C</button>
+      <button class="btn-key" onclick="pressKey('4')">4</button>
+      <button class="btn-key" onclick="pressKey('5')">5</button>
+      <button class="btn-key" onclick="pressKey('6')">6</button>
+      <button class="btn-key" onclick="pressKey('0')">0</button>
+      <button class="btn-key" onclick="pressKey('7')">7</button>
+      <button class="btn-key" onclick="pressKey('8')">8</button>
+      <button class="btn-key" onclick="pressKey('9')">9</button>
+      <button class="btn-key" onclick="pressKey('00')">00</button>
+      <div style="grid-column: span 3; display: flex; align-items: center; justify-content: center; background: #0f172a; border-radius: 6px; border: 1px solid #334155;">
+        <span id="input-buffer" style="font-size: 1.2rem; font-weight: bold;">--</span>
+      </div>
+      <button class="btn-key btn-enter" onclick="submitSpin()">ENTER</button>
+    </div>
+  </div>
+
+  <!-- MAIN SCROLLABLE SECTION -->
+  <div id="main-scroll">
+    
+    <!-- CONDENSED STATS HEADER -->
+    <div class="stats-header">
+      <div class="stat-box">
+        <div class="stat-label">Spins</div>
+        <div id="stat-spins" class="stat-val">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">PnL</div>
+        <div id="stat-pnl" class="stat-val">$0</div>
+      </div>
+      <div id="btn-high-mode" class="btn-session-high" onclick="toggleSessionHighMode()">
+        <div class="stat-label" style="color:white;">Session High</div>
+        <div id="stat-high" class="stat-val">$0</div>
+      </div>
+    </div>
+
+    <!-- JUNKO QUADRANTS MODULE -->
+    <div class="junko-card">
+      <div style="font-size: 0.75rem; font-weight: bold; color: #94a3b8; margin-bottom: 6px;">JUNKO QUADRANTS (W=15)</div>
+      <div class="junko-grid">
+        <div class="quad-badge" onclick="toggleBetNumbers('GN')">
+          <div class="quad-title">GN</div>
+          <div id="stat-gn" class="quad-stats">0 (0+)</div>
+        </div>
+        <div class="quad-badge" onclick="toggleBetNumbers('HO')">
+          <div class="quad-title">HO</div>
+          <div id="stat-ho" class="quad-stats">0 (0+)</div>
+        </div>
+        <div class="quad-badge" onclick="toggleBetNumbers('LO')">
+          <div class="quad-title">LO</div>
+          <div id="stat-lo" class="quad-stats">0 (0+)</div>
+        </div>
+        <div class="quad-badge" onclick="toggleBetNumbers('M')">
+          <div class="quad-title">M</div>
+          <div id="stat-m" class="quad-stats">0 (0+)</div>
+        </div>
+        <div class="quad-badge" onclick="toggleBetNumbers('GR')">
+          <div class="quad-title">GR</div>
+          <div id="stat-gr" class="quad-stats">0 (0+)</div>
+        </div>
+      </div>
+      <div id="bet-numbers-display" class="bet-numbers-panel"></div>
+    </div>
+
+    <!-- BOTTOM CONTROLS & CSV SECTION -->
+    <div class="controls-card">
+      <div class="input-group">
+        <label for="casino-input">Casino Name</label>
+        <input type="text" id="casino-input" value="RM Smokeshow" placeholder="Enter casino name...">
+      </div>
+
+      <div class="action-row">
+        <button class="btn-reset" onclick="resetSession()">Clear</button>
+        <button class="btn-copy" onclick="copyCSV()">Copy CSV</button>
+        <button class="btn-dl" onclick="downloadCSV()">Download CSV</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State Tracking Variables
+    let spins = [];
+    let currentInput = "";
+    let isHighMode = false;
+    let sessionHigh = 0;
+    let activeQuad = null;
+    let sessionId = "SESS-" + Math.floor(1000 + Math.random() * 9000);
+
+    const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
+    const GREEN_NUMS = ["0","00"];
+
+    const QUADRANTS = {
+      GN: ["00","0","1","2","9","10","13","14","27","28"],
+      HO: ["23","24","25","26","29","30","33","34","35","36"],
+      LO: ["3","4","8","11","12","15","16","22"],
+      M:  ["5","6","7","17","18","19","20","21","31","32"],
+      GR: ["0","00"]
+    };
+
+    function getNumColor(num) {
+      if (GREEN_NUMS.includes(num)) return "green";
+      if (RED_NUMS.includes(num)) return "red";
+      return "black";
+    }
+
+    function pressKey(val) {
+      if (currentInput.length < 3) {
+        currentInput += val;
+        document.getElementById("input-buffer").innerText = currentInput;
+      }
+    }
+
+    function clearInput() {
+      currentInput = "";
+      document.getElementById("input-buffer").innerText = "--";
+    }
+
+    function toggleSessionHighMode() {
+      isHighMode = !isHighMode;
+      const btn = document.getElementById("btn-high-mode");
+      if (isHighMode) {
+        btn.classList.add("active");
+        clearInput();
+      } else {
+        btn.classList.remove("active");
+      }
+    }
+
+    function submitSpin() {
+      if (!currentInput) return;
+
+      // 1. Session High Override (Allows any dollar value)
+      if (isHighMode) {
+        sessionHigh = parseInt(currentInput) || sessionHigh;
+        document.getElementById("stat-high").innerText = "$" + sessionHigh;
+        toggleSessionHighMode();
+        clearInput();
+        return;
+      }
+
+      // 2. Validate Roulette Numbers (0-36, or "00")
+      const numVal = parseInt(currentInput, 10);
+      const isValidSpin = currentInput === "00" || (!isNaN(numVal) && numVal >= 0 && numVal <= 36);
+
+      if (!isValidSpin) {
+        alert("Invalid spin! Enter a number between 0 and 36, or 00.");
+        clearInput();
+        return;
+      }
+
+      // 3. Log Valid Spin
+      const now = new Date();
+      const spinData = {
+        number: currentInput,
+        casino: document.getElementById("casino-input").value || "Unknown",
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().split(' ')[0],
+        session_id: sessionId
+      };
+
+      spins.unshift(spinData);
+      clearInput();
+      updateUI();
+    }
+
+    function updateUI() {
+      // 1. Update Condensed Stats
+      document.getElementById("stat-spins").innerText = spins.length;
+
+      // 2. Render Circular Recent History Chips (Max 10)
+      const historyContainer = document.getElementById("history-chips");
+      historyContainer.innerHTML = "";
+      const recentSpins = spins.slice(0, 10);
+      recentSpins.forEach(spin => {
+        const chip = document.createElement("div");
+        chip.className = `chip ${getNumColor(spin.number)}`;
+        chip.innerText = spin.number;
+        historyContainer.appendChild(chip);
+      });
+
+      // 3. Update Junko Quadrants (Window = Last 15)
+      const window15 = spins.slice(0, 15).map(s => s.number);
+      
+      Object.keys(QUADRANTS).forEach(key => {
+        const nums = QUADRANTS[key];
+        const count = window15.filter(n => nums.includes(n)).length;
+        
+        // Calculate Age (Spins since last hit)
+        let age = 0;
+        for (let i = 0; i < spins.length; i++) {
+          if (nums.includes(spins[i].number)) break;
+          age++;
+        }
+
+        const el = document.getElementById(`stat-${key.toLowerCase()}`);
+        el.innerText = `${count} (${age}+)`;
+
+        // Apply Threshold Color Alerts
+        el.className = "quad-stats";
+        if (key === "GR") {
+          if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
+          else if (age > 15) el.classList.add("alert-green");
+        } else {
+          if (age >= 5 && age <= 8) el.classList.add("alert-yellow");
+          else if (age > 8) el.classList.add("alert-green");
+        }
+      });
+    }
+
+    function toggleBetNumbers(quadKey) {
+      const panel = document.getElementById("bet-numbers-display");
+      if (activeQuad === quadKey) {
+        panel.style.display = "none";
+        activeQuad = null;
+      } else {
+        activeQuad = quadKey;
+        panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
+        panel.style.display = "block";
+      }
+    }
+
+    function generateCSVString() {
+      if (spins.length === 0) return "";
+      const headers = ["number", "casino", "date", "time", "session_id"];
+      const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
+      return [headers.join(","), ...rows].join("\n");
+    }
+
+    function copyCSV() {
+      const csvText = generateCSVString();
+      if (!csvText) {
+        alert("No spin data to copy.");
+        return;
+      }
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(csvText).then(() => {
+          alert("CSV copied to clipboard!");
+        }).catch(() => fallbackCopy(csvText));
+      } else {
+        fallbackCopy(csvText);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert("CSV copied to clipboard!");
+      } catch (err) {
+        alert("Failed to copy CSV.");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function downloadCSV() {
+      const csvText = generateCSVString();
+      if (!csvText) {
+        alert("No spin data to download.");
+        return;
+      }
+
+      const casinoName = (document.getElementById("casino-input").value || "casino")
+        .toLowerCase().replace(/[^a-z0-9]/g, "_");
+      const dateStr = new Date().toISOString().split('T')[0];
+      const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
+
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.URL.createObjectURL ? URL.createObjectURL(blob) : null;
+      if (url) {
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    function resetSession() {
+      if (confirm("Clear all session spins and reset tracking?")) {
+        spins = [];
+        sessionHigh = 0;
+        document.getElementById("stat-high").innerText = "$0";
+        clearInput();
+        updateUI();
+      }
+    }
+  </script>
+</body>
+</html>
