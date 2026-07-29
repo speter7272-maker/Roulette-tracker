@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.75.0 - Integrated State Engine</title>
+    <title>Roulette Tracker v1.75.1 - Corrected Sets</title>
     <style>
         * {
             box-sizing: border-box;
@@ -301,7 +301,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.75.0</span>
+        <span class="version-tag">v1.75.1</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -436,18 +436,19 @@
         const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
         const GREEN_NUMS = ["0","00"];
 
+        // Corrected Sets: LO (No 8), HO (Begins with 23,24) - All 10 numbers each
         const QUADRANTS = {
             GN: ["00","0","1","2","9","10","13","14","27","28"],
-            HO: ["25","26","29","30","33","34","35","36"],
-            LO: ["3","4","8","11","12","15","16","21","22","23","24"],
+            HO: ["23","24","25","26","29","30","33","34","35","36"],
+            LO: ["3","4","11","12","15","16","21","22","23","24"],
             M:  ["5","6","7","8","17","18","19","20","31","32"],
             GR: ["0","00"]
         };
 
         const JUNKO_SETS = {
             "Green Neighbors (GN)": new Set(["00", "0", "1", "2", "9", "10", "13", "14", "27", "28"]),
-            "High Orphans (HO)": new Set(["24", "25", "26", "29", "30", "33", "34", "35", "36"]),
-            "Low Orphans (LO)": new Set(["3", "4", "8", "11", "12", "15", "16", "21", "22", "23", "24"]),
+            "High Orphans (HO)": new Set(["23", "24", "25", "26", "29", "30", "33", "34", "35", "36"]),
+            "Low Orphans (LO)": new Set(["3", "4", "11", "12", "15", "16", "21", "22", "23", "24"]),
             "Middle (M)": new Set(["5", "6", "7", "8", "17", "18", "19", "20", "31", "32"])
         };
 
@@ -692,248 +693,4 @@
 
             // TRIGGER E: Balanced Table
             return {
-                stateTitle: "🟢 BALANCED TABLE",
-                color: "#22c55e",
-                score,
-                mainAction: "PLAY — Cassandra v5 / Sweet 16 / Zigzag",
-                pivotAction: "No Pivot Needed",
-                details: `Table is balanced (Doz gap ${dozGap}, Col gap ${colGap}, 0 repeats). Safe for 6-Diamond spreads.`,
-                greenHedge: greenHedgeActive
-            };
-        }
-
-        function updateUI() {
-            document.getElementById('spin-val').innerText = `# ${spins.length}`;
-
-            // 1. History Chips
-            const container = document.getElementById('history-stream');
-            container.innerHTML = "";
-            const displayList = spins.slice(0, 10);
-
-            displayList.forEach((spin, index) => {
-                const chip = document.createElement('div');
-                chip.className = 'spin-chip';
-                if (index === 0) chip.classList.add('chip-latest');
-
-                if (GREEN_NUMS.includes(spin.number)) {
-                    chip.classList.add('chip-green');
-                } else if (RED_NUMS.includes(spin.number)) {
-                    chip.classList.add('chip-red');
-                } else {
-                    chip.classList.add('chip-black');
-                }
-
-                chip.innerText = spin.number;
-                container.appendChild(chip);
-            });
-
-            // 2. Evaluate Consolidated State Engine
-            const stateRes = evaluateConsolidatedState();
-
-            const bannerEl = document.getElementById('state-banner');
-            const titleEl = document.getElementById('banner-state-title');
-            const scoreEl = document.getElementById('banner-score-val');
-            const mainActionEl = document.getElementById('banner-main-action');
-            const pivotActionEl = document.getElementById('banner-pivot-action');
-            const detailsEl = document.getElementById('banner-details-text');
-            const hedgeAlertEl = document.getElementById('banner-green-hedge');
-
-            bannerEl.style.borderLeftColor = stateRes.color;
-            titleEl.innerText = stateRes.stateTitle;
-            titleEl.style.color = stateRes.color;
-            scoreEl.innerText = `TBI: ${stateRes.score}`;
-            mainActionEl.innerText = stateRes.mainAction;
-            pivotActionEl.innerText = stateRes.pivotAction;
-            detailsEl.innerText = stateRes.details;
-
-            // Green Drought Highlight
-            const key0 = document.getElementById('btn-key-0');
-            const key00 = document.getElementById('btn-key-00');
-
-            if (stateRes.greenHedge) {
-                hedgeAlertEl.style.display = "block";
-                key0.classList.add("key-green-glow");
-                key00.classList.add("key-green-glow");
-            } else {
-                hedgeAlertEl.style.display = "none";
-                key0.classList.remove("key-green-glow");
-                key00.classList.remove("key-green-glow");
-            }
-
-            // 3. 10-2-Win Sector Calculations
-            const window15 = spins.slice(0, 15).map(s => s.number);
-            
-            Object.keys(QUADRANTS).forEach(key => {
-                const nums = QUADRANTS[key];
-                const count = window15.filter(n => nums.includes(n)).length;
-                
-                let age = 0;
-                for (let i = 0; i < spins.length; i++) {
-                    if (nums.includes(spins[i].number)) break;
-                    age++;
-                }
-
-                const el = document.getElementById(`stat-${key.toLowerCase()}`);
-                el.innerText = `${count} (${age}+)`;
-
-                el.className = "quad-stats";
-                if (key === "GR") {
-                    if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
-                    else if (age > 15) el.classList.add("alert-cyan");
-                } else {
-                    if (age >= 5 && age <= 8) el.classList.add("alert-yellow");
-                    else if (age > 8) el.classList.add("alert-green");
-                }
-            });
-
-            // 4. Sweet 16 Exclusions Monitor (W=15)
-            const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
-            let s16Age = 0;
-            for (let i = 0; i < spins.length; i++) {
-                if (SWEET_16_EXCLUSIONS.includes(spins[i].number)) break;
-                s16Age++;
-            }
-            const s16El = document.getElementById('stat-s16');
-            s16El.innerText = `${s16Count} (${s16Age}+)`;
-            s16El.className = "strat-val";
-            if (s16Count >= 6 || s16Age >= 6) {
-                s16El.classList.add("alert-green");
-            } else if (s16Count === 5 || (s16Age >= 3 && s16Age <= 5)) {
-                s16El.classList.add("alert-yellow");
-            }
-
-            // 5. 10-2-Win Sniper Monitor
-            let maxDrought = 0;
-            if (spins.length >= 5) {
-                ['d1','d2','d3','c1','c2','c3'].forEach(group => {
-                    let dCount = 0;
-                    for (let i = 0; i < spins.length; i++) {
-                        let n = parseInt(spins[i].number, 10);
-                        if (isNaN(n)) continue;
-                        let matched = false;
-                        if (group === 'd1' && n >= 1 && n <= 12) matched = true;
-                        if (group === 'd2' && n >= 13 && n <= 24) matched = true;
-                        if (group === 'd3' && n >= 25 && n <= 36) matched = true;
-                        if (group === 'c1' && n % 3 === 1) matched = true;
-                        if (group === 'c2' && n % 3 === 2) matched = true;
-                        if (group === 'c3' && (n % 3 === 0 && n !== 0)) matched = true;
-                        if (matched) break;
-                        dCount++;
-                    }
-                    if (dCount > maxDrought) maxDrought = dCount;
-                });
-            }
-            const win10El = document.getElementById('stat-102win');
-            win10El.innerText = `${maxDrought} spins`;
-            win10El.className = "strat-val";
-            if (maxDrought >= 10) {
-                win10El.classList.add("alert-green");
-            } else if (maxDrought >= 7) {
-                win10El.classList.add("alert-yellow");
-            }
-
-            // 6. Streets of Fire Monitor (W=15)
-            const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
-            let sofAge = 0;
-            for (let i = 0; i < spins.length; i++) {
-                if (SOF_NUMBERS.includes(spins[i].number)) break;
-                sofAge++;
-            }
-            const sofEl = document.getElementById('stat-sof');
-            sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
-            sofEl.className = "strat-val";
-            if (sofCount >= 6 || sofAge >= 8) {
-                sofEl.classList.add("alert-green");
-            } else if (sofCount === 5 || (sofAge >= 5 && sofAge <= 7)) {
-                sofEl.classList.add("alert-yellow");
-            }
-        }
-
-        function toggleBetNumbers(quadKey) {
-            const panel = document.getElementById("bet-numbers-display");
-            if (activeQuad === quadKey) {
-                panel.style.display = "none";
-                activeQuad = null;
-            } else {
-                activeQuad = quadKey;
-                panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
-                panel.style.display = "block";
-            }
-        }
-
-        function generateCSVString() {
-            if (spins.length === 0) return "";
-            const headers = ["number", "casino", "date", "time", "session_id"];
-            const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
-            return [headers.join(","), ...rows].join("\n");
-        }
-
-        function copyCSV() {
-            const csvText = generateCSVString();
-            if (!csvText) {
-                alert("No spin data to copy.");
-                return;
-            }
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(csvText).then(() => {
-                    alert("CSV copied to clipboard!");
-                }).catch(() => fallbackCopy(csvText));
-            } else {
-                fallbackCopy(csvText);
-            }
-        }
-
-        function fallbackCopy(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert("CSV copied to clipboard!");
-            } catch (err) {
-                alert("Failed to copy CSV.");
-            }
-            document.body.removeChild(textArea);
-        }
-
-        function downloadCSV() {
-            const csvText = generateCSVString();
-            if (!csvText) {
-                alert("No spin data to download.");
-                return;
-            }
-
-            const casinoName = (document.getElementById("casino-input").value || "casino")
-                .toLowerCase().replace(/[^a-z0-9]/g, "_");
-            const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
-
-            const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvText);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-
-            try {
-                link.click();
-                document.body.removeChild(link);
-            } catch (err) {
-                document.body.removeChild(link);
-                window.open(encodedUri, '_blank');
-            }
-        }
-
-        function resetSession() {
-            if (confirm("Clear all session spins and reset tracking?")) {
-                spins = [];
-                sessionHigh = 0;
-                document.getElementById('high-val').innerText = "$ 0";
-                clearDigit();
-                updateUI();
-            }
-        }
-    </script>
-</body>
-</html>
+                stateTitle:
