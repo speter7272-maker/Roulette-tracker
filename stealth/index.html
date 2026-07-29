@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.73.0 - Multi-Strategy Monitors</title>
+    <title>Roulette Tracker v1.74.1 - Reordered Layout</title>
     <style>
         * {
             box-sizing: border-box;
@@ -201,7 +201,8 @@
         .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
 
         /* Strategy Monitors Panel */
-        .strat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .strat-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+        .strat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .strat-box { background: #121212; padding: 8px; border-radius: 6px; border: 1px solid #333; text-align: center; }
         .strat-title { font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
         .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
@@ -227,20 +228,25 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.73.0</span>
+        <span class="version-tag">v1.74.1</span>
     </header>
 
+    <!-- DUAL MODE INPUT BLOCK -->
     <div id="slim-tracker-container">
+        <!-- 3-Part Readout Bar -->
         <div class="readout-bar">
+            <!-- Left: Spin Counter -->
             <div id="spin-counter" class="readout-cell c-spin">
                 <span id="spin-val" class="r-val"># 0</span>
             </div>
             
+            <!-- Center: Keypad Input Readout -->
             <div id="input-center" class="readout-cell c-ent">
                 <span class="r-lab">NEWEST:</span>
                 <span id="input-buffer" class="r-val">--</span>
             </div>
 
+            <!-- Right: Session High (Mode Switchable) -->
             <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
                 <span id="high-val" class="r-val">$ 0</span>
             </div>
@@ -266,15 +272,18 @@
             <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
         </div>
 
+        <!-- RECENT HISTORY -->
         <div class="history-strip-container">
             <span class="history-label">LAST:</span>
             <div id="history-stream" class="history-stream"></div>
         </div>
     </div>
 
+    <!-- SCROLLABLE LOWER SECTION -->
     <div id="main-scroll">
+        <!-- 10-2-WIN MODULE (Formerly Junko Quadrants) -->
         <div class="junko-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">JUNKO QUADRANTS (W=15)</div>
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
             <div class="junko-grid">
                 <div class="quad-badge" onclick="toggleBetNumbers('GN')">
                     <div class="quad-title">GN</div>
@@ -300,20 +309,30 @@
             <div id="bet-numbers-display" class="bet-numbers-panel"></div>
         </div>
 
+        <!-- STRATEGY MONITORS (Now includes Streets of Fire here) -->
         <div class="strategy-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
             <div class="strat-grid">
-                <div class="strat-box">
-                    <div class="strat-title">Sweet 16 Exclusions (W=15)</div>
-                    <div id="stat-s16" class="strat-val">0 (0+)</div>
+                <div class="strat-row">
+                    <div class="strat-box" style="grid-column: span 2;">
+                        <div class="strat-title">Streets of Fire (0,00,1,2,3,34,25,26) W=15</div>
+                        <div id="stat-sof" class="strat-val">0 (0+)</div>
+                    </div>
                 </div>
-                <div class="strat-box">
-                    <div class="strat-title">10-2-Win (Max Drought)</div>
-                    <div id="stat-102win" class="strat-val">0 spins</div>
+                <div class="strat-row">
+                    <div class="strat-box">
+                        <div class="strat-title">Sweet 16 (W=15)</div>
+                        <div id="stat-s16" class="strat-val">0 (0+)</div>
+                    </div>
+                    <div class="strat-box">
+                        <div class="strat-title">10-2-Win (Drought)</div>
+                        <div id="stat-102win" class="strat-val">0 spins</div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- CONTROLS & CSV SECTION -->
         <div class="controls-card">
             <div class="input-group">
                 <label for="casino-input">Casino Name</label>
@@ -344,13 +363,14 @@
 
         const QUADRANTS = {
             GN: ["00","0","1","2","9","10","13","14","27","28"],
-            HO: ["23","24","25","26","29","30","33","34","35","36"],
-            LO: ["3","4","8","11","12","15","16","22"],
-            M:  ["5","6","7","17","18","19","20","21","31","32"],
+            HO: ["25","26","29","30","33","34","35","36"],
+            LO: ["3","4","8","11","12","15","16","21","22","23","24"],
+            M:  ["5","6","7","8","17","18","19","20","31","32"],
             GR: ["0","00"]
         };
 
         const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
+        const SOF_NUMBERS = ["0","00","1","2","3","34","25","26"];
 
         function toggleInputMode() {
             const bankrollEl = document.getElementById('bankroll');
@@ -464,7 +484,7 @@
                 container.appendChild(chip);
             });
 
-            // 2. Junko Quadrants Calculations
+            // 2. 10-2-Win Sector Calculations
             const window15 = spins.slice(0, 15).map(s => s.number);
             
             Object.keys(QUADRANTS).forEach(key => {
@@ -534,6 +554,22 @@
                 win10El.classList.add("alert-green");
             } else if (maxDrought >= 7) {
                 win10El.classList.add("alert-yellow");
+            }
+
+            // 5. Streets of Fire Monitor (W=15)
+            const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
+            let sofAge = 0;
+            for (let i = 0; i < spins.length; i++) {
+                if (SOF_NUMBERS.includes(spins[i].number)) break;
+                sofAge++;
+            }
+            const sofEl = document.getElementById('stat-sof');
+            sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
+            sofEl.className = "strat-val";
+            if (sofCount >= 6 || sofAge >= 8) {
+                sofEl.classList.add("alert-green");
+            } else if (sofCount === 5 || (sofAge >= 5 && sofAge <= 7)) {
+                sofEl.classList.add("alert-yellow");
             }
         }
 
