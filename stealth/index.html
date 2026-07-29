@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.74.1 - Reordered Layout</title>
+    <title>Roulette Tracker v1.75.0 - Integrated State Engine</title>
     <style>
         * {
             box-sizing: border-box;
@@ -134,11 +134,20 @@
             font-size: 1.1rem;
             font-weight: 600;
             touch-action: manipulation;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .numpad-grid button:active { background: #444; }
         .numpad-grid .btn-clear { background: #333; color: #ffeb3b; }
         .btn-cancel { background: #1565c0 !important; color: #fff !important; }
+
+        /* Green Drought Keypad Highlight */
+        .key-green-glow {
+            background: rgba(6, 182, 212, 0.35) !important;
+            border: 1px solid #06b6d4 !important;
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+            color: #00f0ff !important;
+        }
 
         /* Recent History Strip */
         .history-strip-container {
@@ -184,7 +193,7 @@
         .chip-green { background: #2e7d32; color: #fff; }
         .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
 
-        /* SCROLLABLE METRICS & CONTROLS */
+        /* SCROLLABLE LOWER SECTION */
         #main-scroll {
             flex: 1;
             overflow-y: auto;
@@ -192,6 +201,68 @@
             flex-direction: column;
             gap: 10px;
             padding-bottom: 10px;
+        }
+
+        /* CONSOLIDATED ACTION BANNER */
+        .action-banner {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 10px;
+            border-left: 5px solid #22c55e;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .banner-state {
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .banner-score {
+            font-size: 0.7rem;
+            background: #121212;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #aaa;
+        }
+
+        .banner-action {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 2px;
+            color: #ffffff;
+        }
+
+        .banner-pivot {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #38bdf8;
+            margin-bottom: 4px;
+        }
+
+        .banner-details {
+            font-size: 0.7rem;
+            color: #aaa;
+            line-height: 1.3;
+        }
+
+        .banner-hedge-alert {
+            margin-top: 6px;
+            padding: 4px 6px;
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid #06b6d4;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #00f0ff;
+            font-weight: bold;
+            display: none;
         }
 
         .junko-card, .strategy-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
@@ -209,6 +280,8 @@
 
         .alert-yellow { color: #f59e0b; }
         .alert-green { color: #22c55e; }
+        .alert-cyan { color: #00f0ff; }
+        .alert-red { color: #ef4444; }
 
         .bet-numbers-panel { margin-top: 8px; background: #0f172a; padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #38bdf8; word-break: break-word; display: none; }
 
@@ -228,25 +301,20 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.74.1</span>
+        <span class="version-tag">v1.75.0</span>
     </header>
 
-    <!-- DUAL MODE INPUT BLOCK -->
     <div id="slim-tracker-container">
-        <!-- 3-Part Readout Bar -->
         <div class="readout-bar">
-            <!-- Left: Spin Counter -->
             <div id="spin-counter" class="readout-cell c-spin">
                 <span id="spin-val" class="r-val"># 0</span>
             </div>
             
-            <!-- Center: Keypad Input Readout -->
             <div id="input-center" class="readout-cell c-ent">
                 <span class="r-lab">NEWEST:</span>
                 <span id="input-buffer" class="r-val">--</span>
             </div>
 
-            <!-- Right: Session High (Mode Switchable) -->
             <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
                 <span id="high-val" class="r-val">$ 0</span>
             </div>
@@ -267,23 +335,32 @@
             <button onclick="appendDigit('7')">7</button>
             <button onclick="appendDigit('8')">8</button>
             <button onclick="appendDigit('9')">9</button>
-            <button onclick="appendDigit('0')">0</button>
-            <button onclick="appendDigit('00')">00</button>
+            <button id="btn-key-0" onclick="appendDigit('0')">0</button>
+            <button id="btn-key-00" onclick="appendDigit('00')">00</button>
             <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
         </div>
 
-        <!-- RECENT HISTORY -->
         <div class="history-strip-container">
             <span class="history-label">LAST:</span>
             <div id="history-stream" class="history-stream"></div>
         </div>
     </div>
 
-    <!-- SCROLLABLE LOWER SECTION -->
     <div id="main-scroll">
-        <!-- 10-2-WIN MODULE (Formerly Junko Quadrants) -->
+
+        <div id="state-banner" class="action-banner">
+            <div class="banner-header">
+                <span id="banner-state-title" class="banner-state" style="color: #22c55e;">🟢 BALANCED</span>
+                <span id="banner-score-val" class="banner-score">TBI: 100</span>
+            </div>
+            <div id="banner-main-action" class="banner-action">PLAY — Cassandra v5 / Zigzag Corners</div>
+            <div id="banner-pivot-action" class="banner-pivot">No Pivot Needed</div>
+            <div id="banner-details-text" class="banner-details">Table is balanced. Safe for 6-Diamond spreads.</div>
+            <div id="banner-green-hedge" class="banner-hedge-alert">⚠️ GREEN DROUGHT (15+ spins): Add $1/$2 on 0/00 split</div>
+        </div>
+
         <div class="junko-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN SECTORS (W=15)</div>
             <div class="junko-grid">
                 <div class="quad-badge" onclick="toggleBetNumbers('GN')">
                     <div class="quad-title">GN</div>
@@ -309,7 +386,6 @@
             <div id="bet-numbers-display" class="bet-numbers-panel"></div>
         </div>
 
-        <!-- STRATEGY MONITORS (Now includes Streets of Fire here) -->
         <div class="strategy-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
             <div class="strat-grid">
@@ -332,7 +408,6 @@
             </div>
         </div>
 
-        <!-- CONTROLS & CSV SECTION -->
         <div class="controls-card">
             <div class="input-group">
                 <label for="casino-input">Casino Name</label>
@@ -367,6 +442,13 @@
             LO: ["3","4","8","11","12","15","16","21","22","23","24"],
             M:  ["5","6","7","8","17","18","19","20","31","32"],
             GR: ["0","00"]
+        };
+
+        const JUNKO_SETS = {
+            "Green Neighbors (GN)": new Set(["00", "0", "1", "2", "9", "10", "13", "14", "27", "28"]),
+            "High Orphans (HO)": new Set(["24", "25", "26", "29", "30", "33", "34", "35", "36"]),
+            "Low Orphans (LO)": new Set(["3", "4", "8", "11", "12", "15", "16", "21", "22", "23", "24"]),
+            "Middle (M)": new Set(["5", "6", "7", "8", "17", "18", "19", "20", "31", "32"])
         };
 
         const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
@@ -459,6 +541,167 @@
             updateUI();
         }
 
+        /* --- CONSOLIDATED STATE ENGINE --- */
+        function evaluateConsolidatedState() {
+            const recent = spins.slice(0, 15).map(s => s.number);
+            const allNumStr = spins.map(s => s.number);
+
+            if (recent.length < 15) {
+                return {
+                    stateTitle: "🟢 BALANCED (WARMUP)",
+                    color: "#22c55e",
+                    score: 100,
+                    mainAction: "Sit Out / Log 15 Spins",
+                    pivotAction: "None",
+                    details: "Collecting 15-spin baseline history...",
+                    greenHedge: false
+                };
+            }
+
+            // 1. Calculate Dozen & Column Counts
+            let d1 = 0, d2 = 0, d3 = 0;
+            let c1 = 0, c2 = 0, c3 = 0;
+
+            recent.forEach(numStr => {
+                let n = parseInt(numStr, 10);
+                if (!isNaN(n) && n !== 0) {
+                    if (n >= 1 && n <= 12) d1++;
+                    else if (n >= 13 && n <= 24) d2++;
+                    else if (n >= 25 && n <= 36) d3++;
+
+                    if (n % 3 === 1) c1++;
+                    else if (n % 3 === 2) c2++;
+                    else if (n % 3 === 0) c3++;
+                }
+            });
+
+            const dozGap = Math.max(d1, d2, d3) - Math.min(d1, d2, d3);
+            const colGap = Math.max(c1, c2, c3) - Math.min(c1, c2, c3);
+
+            // 2. Repeats Check (<= 5 spin gap)
+            let repNums = 0;
+            let repStreets = 0;
+            const last5 = spins.slice(0, 5).map(s => s.number);
+            const seenNums = new Set();
+            const seenStreets = new Set();
+
+            last5.forEach(numStr => {
+                let n = parseInt(numStr, 10);
+                if (seenNums.has(numStr) && numStr !== "0" && numStr !== "00") repNums++;
+                seenNums.add(numStr);
+
+                if (!isNaN(n) && n !== 0) {
+                    let street = Math.floor((n - 1) / 3) + 1;
+                    if (seenStreets.has(street)) repStreets++;
+                    seenStreets.add(street);
+                }
+            });
+
+            const isRepeatHeavy = repStreets >= 2 || repNums >= 1;
+
+            // 3. Green Drought Monitor (0/00)
+            let sinceGreen = 0;
+            for (let i = 0; i < spins.length; i++) {
+                if (spins[i].number === "0" || spins[i].number === "00") break;
+                sinceGreen++;
+            }
+            const greenHedgeActive = sinceGreen >= 15;
+
+            // 4. All-Quadrant Drought Monitor (10-2-Win)
+            const quadAges = [];
+            for (const [name, set] of Object.entries(JUNKO_SETS)) {
+                let age = 0;
+                for (let i = 0; i < spins.length; i++) {
+                    if (set.has(spins[i].number)) break;
+                    age++;
+                }
+                quadAges.push({ name, age });
+            }
+            quadAges.sort((a, b) => b.age - a.age);
+            const driestQuad = quadAges[0];
+
+            // 5. Sweet 16 Exclusion Hit Count
+            const sweet16LossHits = recent.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
+
+            // TBI Score
+            let score = 100 - (dozGap * 8 + colGap * 6 + repStreets * 15 + repNums * 20);
+            score = Math.max(0, Math.min(100, score));
+
+            // Cold Dozen for Tupelo
+            const dozHits = [
+                { name: "LOW (D1)", hits: d1, dz: 1 },
+                { name: "MID (D2)", hits: d2, dz: 2 },
+                { name: "HIGH (D3)", hits: d3, dz: 3 }
+            ];
+            dozHits.sort((a, b) => a.hits - b.hits);
+            const coldDozen = dozHits[0];
+
+            // --- STRATEGY ROUTING ---
+
+            // TRIGGER A: 10-2-Win Sniper Activation
+            if (driestQuad.age >= 10 && !isRepeatHeavy) {
+                return {
+                    stateTitle: "🔵 SNIPER READY (10-2-WIN)",
+                    color: "#00f0ff",
+                    score: 88,
+                    mainAction: `PLAY — 10-2-Win (${driestQuad.name})`,
+                    pivotAction: `Target Sector: ${driestQuad.name}`,
+                    details: `${driestQuad.name} is dry for ${driestQuad.age} spins • Table is clean of extreme repeats`,
+                    greenHedge: greenHedgeActive
+                };
+            }
+
+            // TRIGGER B: Sweet 16 Lockout
+            if (isRepeatHeavy && sweet16LossHits >= 3) {
+                return {
+                    stateTitle: "🔴 LOCKOUT / REPEAT HEAVY",
+                    color: "#ef4444",
+                    score: 35,
+                    mainAction: "SIT OUT — Sweet 16 & Corners Locked",
+                    pivotAction: "PLAY — Follow The Leader (FTL)",
+                    details: `Hostile cluster! Sweet 16 loss zone hit ${sweet16LossHits}x in 15 spins. Bet hot line + adjacent.`,
+                    greenHedge: greenHedgeActive
+                };
+            }
+
+            // TRIGGER C: Repeat-Heavy Shift
+            if (isRepeatHeavy) {
+                return {
+                    stateTitle: "🔴 REPEAT-HEAVY SHIFT",
+                    color: "#ef4444",
+                    score,
+                    mainAction: "PAUSE CORNERS / ZIGZAG",
+                    pivotAction: "PLAY — Follow The Leader (FTL)",
+                    details: `Clustering detected (${repStreets} street reps, ${repNums} num reps). Bet hot Double Street + surrounding.`,
+                    greenHedge: greenHedgeActive
+                };
+            }
+
+            // TRIGGER D: Macro Imbalance
+            if (dozGap >= 5 || colGap >= 5) {
+                return {
+                    stateTitle: "🟡 MACRO IMBALANCE",
+                    color: "#f59e0b",
+                    score,
+                    mainAction: "PAUSE FLAT SPREADS",
+                    pivotAction: `PLAY — Tupelo Honey ${coldDozen.name}`,
+                    details: `Severe imbalance (Dozen gap ${dozGap}, Column gap ${colGap}). Bet Dozen ${coldDozen.dz} • Step 1`,
+                    greenHedge: greenHedgeActive
+                };
+            }
+
+            // TRIGGER E: Balanced Table
+            return {
+                stateTitle: "🟢 BALANCED TABLE",
+                color: "#22c55e",
+                score,
+                mainAction: "PLAY — Cassandra v5 / Sweet 16 / Zigzag",
+                pivotAction: "No Pivot Needed",
+                details: `Table is balanced (Doz gap ${dozGap}, Col gap ${colGap}, 0 repeats). Safe for 6-Diamond spreads.`,
+                greenHedge: greenHedgeActive
+            };
+        }
+
         function updateUI() {
             document.getElementById('spin-val').innerText = `# ${spins.length}`;
 
@@ -484,7 +727,40 @@
                 container.appendChild(chip);
             });
 
-            // 2. 10-2-Win Sector Calculations
+            // 2. Evaluate Consolidated State Engine
+            const stateRes = evaluateConsolidatedState();
+
+            const bannerEl = document.getElementById('state-banner');
+            const titleEl = document.getElementById('banner-state-title');
+            const scoreEl = document.getElementById('banner-score-val');
+            const mainActionEl = document.getElementById('banner-main-action');
+            const pivotActionEl = document.getElementById('banner-pivot-action');
+            const detailsEl = document.getElementById('banner-details-text');
+            const hedgeAlertEl = document.getElementById('banner-green-hedge');
+
+            bannerEl.style.borderLeftColor = stateRes.color;
+            titleEl.innerText = stateRes.stateTitle;
+            titleEl.style.color = stateRes.color;
+            scoreEl.innerText = `TBI: ${stateRes.score}`;
+            mainActionEl.innerText = stateRes.mainAction;
+            pivotActionEl.innerText = stateRes.pivotAction;
+            detailsEl.innerText = stateRes.details;
+
+            // Green Drought Highlight
+            const key0 = document.getElementById('btn-key-0');
+            const key00 = document.getElementById('btn-key-00');
+
+            if (stateRes.greenHedge) {
+                hedgeAlertEl.style.display = "block";
+                key0.classList.add("key-green-glow");
+                key00.classList.add("key-green-glow");
+            } else {
+                hedgeAlertEl.style.display = "none";
+                key0.classList.remove("key-green-glow");
+                key00.classList.remove("key-green-glow");
+            }
+
+            // 3. 10-2-Win Sector Calculations
             const window15 = spins.slice(0, 15).map(s => s.number);
             
             Object.keys(QUADRANTS).forEach(key => {
@@ -503,14 +779,14 @@
                 el.className = "quad-stats";
                 if (key === "GR") {
                     if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
-                    else if (age > 15) el.classList.add("alert-green");
+                    else if (age > 15) el.classList.add("alert-cyan");
                 } else {
                     if (age >= 5 && age <= 8) el.classList.add("alert-yellow");
                     else if (age > 8) el.classList.add("alert-green");
                 }
             });
 
-            // 3. Sweet 16 Exclusions Monitor (W=15)
+            // 4. Sweet 16 Exclusions Monitor (W=15)
             const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
             let s16Age = 0;
             for (let i = 0; i < spins.length; i++) {
@@ -526,7 +802,7 @@
                 s16El.classList.add("alert-yellow");
             }
 
-            // 4. 10-2-Win Sniper Monitor (Max Dozen/Column Drought)
+            // 5. 10-2-Win Sniper Monitor
             let maxDrought = 0;
             if (spins.length >= 5) {
                 ['d1','d2','d3','c1','c2','c3'].forEach(group => {
@@ -556,7 +832,7 @@
                 win10El.classList.add("alert-yellow");
             }
 
-            // 5. Streets of Fire Monitor (W=15)
+            // 6. Streets of Fire Monitor (W=15)
             const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
             let sofAge = 0;
             for (let i = 0; i < spins.length; i++) {
