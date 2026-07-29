@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.72.4 - Dual Input Mode</title>
+    <title>Roulette Tracker v1.73.0 - Multi-Strategy Monitors</title>
     <style>
         * {
             box-sizing: border-box;
@@ -194,11 +194,17 @@
             padding-bottom: 10px;
         }
 
-        .junko-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        .junko-card, .strategy-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
         .junko-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
         .quad-badge { background: #121212; padding: 8px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #333; }
         .quad-title { font-size: 0.7rem; font-weight: bold; color: #888; }
         .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
+
+        /* Strategy Monitors Panel */
+        .strat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .strat-box { background: #121212; padding: 8px; border-radius: 6px; border: 1px solid #333; text-align: center; }
+        .strat-title { font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
+        .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
 
         .alert-yellow { color: #f59e0b; }
         .alert-green { color: #22c55e; }
@@ -221,25 +227,20 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.72.4</span>
+        <span class="version-tag">v1.73.0</span>
     </header>
 
-    <!-- DUAL MODE INPUT BLOCK -->
     <div id="slim-tracker-container">
-        <!-- 3-Part Readout Bar -->
         <div class="readout-bar">
-            <!-- Left: Spin Counter -->
             <div id="spin-counter" class="readout-cell c-spin">
                 <span id="spin-val" class="r-val"># 0</span>
             </div>
             
-            <!-- Center: Keypad Input Readout -->
             <div id="input-center" class="readout-cell c-ent">
                 <span class="r-lab">NEWEST:</span>
                 <span id="input-buffer" class="r-val">--</span>
             </div>
 
-            <!-- Right: Session High (Mode Switchable) -->
             <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
                 <span id="high-val" class="r-val">$ 0</span>
             </div>
@@ -265,16 +266,13 @@
             <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
         </div>
 
-        <!-- RECENT HISTORY -->
         <div class="history-strip-container">
             <span class="history-label">LAST:</span>
             <div id="history-stream" class="history-stream"></div>
         </div>
     </div>
 
-    <!-- SCROLLABLE LOWER SECTION -->
     <div id="main-scroll">
-        <!-- JUNKO QUADRANTS MODULE -->
         <div class="junko-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">JUNKO QUADRANTS (W=15)</div>
             <div class="junko-grid">
@@ -302,7 +300,20 @@
             <div id="bet-numbers-display" class="bet-numbers-panel"></div>
         </div>
 
-        <!-- CONTROLS & CSV SECTION -->
+        <div class="strategy-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
+            <div class="strat-grid">
+                <div class="strat-box">
+                    <div class="strat-title">Sweet 16 Exclusions (W=15)</div>
+                    <div id="stat-s16" class="strat-val">0 (0+)</div>
+                </div>
+                <div class="strat-box">
+                    <div class="strat-title">10-2-Win (Max Drought)</div>
+                    <div id="stat-102win" class="strat-val">0 spins</div>
+                </div>
+            </div>
+        </div>
+
         <div class="controls-card">
             <div class="input-group">
                 <label for="casino-input">Casino Name</label>
@@ -338,6 +349,8 @@
             M:  ["5","6","7","17","18","19","20","21","31","32"],
             GR: ["0","00"]
         };
+
+        const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
 
         function toggleInputMode() {
             const bankrollEl = document.getElementById('bankroll');
@@ -476,6 +489,52 @@
                     else if (age > 8) el.classList.add("alert-green");
                 }
             });
+
+            // 3. Sweet 16 Exclusions Monitor (W=15)
+            const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
+            let s16Age = 0;
+            for (let i = 0; i < spins.length; i++) {
+                if (SWEET_16_EXCLUSIONS.includes(spins[i].number)) break;
+                s16Age++;
+            }
+            const s16El = document.getElementById('stat-s16');
+            s16El.innerText = `${s16Count} (${s16Age}+)`;
+            s16El.className = "strat-val";
+            if (s16Count >= 6 || s16Age >= 6) {
+                s16El.classList.add("alert-green");
+            } else if (s16Count === 5 || (s16Age >= 3 && s16Age <= 5)) {
+                s16El.classList.add("alert-yellow");
+            }
+
+            // 4. 10-2-Win Sniper Monitor (Max Dozen/Column Drought)
+            let maxDrought = 0;
+            if (spins.length >= 5) {
+                ['d1','d2','d3','c1','c2','c3'].forEach(group => {
+                    let dCount = 0;
+                    for (let i = 0; i < spins.length; i++) {
+                        let n = parseInt(spins[i].number, 10);
+                        if (isNaN(n)) continue;
+                        let matched = false;
+                        if (group === 'd1' && n >= 1 && n <= 12) matched = true;
+                        if (group === 'd2' && n >= 13 && n <= 24) matched = true;
+                        if (group === 'd3' && n >= 25 && n <= 36) matched = true;
+                        if (group === 'c1' && n % 3 === 1) matched = true;
+                        if (group === 'c2' && n % 3 === 2) matched = true;
+                        if (group === 'c3' && (n % 3 === 0 && n !== 0)) matched = true;
+                        if (matched) break;
+                        dCount++;
+                    }
+                    if (dCount > maxDrought) maxDrought = dCount;
+                });
+            }
+            const win10El = document.getElementById('stat-102win');
+            win10El.innerText = `${maxDrought} spins`;
+            win10El.className = "strat-val";
+            if (maxDrought >= 10) {
+                win10El.classList.add("alert-green");
+            } else if (maxDrought >= 7) {
+                win10El.classList.add("alert-yellow");
+            }
         }
 
         function toggleBetNumbers(quadKey) {
