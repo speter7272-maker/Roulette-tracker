@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.75.1 - Corrected Sets</title>
+    <title>Roulette Tracker v1.75.2 - Fixed Keypad</title>
     <style>
         * {
             box-sizing: border-box;
@@ -301,20 +301,25 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.75.1</span>
+        <span class="version-tag">v1.75.2</span>
     </header>
 
+    <!-- DUAL MODE INPUT BLOCK -->
     <div id="slim-tracker-container">
+        <!-- 3-Part Readout Bar -->
         <div class="readout-bar">
+            <!-- Left: Spin Counter -->
             <div id="spin-counter" class="readout-cell c-spin">
                 <span id="spin-val" class="r-val"># 0</span>
             </div>
             
+            <!-- Center: Keypad Input Readout -->
             <div id="input-center" class="readout-cell c-ent">
                 <span class="r-lab">NEWEST:</span>
                 <span id="input-buffer" class="r-val">--</span>
             </div>
 
+            <!-- Right: Session High (Mode Switchable) -->
             <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
                 <span id="high-val" class="r-val">$ 0</span>
             </div>
@@ -340,14 +345,17 @@
             <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
         </div>
 
+        <!-- RECENT HISTORY -->
         <div class="history-strip-container">
             <span class="history-label">LAST:</span>
             <div id="history-stream" class="history-stream"></div>
         </div>
     </div>
 
+    <!-- SCROLLABLE LOWER SECTION -->
     <div id="main-scroll">
 
+        <!-- CONSOLIDATED STATE ACTION BANNER -->
         <div id="state-banner" class="action-banner">
             <div class="banner-header">
                 <span id="banner-state-title" class="banner-state" style="color: #22c55e;">🟢 BALANCED</span>
@@ -359,6 +367,7 @@
             <div id="banner-green-hedge" class="banner-hedge-alert">⚠️ GREEN DROUGHT (15+ spins): Add $1/$2 on 0/00 split</div>
         </div>
 
+        <!-- 10-2-WIN MODULE -->
         <div class="junko-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN SECTORS (W=15)</div>
             <div class="junko-grid">
@@ -386,6 +395,7 @@
             <div id="bet-numbers-display" class="bet-numbers-panel"></div>
         </div>
 
+        <!-- STRATEGY MONITORS -->
         <div class="strategy-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
             <div class="strat-grid">
@@ -408,6 +418,7 @@
             </div>
         </div>
 
+        <!-- CONTROLS & CSV SECTION -->
         <div class="controls-card">
             <div class="input-group">
                 <label for="casino-input">Casino Name</label>
@@ -436,7 +447,7 @@
         const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
         const GREEN_NUMS = ["0","00"];
 
-        // Corrected Sets: LO (No 8), HO (Begins with 23,24) - All 10 numbers each
+        // Corrected Sets: LO (No 8), HO (Begins with 23,24)
         const QUADRANTS = {
             GN: ["00","0","1","2","9","10","13","14","27","28"],
             HO: ["23","24","25","26","29","30","33","34","35","36"],
@@ -497,7 +508,8 @@
         }
 
         function updateDisplay() {
-            document.getElementById('input-buffer').innerText = currentInputText === "" ? "--" : currentInputText;
+            const el = document.getElementById('input-buffer');
+            if (el) el.innerText = currentInputText === "" ? "--" : currentInputText;
         }
 
         function submitCommitedValue() {
@@ -514,7 +526,7 @@
             const now = new Date();
             const spinData = {
                 number: currentInputText,
-                casino: document.getElementById("casino-input").value || "Unknown",
+                casino: (document.getElementById("casino-input") && document.getElementById("casino-input").value) || "Unknown",
                 date: now.toISOString().split('T')[0],
                 time: now.toTimeString().split(' ')[0],
                 session_id: sessionId
@@ -530,7 +542,8 @@
                 let newHigh = parseInt(currentInputText, 10);
                 if (!isNaN(newHigh) && newHigh >= 0) {
                     sessionHigh = newHigh;
-                    document.getElementById('high-val').innerText = `$ ${sessionHigh.toLocaleString()}`;
+                    const highEl = document.getElementById('high-val');
+                    if (highEl) highEl.innerText = `$ ${sessionHigh.toLocaleString()}`;
                 }
             }
             toggleInputMode();
@@ -545,7 +558,6 @@
         /* --- CONSOLIDATED STATE ENGINE --- */
         function evaluateConsolidatedState() {
             const recent = spins.slice(0, 15).map(s => s.number);
-            const allNumStr = spins.map(s => s.number);
 
             if (recent.length < 15) {
                 return {
@@ -640,14 +652,14 @@
             // --- STRATEGY ROUTING ---
 
             // TRIGGER A: 10-2-Win Sniper Activation
-            if (driestQuad.age >= 10 && !isRepeatHeavy) {
+            if (driestQuad && driestQuad.age >= 10 && !isRepeatHeavy) {
                 return {
                     stateTitle: "🔵 SNIPER READY (10-2-WIN)",
                     color: "#00f0ff",
                     score: 88,
                     mainAction: `PLAY — 10-2-Win (${driestQuad.name})`,
                     pivotAction: `Target Sector: ${driestQuad.name}`,
-                    details: `${driestQuad.name} is dry for ${driestQuad.age} spins • Table is clean of extreme repeats`,
+                    details: `${driestQuad.name} is dry for ${driestQuad.age} spins • Table clean of repeats`,
                     greenHedge: greenHedgeActive
                 };
             }
@@ -693,4 +705,270 @@
 
             // TRIGGER E: Balanced Table
             return {
-                stateTitle:
+                stateTitle: "🟢 BALANCED TABLE",
+                color: "#22c55e",
+                score,
+                mainAction: "PLAY — Cassandra v5 / Sweet 16 / Zigzag",
+                pivotAction: "No Pivot Needed",
+                details: `Table is balanced (Doz gap ${dozGap}, Col gap ${colGap}, 0 repeats). Safe for 6-Diamond spreads.`,
+                greenHedge: greenHedgeActive
+            };
+        }
+
+        function updateUI() {
+            const spinValEl = document.getElementById('spin-val');
+            if (spinValEl) spinValEl.innerText = `# ${spins.length}`;
+
+            // 1. History Chips
+            const container = document.getElementById('history-stream');
+            if (container) {
+                container.innerHTML = "";
+                const displayList = spins.slice(0, 10);
+
+                displayList.forEach((spin, index) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'spin-chip';
+                    if (index === 0) chip.classList.add('chip-latest');
+
+                    if (GREEN_NUMS.includes(spin.number)) {
+                        chip.classList.add('chip-green');
+                    } else if (RED_NUMS.includes(spin.number)) {
+                        chip.classList.add('chip-red');
+                    } else {
+                        chip.classList.add('chip-black');
+                    }
+
+                    chip.innerText = spin.number;
+                    container.appendChild(chip);
+                });
+            }
+
+            // 2. Evaluate Consolidated State Engine
+            const stateRes = evaluateConsolidatedState();
+
+            const bannerEl = document.getElementById('state-banner');
+            const titleEl = document.getElementById('banner-state-title');
+            const scoreEl = document.getElementById('banner-score-val');
+            const mainActionEl = document.getElementById('banner-main-action');
+            const pivotActionEl = document.getElementById('banner-pivot-action');
+            const detailsEl = document.getElementById('banner-details-text');
+            const hedgeAlertEl = document.getElementById('banner-green-hedge');
+
+            if (bannerEl) {
+                bannerEl.style.borderLeftColor = stateRes.color;
+                if (titleEl) {
+                    titleEl.innerText = stateRes.stateTitle;
+                    titleEl.style.color = stateRes.color;
+                }
+                if (scoreEl) scoreEl.innerText = `TBI: ${stateRes.score}`;
+                if (mainActionEl) mainActionEl.innerText = stateRes.mainAction;
+                if (pivotActionEl) pivotActionEl.innerText = stateRes.pivotAction;
+                if (detailsEl) detailsEl.innerText = stateRes.details;
+
+                // Green Drought Highlight
+                const key0 = document.getElementById('btn-key-0');
+                const key00 = document.getElementById('btn-key-00');
+
+                if (stateRes.greenHedge) {
+                    if (hedgeAlertEl) hedgeAlertEl.style.display = "block";
+                    if (key0) key0.classList.add("key-green-glow");
+                    if (key00) key00.classList.add("key-green-glow");
+                } else {
+                    if (hedgeAlertEl) hedgeAlertEl.style.display = "none";
+                    if (key0) key0.classList.remove("key-green-glow");
+                    if (key00) key00.classList.remove("key-green-glow");
+                }
+            }
+
+            // 3. 10-2-Win Sector Calculations
+            const window15 = spins.slice(0, 15).map(s => s.number);
+            
+            Object.keys(QUADRANTS).forEach(key => {
+                const nums = QUADRANTS[key];
+                const count = window15.filter(n => nums.includes(n)).length;
+                
+                let age = 0;
+                for (let i = 0; i < spins.length; i++) {
+                    if (nums.includes(spins[i].number)) break;
+                    age++;
+                }
+
+                const el = document.getElementById(`stat-${key.toLowerCase()}`);
+                if (el) {
+                    el.innerText = `${count} (${age}+)`;
+                    el.className = "quad-stats";
+                    if (key === "GR") {
+                        if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
+                        else if (age > 15) el.classList.add("alert-cyan");
+                    } else {
+                        if (age >= 5 && age <= 8) el.classList.add("alert-yellow");
+                        else if (age > 8) el.classList.add("alert-green");
+                    }
+                }
+            });
+
+            // 4. Sweet 16 Exclusions Monitor (W=15)
+            const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
+            let s16Age = 0;
+            for (let i = 0; i < spins.length; i++) {
+                if (SWEET_16_EXCLUSIONS.includes(spins[i].number)) break;
+                s16Age++;
+            }
+            const s16El = document.getElementById('stat-s16');
+            if (s16El) {
+                s16El.innerText = `${s16Count} (${s16Age}+)`;
+                s16El.className = "strat-val";
+                if (s16Count >= 6 || s16Age >= 6) {
+                    s16El.classList.add("alert-green");
+                } else if (s16Count === 5 || (s16Age >= 3 && s16Age <= 5)) {
+                    s16El.classList.add("alert-yellow");
+                }
+            }
+
+            // 5. 10-2-Win Sniper Monitor
+            let maxDrought = 0;
+            if (spins.length >= 5) {
+                ['d1','d2','d3','c1','c2','c3'].forEach(group => {
+                    let dCount = 0;
+                    for (let i = 0; i < spins.length; i++) {
+                        let n = parseInt(spins[i].number, 10);
+                        if (isNaN(n)) continue;
+                        let matched = false;
+                        if (group === 'd1' && n >= 1 && n <= 12) matched = true;
+                        if (group === 'd2' && n >= 13 && n <= 24) matched = true;
+                        if (group === 'd3' && n >= 25 && n <= 36) matched = true;
+                        if (group === 'c1' && n % 3 === 1) matched = true;
+                        if (group === 'c2' && n % 3 === 2) matched = true;
+                        if (group === 'c3' && (n % 3 === 0 && n !== 0)) matched = true;
+                        if (matched) break;
+                        dCount++;
+                    }
+                    if (dCount > maxDrought) maxDrought = dCount;
+                });
+            }
+            const win10El = document.getElementById('stat-102win');
+            if (win10El) {
+                win10El.innerText = `${maxDrought} spins`;
+                win10El.className = "strat-val";
+                if (maxDrought >= 10) {
+                    win10El.classList.add("alert-green");
+                } else if (maxDrought >= 7) {
+                    win10El.classList.add("alert-yellow");
+                }
+            }
+
+            // 6. Streets of Fire Monitor (W=15)
+            const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
+            let sofAge = 0;
+            for (let i = 0; i < spins.length; i++) {
+                if (SOF_NUMBERS.includes(spins[i].number)) break;
+                sofAge++;
+            }
+            const sofEl = document.getElementById('stat-sof');
+            if (sofEl) {
+                sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
+                sofEl.className = "strat-val";
+                if (sofCount >= 6 || sofAge >= 8) {
+                    sofEl.classList.add("alert-green");
+                } else if (sofCount === 5 || (sofAge >= 5 && sofAge <= 7)) {
+                    sofEl.classList.add("alert-yellow");
+                }
+            }
+        }
+
+        function toggleBetNumbers(quadKey) {
+            const panel = document.getElementById("bet-numbers-display");
+            if (!panel) return;
+            if (activeQuad === quadKey) {
+                panel.style.display = "none";
+                activeQuad = null;
+            } else {
+                activeQuad = quadKey;
+                panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
+                panel.style.display = "block";
+            }
+        }
+
+        function generateCSVString() {
+            if (spins.length === 0) return "";
+            const headers = ["number", "casino", "date", "time", "session_id"];
+            const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
+            return [headers.join(","), ...rows].join("\n");
+        }
+
+        function copyCSV() {
+            const csvText = generateCSVString();
+            if (!csvText) {
+                alert("No spin data to copy.");
+                return;
+            }
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(csvText).then(() => {
+                    alert("CSV copied to clipboard!");
+                }).catch(() => fallbackCopy(csvText));
+            } else {
+                fallbackCopy(csvText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("CSV copied to clipboard!");
+            } catch (err) {
+                alert("Failed to copy CSV.");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function downloadCSV() {
+            const csvText = generateCSVString();
+            if (!csvText) {
+                alert("No spin data to download.");
+                return;
+            }
+
+            const casinoInput = document.getElementById("casino-input");
+            const casinoName = ((casinoInput && casinoInput.value) || "casino")
+                .toLowerCase().replace(/[^a-z0-9]/g, "_");
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
+
+            const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvText);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+
+            try {
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                document.body.removeChild(link);
+                window.open(encodedUri, '_blank');
+            }
+        }
+
+        function resetSession() {
+            if (confirm("Clear all session spins and reset tracking?")) {
+                spins = [];
+                sessionHigh = 0;
+                const highEl = document.getElementById('high-val');
+                if (highEl) highEl.innerText = "$ 0";
+                clearDigit();
+                updateUI();
+            }
+        }
+
+        // DOM Safely Mounted Initialization
+        document.addEventListener("DOMContentLoaded", () => {
+            updateUI();
+        });
+    </script>
+</body>
+</html>
