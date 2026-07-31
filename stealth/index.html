@@ -1,282 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Roulette Tracker - v1.76.0</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    
-    /* Fixed Top Section: Keypad + History */
-    .top-fixed { background: #1e293b; padding: 8px; border-bottom: 2px solid #334155; shrink: 0; }
-    .history-bar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; align-items: center; }
-    .history-title { font-size: 0.75rem; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-right: 4px; }
-    .chip { min-width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; color: #fff; flex-shrink: 0; }
-    .chip-red { background: #991b1b; }
-    .chip-black { background: #151c24; border: 1px solid #475569; }
-    .chip-green { background: #15803d; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roulette Tracker v1.75.3 - Updated SOF & Sets</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
 
-    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .keypad button { background: #151c24; border: 1px solid #334155; color: #fff; font-size: 1.1rem; font-weight: bold; padding: 12px 0; border-radius: 6px; cursor: pointer; }
-    .keypad button:active { background: #3b82f6; }
-    .keypad .btn-action { background: #334155; color: #38bdf8; }
-    .keypad .btn-enter { background: #16a34a; color: #fff; grid-column: span 2; }
-    .keypad .btn-high { background: #475569; color: #f8fafc; }
-    .keypad .btn-high.active { background: #2563eb; color: #fff; }
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 8px;
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-    /* Main Scrollable Content */
-    .scroll-container { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
-    
-    .card { background: #1e293b; border-radius: 8px; padding: 10px; border: 1px solid #334155; }
-    .card-title { font-size: 0.8rem; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
-    
-    /* Quadrants Bar */
-    .quad-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
-    .quad-box { background: #0f172a; padding: 8px 4px; border-radius: 6px; border: 1px solid #334155; cursor: pointer; }
-    .quad-label { font-size: 0.75rem; color: #94a3b8; font-weight: bold; }
-    .quad-val { font-size: 0.95rem; font-weight: bold; margin-top: 2px; }
-    
-    /* Dynamic Colors */
-    .alert-yellow { color: #f59e0b; border-color: #f59e0b; }
-    .alert-green { color: #22c55e; border-color: #22c55e; }
-    .glow-cyan { border-color: #06b6d4; box-shadow: 0 0 8px #06b6d4; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #333;
+            flex-shrink: 0;
+        }
 
-    .numbers-panel { margin-top: 8px; padding: 8px; background: #0f172a; border-radius: 6px; font-size: 0.85rem; color: #38bdf8; font-weight: bold; text-align: center; display: none; }
+        h1 { font-size: 1rem; color: #4caf50; }
+        .version-tag { font-size: 0.75rem; color: #888; font-weight: bold; }
 
-    .stat-line { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px solid #334155; }
-    .stat-line:last-child { border-bottom: none; }
-    .strat-val { font-weight: bold; }
+        /* --- DUAL MODE INPUT BLOCK --- */
+        #slim-tracker-container {
+            width: 100%;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 6px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
 
-    .controls-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-    .input-field { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px; border-radius: 6px; font-size: 0.9rem; width: 100%; }
-    .action-row { display: flex; gap: 6px; }
-    .action-row button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; font-size: 0.8rem; }
-    .btn-reset { background: #ef4444; }
-    .btn-copy { background: #2563eb; }
-    .btn-dl { background: #16a34a; }
-  </style>
+        /* 3-Part Readout Bar */
+        .readout-bar {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .readout-cell {
+            height: 42px;
+            color: #ffffff;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .r-lab { font-size: 0.6rem; color: #ccc; opacity: 0.8; font-weight: normal; }
+        .r-val { font-size: 1.1rem; }
+
+        .c-spin { background: #b71c1c; border: 1px solid #d32f2f; }
+        .c-high { background: #1565c0; border: 1px solid #1e88e5; }
+        .c-ent { background: #b71c1c; border: 1px solid #d32f2f; font-size: 1.2rem !important; }
+
+        #spin-counter.c-spin { color: #fff; }
+        #input-center.c-ent { color: #fff; }
+        #bankroll.c-high .r-val { color: #fff; }
+        #bankroll.c-spin .r-val { color: #ffca28; }
+
+        .control-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .btn {
+            height: 38px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .btn-enter {
+            background: #2e7d32;
+            color: #fff;
+            flex: 2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .btn-enter:active { background: #1b5e20; }
+
+        .btn-undo {
+            background: #c62828;
+            color: #fff;
+            flex: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .btn-undo:active { background: #8e0000; }
+
+        .numpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .numpad-grid button {
+            height: 36px;
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #3d3d3d;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            touch-action: manipulation;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .numpad-grid button:active { background: #444; }
+        .numpad-grid .btn-clear { background: #333; color: #ffeb3b; }
+        .btn-cancel { background: #1565c0 !important; color: #fff !important; }
+
+        /* Green Drought Keypad Highlight */
+        .key-green-glow {
+            background: rgba(6, 182, 212, 0.35) !important;
+            border: 1px solid #06b6d4 !important;
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+            color: #00f0ff !important;
+        }
+
+        /* Recent History Strip */
+        .history-strip-container {
+            display: flex;
+            align-items: center;
+            background: #0a0a0a;
+            padding: 4px 8px;
+            border-radius: 6px;
+            height: 32px;
+            border: 1px solid #222;
+        }
+
+        .history-label {
+            font-size: 0.7rem;
+            color: #777;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .history-stream {
+            display: flex;
+            gap: 6px;
+            flex-direction: row;
+            overflow-x: auto;
+            width: 100%;
+            align-items: center;
+        }
+
+        .spin-chip {
+            min-width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .chip-red { background: #d32f2f; color: #fff; }
+        .chip-black { background: #212121; color: #fff; border: 1px solid #555; }
+        .chip-green { background: #2e7d32; color: #fff; }
+        .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
+
+        /* SCROLLABLE LOWER SECTION */
+        #main-scroll {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+
+        /* CONSOLIDATED ACTION BANNER */
+        .action-banner {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 10px;
+            border-left: 5px solid #22c55e;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .banner-state {
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .banner-score {
+            font-size: 0.7rem;
+            background: #121212;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #aaa;
+        }
+
+        .banner-action {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 2px;
+            color: #ffffff;
+        }
+
+        .banner-pivot {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #38bdf8;
+            margin-bottom: 4px;
+        }
+
+        .banner-details {
+            font-size: 0.7rem;
+            color: #aaa;
+            line-height: 1.3;
+        }
+
+        .banner-hedge-alert {
+            margin-top: 6px;
+            padding: 4px 6px;
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid #06b6d4;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #00f0ff;
+            font-weight: bold;
+            display: none;
+        }
+
+        .junko-card, .strategy-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        .junko-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
+        .quad-badge { background: #121212; padding: 8px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #333; }
+        .quad-title { font-size: 0.7rem; font-weight: bold; color: #888; }
+        .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
+
+        /* Strategy Monitors Panel */
+        .strat-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+        .strat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .strat-box { background: #121212; padding: 8px; border-radius: 6px; border: 1px solid #333; text-align: center; }
+        .strat-title { font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
+        .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
+
+        .alert-yellow { color: #f59e0b; }
+        .alert-green { color: #22c55e; }
+        .alert-cyan { color: #00f0ff; }
+        .alert-red { color: #ef4444; }
+
+        .bet-numbers-panel { margin-top: 8px; background: #0f172a; padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #38bdf8; word-break: break-word; display: none; }
+
+        .controls-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; display: flex; flex-direction: column; gap: 8px; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 0.75rem; color: #888; }
+        .input-group input { background: #121212; border: 1px solid #333; color: white; padding: 8px; border-radius: 4px; }
+
+        .action-row { display: flex; gap: 6px; }
+        .action-row button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; font-size: 0.8rem; }
+        .btn-reset { background: #ef4444; }
+        .btn-copy { background: #2563eb; }
+        .btn-dl { background: #16a34a; }
+    </style>
 </head>
 <body>
 
-  <div class="top-fixed">
-    <div class="history-bar">
-      <span class="history-title">LAST:</span>
-      <div id="history-chips" style="display:flex; gap:6px;"></div>
-    </div>
+    <header>
+        <h1>ROULETTE TRACKER</h1>
+        <span class="version-tag">v1.75.3</span>
+    </header>
 
-    <div class="keypad">
-      <button onclick="pressKey('1')">1</button>
-      <button onclick="pressKey('2')">2</button>
-      <button onclick="pressKey('3')">3</button>
-      <button onclick="pressKey('4')">4</button>
-      <button onclick="pressKey('5')">5</button>
-      <button onclick="pressKey('6')">6</button>
-      <button onclick="pressKey('7')">7</button>
-      <button onclick="pressKey('8')">8</button>
-      <button onclick="pressKey('9')">9</button>
-      <button onclick="pressKey('00')" class="btn-action" id="btn-00">00</button>
-      <button onclick="pressKey('0')" class="btn-action" id="btn-0">0</button>
-      <button onclick="toggleHighMode()" class="btn-high" id="btn-high">HIGH</button>
-      <button onclick="clearInput()" class="btn-action">C</button>
-      <button onclick="submitSpin()" class="btn-enter">ENTER <span id="input-buffer"></span></button>
-    </div>
-  </div>
+    <div id="slim-tracker-container">
+        <div class="readout-bar">
+            <div id="spin-counter" class="readout-cell c-spin">
+                <span id="spin-val" class="r-val"># 0</span>
+            </div>
+            
+            <div id="input-center" class="readout-cell c-ent">
+                <span class="r-lab">NEWEST:</span>
+                <span id="input-buffer" class="r-val">--</span>
+            </div>
 
-  <div class="scroll-container">
-
-    <div class="card">
-      <div class="card-title">
-        <span>Junko Quadrants (W=15)</span>
-        <span id="green-dryness" style="color:#94a3b8;">0/00: 0 (0+)</span>
-      </div>
-      <div class="quad-grid">
-        <div class="quad-box" id="box-GN" onclick="toggleQuadNums('GN')">
-          <div class="quad-label">GN</div>
-          <div class="quad-val" id="val-GN">0 (0+)</div>
+            <div id="bankroll" onclick="toggleInputMode()" class="readout-cell c-spin">
+                <span id="high-val" class="r-val">$ 0</span>
+            </div>
         </div>
-        <div class="quad-box" id="box-HO" onclick="toggleQuadNums('HO')">
-          <div class="quad-label">HO</div>
-          <div class="quad-val" id="val-HO">0 (0+)</div>
+
+        <div class="control-row">
+            <button id="btn-enter" onclick="submitCommitedValue()" class="btn btn-enter">ENTER</button>
+            <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
         </div>
-        <div class="quad-box" id="box-LO" onclick="toggleQuadNums('LO')">
-          <div class="quad-label">LO</div>
-          <div class="quad-val" id="val-LO">0 (0+)</div>
+
+        <div class="numpad-grid">
+            <button onclick="appendDigit('1')">1</button>
+            <button onclick="appendDigit('2')">2</button>
+            <button onclick="appendDigit('3')">3</button>
+            <button onclick="appendDigit('4')">4</button>
+            <button onclick="appendDigit('5')">5</button>
+            <button onclick="appendDigit('6')">6</button>
+            <button onclick="appendDigit('7')">7</button>
+            <button onclick="appendDigit('8')">8</button>
+            <button onclick="appendDigit('9')">9</button>
+            <button id="btn-key-0" onclick="appendDigit('0')">0</button>
+            <button id="btn-key-00" onclick="appendDigit('00')">00</button>
+            <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
         </div>
-        <div class="quad-box" id="box-M" onclick="toggleQuadNums('M')">
-          <div class="quad-label">M</div>
-          <div class="quad-val" id="val-M">0 (0+)</div>
+
+        <div class="history-strip-container">
+            <span class="history-label">LAST:</span>
+            <div id="history-stream" class="history-stream"></div>
         </div>
-      </div>
-      <div id="quad-numbers-panel" class="numbers-panel"></div>
     </div>
 
-    <div class="card">
-      <div class="card-title">Streets of Fire (0,00,1,2,3,34,35,36)</div>
-      <div class="stat-line">
-        <span>Window Activity:</span>
-        <span id="stat-sof" class="strat-val">0 hits in last 15 | Age: 0+</span>
-      </div>
+    <div id="main-scroll">
+
+        <div id="state-banner" class="action-banner">
+            <div class="banner-header">
+                <span id="banner-state-title" class="banner-state" style="color: #22c55e;">🟢 BALANCED</span>
+                <span id="banner-score-val" class="banner-score">TBI: 100</span>
+            </div>
+            <div id="banner-main-action" class="banner-action">PLAY — Cassandra v5 / Zigzag Corners</div>
+            <div id="banner-pivot-action" class="banner-pivot">No Pivot Needed</div>
+            <div id="banner-details-text" class="banner-details">Table is balanced. Safe for 6-Diamond spreads.</div>
+            <div id="banner-green-hedge" class="banner-hedge-alert">⚠️ GREEN DROUGHT (15+ spins): Add $1/$2 on 0/00 split</div>
+        </div>
+
+        <div class="junko-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN SECTORS (W=15)</div>
+            <div class="junko-grid">
+                <div class="quad-badge" onclick="toggleBetNumbers('GN')">
+                    <div class="quad-title">GN</div>
+                    <div id="stat-gn" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" onclick="toggleBetNumbers('HO')">
+                    <div class="quad-title">HO</div>
+                    <div id="stat-ho" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" onclick="toggleBetNumbers('LO')">
+                    <div class="quad-title">LO</div>
+                    <div id="stat-lo" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" onclick="toggleBetNumbers('M')">
+                    <div class="quad-title">M</div>
+                    <div id="stat-m" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" onclick="toggleBetNumbers('GR')">
+                    <div class="quad-title">GR</div>
+                    <div id="stat-gr" class="quad-stats">0 (0+)</div>
+                </div>
+            </div>
+            <div id="bet-numbers-display" class="bet-numbers-panel"></div>
+        </div>
+
+        <div class="strategy-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
+            <div class="strat-grid">
+                <div class="strat-row">
+                    <div class="strat-box" style="grid-column: span 2;">
+                        <div class="strat-title">Streets of Fire (0,00,1,2,3,34,35,36) W=15</div>
+                        <div id="stat-sof" class="strat-val">0 (0+)</div>
+                    </div>
+                </div>
+                <div class="strat-row">
+                    <div class="strat-box">
+                        <div class="strat-title">Sweet 16 (W=15)</div>
+                        <div id="stat-s16" class="strat-val">0 (0+)</div>
+                    </div>
+                    <div class="strat-box">
+                        <div class="strat-title">10-2-Win (Drought)</div>
+                        <div id="stat-102win" class="strat-val">0 spins</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-card">
+            <div class="input-group">
+                <label for="casino-input">Casino Name</label>
+                <input type="text" id="casino-input" value="RM Smokeshow" placeholder="Enter casino name...">
+            </div>
+
+            <div class="action-row">
+                <button class="btn-reset" onclick="resetSession()">Clear</button>
+                <button class="btn-copy" onclick="copyCSV()">Copy CSV</button>
+                <button class="btn-dl" onclick="downloadCSV()">Download CSV</button>
+            </div>
+        </div>
     </div>
 
-    <div class="card controls-group">
-      <input type="text" id="casino-name" class="input-field" placeholder="Casino Name" value="Live Casino">
-      <div class="action-row">
-        <button class="btn-reset" onclick="resetData()">Reset</button>
-        <button class="btn-copy" onclick="copyCSV()">Copy CSV</button>
-        <button class="btn-dl" onclick="downloadCSV()">Download</button>
-      </div>
-    </div>
+    <script>
+        const MODE_SPIN = 'SPIN';
+        const MODE_HIGH = 'HIGH';
+        
+        let currentMode = MODE_SPIN;
+        let currentInputText = "";
+        let spins = []; 
+        let sessionHigh = 0;
+        let activeQuad = null;
+        let sessionId = "SESS-" + Math.floor(1000 + Math.random() * 9000);
 
-  </div>
+        const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
+        const GREEN_NUMS = ["0","00"];
 
-  <script>
-    // System Constants
-    const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    const GREEN_NUMS = ['0', '00'];
+        // Corrected 10-Number Sets per Category
+        const QUADRANTS = {
+            GN: ["0","00","1","2","9","10","13","14","27","28"],
+            HO: ["23","24","25","26","29","30","33","34","35","36"],
+            LO: ["3","4","11","12","15","16","21","22","23","24"],
+            M:  ["5","6","7","8","17","18","19","20","31","32"],
+            GR: ["0","00"]
+        };
 
-    const QUADRANTS = {
-      GN: ["0", "00", "1", "2", "9", "10", "13", "14", "27", "28"],
-      M:  ["5", "6", "7", "8", "17", "18", "19", "20", "31", "32"],
-      LO: ["3", "4", "11", "12", "15", "16", "21", "22", "23", "24"],
-      HO: ["23", "24", "25", "26", "29", "30", "33", "34", "35", "36"]
-    };
-
-    const SOF_NUMBERS = ["0", "00", "1", "2", "3", "34", "35", "36"];
-
-    let spins = [];
-    let currentInput = "";
-    let isHighMode = false;
-    let activeQuadPanel = null;
-
-    function pressKey(val) {
-      if (currentInput.length < 2) {
-        currentInput += val;
-        document.getElementById('input-buffer').innerText = `(${currentInput})`;
-      }
-    }
-
-    function clearInput() {
-      currentInput = "";
-      document.getElementById('input-buffer').innerText = "";
-    }
-
-    function toggleHighMode() {
-      isHighMode = !isHighMode;
-      document.getElementById('btn-high').classList.toggle('active', isHighMode);
-    }
-
-    function submitSpin() {
-      if (!currentInput) return;
-      
-      if (isHighMode) {
-        // Track high score mode if toggled
-        clearInput();
-        toggleHighMode();
-        return;
-      }
-
-      spins.unshift({ number: currentInput, timestamp: new Date() });
-      clearInput();
-      updateUI();
-    }
-
-    function toggleQuadNums(key) {
-      const panel = document.getElementById('quad-numbers-panel');
-      if (activeQuadPanel === key) {
-        panel.style.display = 'none';
-        activeQuadPanel = null;
-      } else {
-        panel.innerText = `${key} Numbers: ${QUADRANTS[key].join(', ')}`;
-        panel.style.display = 'block';
-        activeQuadPanel = key;
-      }
-    }
-
-    function updateUI() {
-      // 1. History Chips
-      const chipContainer = document.getElementById('history-chips');
-      chipContainer.innerHTML = '';
-      spins.slice(0, 10).forEach(s => {
-        const chip = document.createElement('div');
-        const num = s.number;
-        let colorClass = 'chip-black';
-        if (GREEN_NUMS.includes(num)) colorClass = 'chip-green';
-        else if (RED_NUMS.includes(parseInt(num))) colorClass = 'chip-red';
-
-        chip.className = `chip ${colorClass}`;
-        chip.innerText = num;
-        chipContainer.appendChild(chip);
-      });
-
-      // 2. Junko Quadrants (Window 15)
-      const window15 = spins.slice(0, 15).map(s => s.number);
-      Object.keys(QUADRANTS).forEach(key => {
-        const count = window15.filter(n => QUADRANTS[key].includes(n)).length;
-        let age = 0;
-        for (let i = 0; i < spins.length; i++) {
-          if (QUADRANTS[key].includes(spins[i].number)) break;
-          age++;
-        }
-
-        const valEl = document.getElementById(`val-${key}`);
-        const boxEl = document.getElementById(`box-${key}`);
-        valEl.innerText = `${count} (${age}+)`;
-
-        boxEl.className = "quad-box";
-        if (age >= 9) boxEl.classList.add("alert-green");
-        else if (age >= 5) boxEl.classList.add("alert-yellow");
-      });
-
-      // 3. Green (0/00) Dryness Alert
-      let grAge = 0;
-      for (let i = 0; i < spins.length; i++) {
-        if (GREEN_NUMS.includes(spins[i].number)) break;
-        grAge++;
-      }
-      const grEl = document.getElementById('green-dryness');
-      const grCount = window15.filter(n => GREEN_NUMS.includes(n)).length;
-      grEl.innerText = `0/00: ${grCount} (${grAge}+)`;
-      
-      document.getElementById('btn-0').classList.toggle('glow-cyan', grAge >= 15);
-      document.getElementById('btn-00').classList.toggle('glow-cyan', grAge >= 15);
-
-      // 4. Streets of Fire Monitor
-      const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
-      let sofAge = 0;
-      for (let i = 0; i < spins.length; i++) {
-        if (SOF_NUMBERS.includes(spins[i].number)) break;
-        sofAge++;
-      }
-      const sofEl = document.getElementById('stat-sof');
-      sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
-      sofEl.className = "strat-val";
-      if (sofCount >= 6 || sofAge >= 8) sofEl.classList.add("alert-green");
-      else if (sofCount === 5 || (sofAge >= 5 && sofAge <= 7)) sofEl.classList.add("alert-yellow");
-    }
-
-    function resetData() {
-      if (confirm("Reset current session data?")) {
-        spins = [];
-        updateUI();
-      }
-    }
-
-    function copyCSV() {
-      const csv = spins.map(s => s.number).join(',');
-      navigator.clipboard.writeText(csv);
-      alert("CSV copied to clipboard!");
-    }
-
-    function downloadCSV() {
-      const csv = "Spin\n" + spins.map(s => s.number).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `roulette_session_${Date.now()}.csv`;
-      a.click();
-    }
-  </script>
-</body>
-</html>
+        const JUNKO_SETS = {
