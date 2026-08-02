@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.75.0 - Zigzag Monitors</title>
+    <title>Roulette Tracker v1.76.0 - CSV Import & Fixed ZZ3</title>
     <style>
         * {
             box-sizing: border-box;
@@ -218,17 +218,26 @@
         .input-group input { background: #121212; border: 1px solid #333; color: white; padding: 8px; border-radius: 4px; }
 
         .action-row { display: flex; gap: 6px; }
-        .action-row button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; font-size: 0.8rem; }
+        .action-row button { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; font-size: 0.75rem; }
         .btn-reset { background: #ef4444; }
         .btn-copy { background: #2563eb; }
         .btn-dl { background: #16a34a; }
+        .btn-import { background: #7c3aed; }
+
+        /* CSV Import Modal Panel */
+        #import-panel { background: #0f172a; border: 1px solid #334155; padding: 8px; border-radius: 6px; display: none; margin-top: 4px; }
+        #import-panel textarea { width: 100%; height: 60px; background: #1e293b; color: #fff; border: 1px solid #475569; padding: 4px; font-size: 0.75rem; border-radius: 4px; resize: none; }
+        .import-actions { display: flex; gap: 6px; margin-top: 4px; }
+        .import-actions button { flex: 1; padding: 6px; font-size: 0.7rem; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-do-import { background: #22c55e; }
+        .btn-cancel-import { background: #64748b; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.75.0</span>
+        <span class="version-tag">v1.76.0</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -313,11 +322,11 @@
                 <div class="strat-row">
                     <div class="strat-box">
                         <div class="strat-title">ZZ1 (Base Zigzag) W=15</div>
-                        <div id="stat-zz1" class="strat-val">0 (0+)</div>
+                        <div id="stat-zz1" class="strat-val">0(+0)</div>
                     </div>
                     <div class="strat-box">
                         <div class="strat-title">ZZ3 (Reverse Zigzag) W=15</div>
-                        <div id="stat-zz3" class="strat-val">0 (0+)</div>
+                        <div id="stat-zz3" class="strat-val">0(+0)</div>
                     </div>
                 </div>
                 <div class="strat-row">
@@ -342,7 +351,17 @@
             <div class="action-row">
                 <button class="btn-reset" onclick="resetSession()">Clear</button>
                 <button class="btn-copy" onclick="copyCSV()">Copy CSV</button>
+                <button class="btn-import" onclick="toggleImportPanel()">Import CSV</button>
                 <button class="btn-dl" onclick="downloadCSV()">Download CSV</button>
+            </div>
+
+            <div id="import-panel">
+                <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 3px;">Paste CSV session data below:</label>
+                <textarea id="import-textarea" placeholder="number,casino,date,time,session_id..."></textarea>
+                <div class="import-actions">
+                    <button class="btn-do-import" onclick="processCSVImport()">Load Session</button>
+                    <button class="btn-cancel-import" onclick="toggleImportPanel()">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
@@ -372,10 +391,11 @@
         const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
         const SOF_NUMBERS = ["0","00","1","2","3","34","25","26"];
 
-        // ZZ1 non-middle (non-column 2) numbers across the 6-diamond set (1/5, 8/12, 13/17, 20/24, 25/29, 32/36)
+        // ZZ1 non-middle (non-column 2) numbers across standard zigzag (1/5, 8/12, 13/17, 20/24, 25/29, 32/36)
         const ZZ1_NUMBERS = ["1","4","9","12","13","16","21","24","25","28","33","36"];
-        // ZZ3 complement set non-middle numbers
-        const ZZ3_NUMBERS = ["3","6","7","10","14","15","18","22","26","27","30","35"];
+        
+        // ZZ3 non-middle (non-column 2) numbers across correct reverse zigzag (2/6, 7/11, 14/18, 19/23, 26/30, 31/35) -> 3,6,7,10,15,18,19,22,27,30,31,34
+        const ZZ3_NUMBERS = ["3","6","7","10","15","18","19","22","27","30","31","34"];
 
         function toggleInputMode() {
             const bankrollEl = document.getElementById('bankroll');
@@ -604,6 +624,62 @@
                 activeQuad = quadKey;
                 panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
                 panel.style.display = "block";
+            }
+        }
+
+        function toggleImportPanel() {
+            const panel = document.getElementById("import-panel");
+            panel.style.display = panel.style.display === "block" ? "none" : "block";
+        }
+
+        function processCSVImport() {
+            const rawText = document.getElementById("import-textarea").value.trim();
+            if (!rawText) {
+                alert("Please paste valid CSV spin data.");
+                return;
+            }
+
+            const lines = rawText.split("\n");
+            if (lines.length < 2) {
+                alert("Invalid format. Make sure headers and rows are included.");
+                return;
+            }
+
+            let newSpins = [];
+            let detectedCasino = "";
+
+            // Parse CSV lines (ignoring header line 0)
+            for (let i = 1; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+
+                // Basic CSV regex split or comma split handling quotes
+                let parts = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
+                if (parts.length >= 2) {
+                    let num = parts[0].replace(/["']/g, "").trim();
+                    let casino = parts[1] ? parts[1].replace(/["']/g, "").trim() : "Imported Casino";
+                    let date = parts[2] ? parts[2].replace(/["']/g, "").trim() : new Date().toISOString().split('T')[0];
+                    let time = parts[3] ? parts[3].replace(/["']/g, "").trim() : "00:00:00";
+                    let sId = parts[4] ? parts[4].replace(/["']/g, "").trim() : sessionId;
+
+                    if (num !== "" && !isNaN(num) || num === "00") {
+                        newSpins.push({ number: num, casino: casino, date: date, time: time, session_id: sId });
+                        if (!detectedCasino && casino) detectedCasino = casino;
+                    }
+                }
+            }
+
+            if (newSpins.length > 0) {
+                spins = newSpins; // Replace current session spins with imported set
+                if (detectedCasino) {
+                    document.getElementById("casino-input").value = detectedCasino;
+                }
+                toggleImportPanel();
+                document.getElementById("import-textarea").value = "";
+                updateUI();
+                alert(`Successfully imported ${newSpins.length} spins!`);
+            } else {
+                alert("Could not parse any valid spin rows from the pasted text.");
             }
         }
 
