@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.79.1 - Corrected SOF & HO</title>
+    <title>Roulette Tracker v1.79.2 - Sector Clean Up</title>
     <style>
         * {
             box-sizing: border-box;
@@ -239,7 +239,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.79.1</span>
+        <span class="version-tag">v1.79.2</span>
     </header>
 
     <!-- DUAL MODE INPUT BLOCK -->
@@ -413,11 +413,11 @@
             "31/35": [31,32,34,35], "32/36": [32,33,35,36]
         };
 
-        // Updated HO to include 23,24,25,26,30,33,34,35,36
+        // Corrected LO: 8 removed from LO, exclusively kept in M
         const QUADRANTS = {
             GN: ["00","0","1","2","9","10","13","14","27","28"],
             HO: ["23","24","25","26","30","33","34","35","36"],
-            LO: ["3","4","8","11","12","15","16","21","22","23","24"],
+            LO: ["3","4","11","12","15","16","21","22","23","24"],
             M:  ["5","6","7","8","17","18","19","20","31","32"],
             GR: ["0","00"]
         };
@@ -429,7 +429,6 @@
         };
 
         const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
-        // Corrected SOF numbers: 0, 00, 1, 2, 3, 34, 35, 36
         const SOF_NUMBERS = ["0","00","1","2","3","34","35","36"];
         const ZZ1_NUMBERS = ["1","4","9","12","13","16","21","24","25","28","33","36"];
         const ZZ3_NUMBERS = ["3","6","7","10","15","18","19","22","27","30","31","34"];
