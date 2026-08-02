@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.76.0 - CSV Import & Fixed ZZ3</title>
+    <title>Roulette Tracker v1.78.0 - Anomaly Engine</title>
     <style>
         * {
             box-sizing: border-box;
@@ -50,7 +50,6 @@
             flex-shrink: 0;
         }
 
-        /* 3-Part Readout Bar */
         .readout-bar {
             display: grid;
             grid-template-columns: 1fr 1.2fr 1fr;
@@ -140,7 +139,6 @@
         .numpad-grid .btn-clear { background: #333; color: #ffeb3b; }
         .btn-cancel { background: #1565c0 !important; color: #fff !important; }
 
-        /* Recent History Strip */
         .history-strip-container {
             display: flex;
             align-items: center;
@@ -184,7 +182,6 @@
         .chip-green { background: #2e7d32; color: #fff; }
         .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
 
-        /* SCROLLABLE METRICS & CONTROLS */
         #main-scroll {
             flex: 1;
             overflow-y: auto;
@@ -194,21 +191,27 @@
             padding-bottom: 10px;
         }
 
-        .junko-card, .strategy-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        .junko-card, .strategy-card, .anomaly-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
         .junko-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
         .quad-badge { background: #121212; padding: 8px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #333; }
         .quad-title { font-size: 0.7rem; font-weight: bold; color: #888; }
         .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
 
-        /* Strategy Monitors Panel */
         .strat-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
         .strat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .strat-box { background: #121212; padding: 8px; border-radius: 6px; border: 1px solid #333; text-align: center; }
         .strat-title { font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
         .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
 
+        /* Statistical Anomalies Compact Strip */
+        .anomaly-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; text-align: center; }
+        .anomaly-badge { background: #121212; border: 1px solid #222; padding: 6px 2px; border-radius: 4px; color: #555; opacity: 0.6; }
+        .anomaly-badge.active-yellow { background: #78350f; border-color: #f59e0b; color: #fde68a; opacity: 1; }
+        .anomaly-badge.active-red { background: #7f1d1d; border-color: #ef4444; color: #fca5a5; opacity: 1; font-weight: bold; }
+
         .alert-yellow { color: #f59e0b; }
         .alert-green { color: #22c55e; }
+        .alert-red { color: #ef4444; }
 
         .bet-numbers-panel { margin-top: 8px; background: #0f172a; padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #38bdf8; word-break: break-word; display: none; }
 
@@ -224,7 +227,6 @@
         .btn-dl { background: #16a34a; }
         .btn-import { background: #7c3aed; }
 
-        /* CSV Import Modal Panel */
         #import-panel { background: #0f172a; border: 1px solid #334155; padding: 8px; border-radius: 6px; display: none; margin-top: 4px; }
         #import-panel textarea { width: 100%; height: 60px; background: #1e293b; color: #fff; border: 1px solid #475569; padding: 4px; font-size: 0.75rem; border-radius: 4px; resize: none; }
         .import-actions { display: flex; gap: 6px; margin-top: 4px; }
@@ -237,7 +239,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.76.0</span>
+        <span class="version-tag">v1.78.0</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -283,6 +285,22 @@
     </div>
 
     <div id="main-scroll">
+        <div class="anomaly-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
+            <div class="anomaly-grid">
+                <div id="anom-c1" class="anomaly-badge"><div style="font-size:0.6rem;">C1 CONC.</div><div id="val-c1" style="font-size:0.75rem;">0/15</div></div>
+                <div id="anom-c2" class="anomaly-badge"><div style="font-size:0.6rem;">C2 CONC.</div><div id="val-c2" style="font-size:0.75rem;">0/15</div></div>
+                <div id="anom-c3" class="anomaly-badge"><div style="font-size:0.6rem;">C3 CONC.</div><div id="val-c3" style="font-size:0.75rem;">0/15</div></div>
+                <div id="anom-numrep" class="anomaly-badge"><div style="font-size:0.6rem;">NUM REPEAT</div><div id="val-numrep" style="font-size:0.75rem;">None</div></div>
+                <div id="anom-strep" class="anomaly-badge"><div style="font-size:0.6rem;">STREET REP</div><div id="val-strep" style="font-size:0.75rem;">None</div></div>
+                <div id="anom-dsrep" class="anomaly-badge"><div style="font-size:0.6rem;">DBL STREET</div><div id="val-dsrep" style="font-size:0.75rem;">None</div></div>
+            </div>
+            <div style="margin-top:6px; background:#121212; padding:6px; border-radius:4px; font-size:0.7rem; color:#888; display:flex; justify-content:space-between;">
+                <span>DRIEST VERTICAL COL:</span>
+                <span id="stat-driest-vcol" style="font-weight:bold; color:#38bdf8;">--</span>
+            </div>
+        </div>
+
         <div class="junko-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
             <div class="junko-grid">
@@ -388,13 +406,15 @@
             GR: ["0","00"]
         };
 
+        const VERTICAL_COLUMNS = {
+            "D1/C1": [1,4,7,10], "D1/C2": [2,5,8,11], "D1/C3": [3,6,9,12],
+            "D2/C1": [13,16,19,22], "D2/C2": [14,17,20,23], "D2/C3": [15,18,21,24],
+            "D3/C1": [25,28,31,34], "D3/C2": [26,29,32,35], "D3/C3": [27,30,33,36]
+        };
+
         const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
         const SOF_NUMBERS = ["0","00","1","2","3","34","25","26"];
-
-        // ZZ1 non-middle (non-column 2) numbers across standard zigzag (1/5, 8/12, 13/17, 20/24, 25/29, 32/36)
         const ZZ1_NUMBERS = ["1","4","9","12","13","16","21","24","25","28","33","36"];
-        
-        // ZZ3 non-middle (non-column 2) numbers across correct reverse zigzag (2/6, 7/11, 14/18, 19/23, 26/30, 31/35) -> 3,6,7,10,15,18,19,22,27,30,31,34
         const ZZ3_NUMBERS = ["3","6","7","10","15","18","19","22","27","30","31","34"];
 
         function toggleInputMode() {
@@ -484,6 +504,18 @@
             updateUI();
         }
 
+        function getStreet(num) {
+            let n = parseInt(num, 10);
+            if (isNaN(n) || n < 1 || n > 36) return null;
+            return Math.ceil(n / 3);
+        }
+
+        function getDoubleStreet(num) {
+            let s = getStreet(num);
+            if (!s) return null;
+            return Math.ceil(s / 2);
+        }
+
         function updateUI() {
             document.getElementById('spin-val').innerText = `# ${spins.length}`;
 
@@ -509,22 +541,102 @@
                 container.appendChild(chip);
             });
 
-            // 2. 10-2-Win Sector Calculations
             const window15 = spins.slice(0, 15).map(s => s.number);
-            
+
+            // 2. Statistical Anomaly & Repeat Engine
+            let c1 = 0, c2 = 0, c3 = 0;
+            window15.forEach(num => {
+                let n = parseInt(num, 10);
+                if (!isNaN(n) && n >= 1 && n <= 36) {
+                    if (n % 3 === 1) c1++;
+                    else if (n % 3 === 2) c2++;
+                    else if (n % 3 === 0) c3++;
+                }
+            });
+
+            document.getElementById('val-c1').innerText = `${c1}/15`;
+            document.getElementById('val-c2').innerText = `${c2}/15`;
+            document.getElementById('val-c3').innerText = `${c3}/15`;
+
+            let setAnomStyle = (id, count) => {
+                let el = document.getElementById(id);
+                el.className = "anomaly-badge";
+                if (count >= 8) el.classList.add("active-red");
+                else if (count >= 7) el.classList.add("active-yellow");
+            };
+            setAnomStyle('anom-c1', c1);
+            setAnomStyle('anom-c2', c2);
+            setAnomStyle('anom-c3', c3);
+
+            // Number Repeats (Last 5)
+            const last5 = spins.slice(0, 5).map(s => s.number);
+            let numRep = "None";
+            for (let i = 0; i < last5.length; i++) {
+                if (last5.indexOf(last5[i]) !== i) { numRep = `#${last5[i]}`; break; }
+            }
+            let elNumRep = document.getElementById('anom-numrep');
+            document.getElementById('val-numrep').innerText = numRep;
+            elNumRep.className = numRep !== "None" ? "anomaly-badge active-red" : "anomaly-badge";
+
+            // Street Repeats (Last 6)
+            const last6 = spins.slice(0, 6).map(s => s.number);
+            let streetCounts = {};
+            let streetRep = "None";
+            last6.forEach(n => {
+                let st = getStreet(n);
+                if (st) {
+                    streetCounts[st] = (streetCounts[st] || 0) + 1;
+                    if (streetCounts[st] >= 3) streetRep = `St ${st}`;
+                }
+            });
+            let elStRep = document.getElementById('anom-strep');
+            document.getElementById('val-strep').innerText = streetRep;
+            elStRep.className = streetRep !== "None" ? "anomaly-badge active-red" : "anomaly-badge";
+
+            // Double Street Repeats (Last 8)
+            const last8 = spins.slice(0, 8).map(s => s.number);
+            let dsCounts = {};
+            let dsRep = "None";
+            last8.forEach(n => {
+                let ds = getDoubleStreet(n);
+                if (ds) {
+                    dsCounts[ds] = (dsCounts[ds] || 0) + 1;
+                    if (dsCounts[ds] >= 3) dsRep = `DS ${ds}`;
+                }
+            });
+            let elDsRep = document.getElementById('anom-dsrep');
+            document.getElementById('val-dsrep').innerText = dsRep;
+            elDsRep.className = dsRep !== "None" ? "anomaly-badge active-yellow" : "anomaly-badge";
+
+            // Driest 4-Number Vertical Column Calculation
+            let maxVColAge = -1;
+            let driestVColName = "--";
+            Object.keys(VERTICAL_COLUMNS).forEach(vKey => {
+                let vNums = VERTICAL_COLUMNS[vKey];
+                let age = 0;
+                for (let i = 0; i < spins.length; i++) {
+                    let n = parseInt(spins[i].number, 10);
+                    if (vNums.includes(n)) break;
+                    age++;
+                }
+                if (age > maxVColAge) {
+                    maxVColAge = age;
+                    driestVColName = `${vKey} (${age}+ spins)`;
+                }
+            });
+            document.getElementById('stat-driest-vcol').innerText = driestVColName;
+
+            // 3. 10-2-Win Sector Calculations
             Object.keys(QUADRANTS).forEach(key => {
                 const nums = QUADRANTS[key];
                 const count = window15.filter(n => nums.includes(n)).length;
-                
                 let age = 0;
                 for (let i = 0; i < spins.length; i++) {
                     if (nums.includes(spins[i].number)) break;
                     age++;
                 }
-
                 const el = document.getElementById(`stat-${key.toLowerCase()}`);
                 el.innerText = `${count} (${age}+)`;
-
                 el.className = "quad-stats";
                 if (key === "GR") {
                     if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
@@ -535,7 +647,7 @@
                 }
             });
 
-            // 3. ZZ1 Monitor (Base Zigzag W=15)
+            // 4. Strategy Monitors
             const zz1Count = window15.filter(n => ZZ1_NUMBERS.includes(n)).length;
             let zz1Age = 0;
             for (let i = 0; i < spins.length; i++) {
@@ -548,7 +660,6 @@
             if (zz1Count >= 6 || zz1Age >= 6) zz1El.classList.add("alert-green");
             else if (zz1Count === 5 || (zz1Age >= 3 && zz1Age <= 5)) zz1El.classList.add("alert-yellow");
 
-            // 4. ZZ3 Monitor (Reverse Zigzag W=15)
             const zz3Count = window15.filter(n => ZZ3_NUMBERS.includes(n)).length;
             let zz3Age = 0;
             for (let i = 0; i < spins.length; i++) {
@@ -561,7 +672,6 @@
             if (zz3Count >= 6 || zz3Age >= 6) zz3El.classList.add("alert-green");
             else if (zz3Count === 5 || (zz3Age >= 3 && zz3Age <= 5)) zz3El.classList.add("alert-yellow");
 
-            // 5. Sweet 16 Exclusions Monitor (W=15)
             const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
             let s16Age = 0;
             for (let i = 0; i < spins.length; i++) {
@@ -574,7 +684,6 @@
             if (s16Count >= 6 || s16Age >= 6) s16El.classList.add("alert-green");
             else if (s16Count === 5 || (s16Age >= 3 && s16Age <= 5)) s16El.classList.add("alert-yellow");
 
-            // 6. 10-2-Win Sniper Monitor (Max Dozen/Column Drought)
             let maxDrought = 0;
             if (spins.length >= 5) {
                 ['d1','d2','d3','c1','c2','c3'].forEach(group => {
@@ -595,13 +704,13 @@
                     if (dCount > maxDrought) maxDrought = dCount;
                 });
             }
+
             const win10El = document.getElementById('stat-102win');
             win10El.innerText = `${maxDrought} spins`;
             win10El.className = "strat-val";
             if (maxDrought >= 10) win10El.classList.add("alert-green");
             else if (maxDrought >= 7) win10El.classList.add("alert-yellow");
 
-            // 7. Streets of Fire Monitor (W=15)
             const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
             let sofAge = 0;
             for (let i = 0; i < spins.length; i++) {
@@ -648,12 +757,10 @@
             let newSpins = [];
             let detectedCasino = "";
 
-            // Parse CSV lines (ignoring header line 0)
             for (let i = 1; i < lines.length; i++) {
                 let line = lines[i].trim();
                 if (!line) continue;
 
-                // Basic CSV regex split or comma split handling quotes
                 let parts = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
                 if (parts.length >= 2) {
                     let num = parts[0].replace(/["']/g, "").trim();
@@ -670,7 +777,7 @@
             }
 
             if (newSpins.length > 0) {
-                spins = newSpins; // Replace current session spins with imported set
+                spins = newSpins;
                 if (detectedCasino) {
                     document.getElementById("casino-input").value = detectedCasino;
                 }
