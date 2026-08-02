@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.79.2 - Sector Clean Up</title>
+    <title>Roulette Tracker v1.80.0 - Zigzag Corner Repeats</title>
     <style>
         * {
             box-sizing: border-box;
@@ -239,7 +239,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.79.2</span>
+        <span class="version-tag">v1.80.0</span>
     </header>
 
     <!-- DUAL MODE INPUT BLOCK -->
@@ -296,7 +296,7 @@
                 <div id="anom-c3" class="anomaly-badge"><div style="font-size:0.6rem;">C3 CONC.</div><div id="val-c3" style="font-size:0.75rem;">0/15</div></div>
                 <div id="anom-numrep" class="anomaly-badge"><div style="font-size:0.6rem;">NUM REPEAT</div><div id="val-numrep" style="font-size:0.75rem;">None</div></div>
                 <div id="anom-strep" class="anomaly-badge"><div style="font-size:0.6rem;">STREET REP</div><div id="val-strep" style="font-size:0.75rem;">None</div></div>
-                <div id="anom-cornerrep" class="anomaly-badge"><div style="font-size:0.6rem;">CORNER REP</div><div id="val-cornerrep" style="font-size:0.75rem;">None</div></div>
+                <div id="anom-cornerrep" class="anomaly-badge"><div style="font-size:0.6rem;">ZZ CORNER REP</div><div id="val-cornerrep" style="font-size:0.75rem;">None</div></div>
             </div>
             <div style="margin-top:6px; background:#121212; padding:6px; border-radius:4px; font-size:0.7rem; color:#888; display:flex; justify-content:space-between;">
                 <span>DRIEST VERTICAL COL:</span>
@@ -404,16 +404,24 @@
         const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
         const GREEN_NUMS = ["0","00"];
 
+        // 12 Non-Overlapping Zigzag Corners Only (ZZ1 + ZZ3)
         const CORNERS = {
-            "1/5": [1,2,4,5], "2/6": [2,3,5,6], "4/8": [4,5,7,8], "5/9": [5,6,8,9],
-            "7/11": [7,8,10,11], "8/12": [8,9,11,12], "10/14": [10,11,13,14], "11/15": [11,12,14,15],
-            "13/17": [13,14,16,17], "14/18": [14,15,17,18], "16/20": [16,17,19,20], "17/21": [17,18,20,21],
-            "19/23": [19,20,22,23], "20/24": [20,21,23,24], "22/26": [22,23,25,26], "23/27": [23,24,26,27],
-            "25/29": [25,26,28,29], "26/30": [26,27,29,30], "28/32": [28,29,31,32], "29/33": [29,30,32,33],
-            "31/35": [31,32,34,35], "32/36": [32,33,35,36]
+            // ZZ1 Corners (Base)
+            "1/5": [1,2,4,5],
+            "8/12": [8,9,11,12],
+            "13/17": [13,14,16,17],
+            "20/24": [20,21,23,24],
+            "25/29": [25,26,28,29],
+            "32/36": [32,33,35,36],
+            // ZZ3 Corners (Reverse)
+            "2/6": [2,3,5,6],
+            "7/11": [7,8,10,11],
+            "14/18": [14,15,17,18],
+            "19/23": [19,20,22,23],
+            "26/30": [26,27,29,30],
+            "31/35": [31,32,34,35]
         };
 
-        // Corrected LO: 8 removed from LO, exclusively kept in M
         const QUADRANTS = {
             GN: ["00","0","1","2","9","10","13","14","27","28"],
             HO: ["23","24","25","26","30","33","34","35","36"],
@@ -613,7 +621,7 @@
             document.getElementById('val-strep').innerText = streetRep;
             elStRep.className = streetRep !== "None" ? "anomaly-badge active-red" : "anomaly-badge";
 
-            // Corner Repeats (Last 5 spins)
+            // Zigzag Corner Repeats (Last 5 spins)
             let cornerCounts = {};
             let cornerRep = "None";
             last5.forEach(n => {
