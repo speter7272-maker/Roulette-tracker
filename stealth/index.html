@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.80.0 - Zigzag Corner Repeats</title>
+    <title>Roulette Tracker v1.81.0 - Aligned Anomalies</title>
     <style>
         * {
             box-sizing: border-box;
@@ -203,11 +203,11 @@
         .strat-title { font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
         .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
 
-        /* Statistical Anomalies Compact Strip */
+        /* Statistical Anomalies Section Styles */
         .anomaly-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; text-align: center; }
-        .anomaly-badge { background: #121212; border: 1px solid #222; padding: 6px 2px; border-radius: 4px; color: #555; opacity: 0.6; }
-        .anomaly-badge.active-yellow { background: #78350f; border-color: #f59e0b; color: #fde68a; opacity: 1; }
-        .anomaly-badge.active-red { background: #7f1d1d; border-color: #ef4444; color: #fca5a5; opacity: 1; font-weight: bold; }
+        .anomaly-badge { background: #121212; border: 1px solid #222; padding: 6px 2px; border-radius: 4px; color: #666; }
+        .anomaly-badge.active-red { background: #450a0a; border-color: #ef4444; color: #fca5a5; font-weight: bold; }
+        .anomaly-badge.active-red .anom-val { color: #ef4444; font-weight: bold; }
 
         .alert-yellow { color: #f59e0b; }
         .alert-green { color: #22c55e; }
@@ -239,10 +239,9 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.80.0</span>
+        <span class="version-tag">v1.81.0</span>
     </header>
 
-    <!-- DUAL MODE INPUT BLOCK -->
     <div id="slim-tracker-container">
         <div class="readout-bar">
             <div id="spin-counter" class="readout-cell c-spin">
@@ -285,18 +284,21 @@
         </div>
     </div>
 
-    <!-- SCROLLABLE LOWER SECTION -->
     <div id="main-scroll">
-        <!-- STATISTICAL ANOMALY & CORNER REPEAT DASHBOARD -->
         <div class="anomaly-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
             <div class="anomaly-grid">
-                <div id="anom-c1" class="anomaly-badge"><div style="font-size:0.6rem;">C1 CONC.</div><div id="val-c1" style="font-size:0.75rem;">0/15</div></div>
-                <div id="anom-c2" class="anomaly-badge"><div style="font-size:0.6rem;">C2 CONC.</div><div id="val-c2" style="font-size:0.75rem;">0/15</div></div>
-                <div id="anom-c3" class="anomaly-badge"><div style="font-size:0.6rem;">C3 CONC.</div><div id="val-c3" style="font-size:0.75rem;">0/15</div></div>
-                <div id="anom-numrep" class="anomaly-badge"><div style="font-size:0.6rem;">NUM REPEAT</div><div id="val-numrep" style="font-size:0.75rem;">None</div></div>
-                <div id="anom-strep" class="anomaly-badge"><div style="font-size:0.6rem;">STREET REP</div><div id="val-strep" style="font-size:0.75rem;">None</div></div>
-                <div id="anom-cornerrep" class="anomaly-badge"><div style="font-size:0.6rem;">ZZ CORNER REP</div><div id="val-cornerrep" style="font-size:0.75rem;">None</div></div>
+                <div id="anom-c1" class="anomaly-badge"><div style="font-size:0.6rem;">C1 CONC.</div><div id="val-c1" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
+                <div id="anom-c2" class="anomaly-badge"><div style="font-size:0.6rem;">C2 CONC.</div><div id="val-c2" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
+                <div id="anom-c3" class="anomaly-badge"><div style="font-size:0.6rem;">C3 CONC.</div><div id="val-c3" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
+                
+                <div id="anom-d1" class="anomaly-badge"><div style="font-size:0.6rem;">D1 CONC.</div><div id="val-d1" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
+                <div id="anom-d2" class="anomaly-badge"><div style="font-size:0.6rem;">D2 CONC.</div><div id="val-d2" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
+                <div id="anom-d3" class="anomaly-badge"><div style="font-size:0.6rem;">D3 CONC.</div><div id="val-d3" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
+
+                <div id="anom-numrep" class="anomaly-badge"><div style="font-size:0.6rem;">NUM REPEAT</div><div id="val-numrep" class="anom-val" style="font-size:0.7rem;">None</div></div>
+                <div id="anom-strep" class="anomaly-badge"><div style="font-size:0.6rem;">STREET REP</div><div id="val-strep" class="anom-val" style="font-size:0.7rem;">None</div></div>
+                <div id="anom-cornerrep" class="anomaly-badge"><div style="font-size:0.6rem;">ZZ CORNER REP</div><div id="val-cornerrep" class="anom-val" style="font-size:0.7rem;">None</div></div>
             </div>
             <div style="margin-top:6px; background:#121212; padding:6px; border-radius:4px; font-size:0.7rem; color:#888; display:flex; justify-content:space-between;">
                 <span>DRIEST VERTICAL COL:</span>
@@ -304,7 +306,6 @@
             </div>
         </div>
 
-        <!-- 10-2-WIN MODULE -->
         <div class="junko-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
             <div class="junko-grid">
@@ -332,7 +333,6 @@
             <div id="bet-numbers-display" class="bet-numbers-panel"></div>
         </div>
 
-        <!-- STRATEGY MONITORS -->
         <div class="strategy-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
             <div class="strat-grid">
@@ -365,7 +365,6 @@
             </div>
         </div>
 
-        <!-- CONTROLS & CSV SECTION -->
         <div class="controls-card">
             <div class="input-group">
                 <label for="casino-input">Casino Name</label>
@@ -406,20 +405,10 @@
 
         // 12 Non-Overlapping Zigzag Corners Only (ZZ1 + ZZ3)
         const CORNERS = {
-            // ZZ1 Corners (Base)
-            "1/5": [1,2,4,5],
-            "8/12": [8,9,11,12],
-            "13/17": [13,14,16,17],
-            "20/24": [20,21,23,24],
-            "25/29": [25,26,28,29],
-            "32/36": [32,33,35,36],
-            // ZZ3 Corners (Reverse)
-            "2/6": [2,3,5,6],
-            "7/11": [7,8,10,11],
-            "14/18": [14,15,17,18],
-            "19/23": [19,20,22,23],
-            "26/30": [26,27,29,30],
-            "31/35": [31,32,34,35]
+            "1/5": [1,2,4,5], "8/12": [8,9,11,12], "13/17": [13,14,16,17],
+            "20/24": [20,21,23,24], "25/29": [25,26,28,29], "32/36": [32,33,35,36],
+            "2/6": [2,3,5,6], "7/11": [7,8,10,11], "14/18": [14,15,17,18],
+            "19/23": [19,20,22,23], "26/30": [26,27,29,30], "31/35": [31,32,34,35]
         };
 
         const QUADRANTS = {
@@ -571,14 +560,22 @@
 
             const window15 = spins.slice(0, 15).map(s => s.number);
 
-            // 2. Statistical Anomaly & Repeat Engine
+            // 2. Column & Dozen Concentration Analytics (Box 1 & Box 2)
             let c1 = 0, c2 = 0, c3 = 0;
+            let d1 = 0, d2 = 0, d3 = 0;
+
             window15.forEach(num => {
                 let n = parseInt(num, 10);
                 if (!isNaN(n) && n >= 1 && n <= 36) {
+                    // Columns
                     if (n % 3 === 1) c1++;
                     else if (n % 3 === 2) c2++;
                     else if (n % 3 === 0) c3++;
+
+                    // Dozens
+                    if (n >= 1 && n <= 12) d1++;
+                    else if (n >= 13 && n <= 24) d2++;
+                    else if (n >= 25 && n <= 36) d3++;
                 }
             });
 
@@ -586,54 +583,81 @@
             document.getElementById('val-c2').innerText = `${c2}/15`;
             document.getElementById('val-c3').innerText = `${c3}/15`;
 
-            let setAnomStyle = (id, count) => {
+            document.getElementById('val-d1').innerText = `${d1}/15`;
+            document.getElementById('val-d2').innerText = `${d2}/15`;
+            document.getElementById('val-d3').innerText = `${d3}/15`;
+
+            let setExtremeStyle = (id, count) => {
                 let el = document.getElementById(id);
                 el.className = "anomaly-badge";
-                if (count >= 8) el.classList.add("active-red");
-                else if (count >= 7) el.classList.add("active-yellow");
+                if (count >= 7) el.classList.add("active-red");
             };
-            setAnomStyle('anom-c1', c1);
-            setAnomStyle('anom-c2', c2);
-            setAnomStyle('anom-c3', c3);
 
-            // Number Repeats (Last 5)
-            const last5 = spins.slice(0, 5).map(s => s.number);
-            let numRep = "None";
-            for (let i = 0; i < last5.length; i++) {
-                if (last5.indexOf(last5[i]) !== i) { numRep = `#${last5[i]}`; break; }
-            }
-            let elNumRep = document.getElementById('anom-numrep');
-            document.getElementById('val-numrep').innerText = numRep;
-            elNumRep.className = numRep !== "None" ? "anomaly-badge active-red" : "anomaly-badge";
+            setExtremeStyle('anom-c1', c1);
+            setExtremeStyle('anom-c2', c2);
+            setExtremeStyle('anom-c3', c3);
+            setExtremeStyle('anom-d1', d1);
+            setExtremeStyle('anom-d2', d2);
+            setExtremeStyle('anom-d3', d3);
 
-            // Street Repeats (Last 6)
-            const last6 = spins.slice(0, 6).map(s => s.number);
-            let streetCounts = {};
-            let streetRep = "None";
-            last6.forEach(n => {
-                let st = getStreet(n);
-                if (st) {
-                    streetCounts[st] = (streetCounts[st] || 0) + 1;
-                    if (streetCounts[st] >= 3) streetRep = `St ${st}`;
+            // 3. Repeats with Gap Tracking (Box 3)
+            // Number Repeats
+            let numRepStr = "None";
+            let isNumRep = false;
+            for (let i = 0; i < spins.length && i < 10; i++) {
+                for (let j = i + 1; j < spins.length && j <= i + 5; j++) {
+                    if (spins[i].number === spins[j].number) {
+                        let gap = j - i - 1;
+                        numRepStr = `#${spins[i].number} (gap ${gap})`;
+                        isNumRep = true;
+                        break;
+                    }
                 }
-            });
-            let elStRep = document.getElementById('anom-strep');
-            document.getElementById('val-strep').innerText = streetRep;
-            elStRep.className = streetRep !== "None" ? "anomaly-badge active-red" : "anomaly-badge";
+                if (isNumRep) break;
+            }
+            document.getElementById('val-numrep').innerText = numRepStr;
+            document.getElementById('anom-numrep').className = isNumRep ? "anomaly-badge active-red" : "anomaly-badge";
 
-            // Zigzag Corner Repeats (Last 5 spins)
-            let cornerCounts = {};
-            let cornerRep = "None";
-            last5.forEach(n => {
-                let cList = getCornersForNum(n);
-                cList.forEach(c => {
-                    cornerCounts[c] = (cornerCounts[c] || 0) + 1;
-                    if (cornerCounts[c] >= 2) cornerRep = c;
-                });
-            });
-            let elCornerRep = document.getElementById('anom-cornerrep');
-            document.getElementById('val-cornerrep').innerText = cornerRep;
-            elCornerRep.className = cornerRep !== "None" ? "anomaly-badge active-red" : "anomaly-badge";
+            // Street Repeats
+            let streetRepStr = "None";
+            let isStreetRep = false;
+            for (let i = 0; i < spins.length && i < 10; i++) {
+                let st1 = getStreet(spins[i].number);
+                if (!st1) continue;
+                for (let j = i + 1; j < spins.length && j <= i + 6; j++) {
+                    let st2 = getStreet(spins[j].number);
+                    if (st1 === st2) {
+                        let gap = j - i - 1;
+                        streetRepStr = `St ${st1} (gap ${gap})`;
+                        isStreetRep = true;
+                        break;
+                    }
+                }
+                if (isStreetRep) break;
+            }
+            document.getElementById('val-strep').innerText = streetRepStr;
+            document.getElementById('anom-strep').className = isStreetRep ? "anomaly-badge active-red" : "anomaly-badge";
+
+            // Zigzag Corner Repeats
+            let cornerRepStr = "None";
+            let isCornerRep = false;
+            for (let i = 0; i < spins.length && i < 10; i++) {
+                let cList1 = getCornersForNum(spins[i].number);
+                if (cList1.length === 0) continue;
+                for (let j = i + 1; j < spins.length && j <= i + 5; j++) {
+                    let cList2 = getCornersForNum(spins[j].number);
+                    let shared = cList1.filter(c => cList2.includes(c));
+                    if (shared.length > 0) {
+                        let gap = j - i - 1;
+                        cornerRepStr = `${shared[0]} (gap ${gap})`;
+                        isCornerRep = true;
+                        break;
+                    }
+                }
+                if (isCornerRep) break;
+            }
+            document.getElementById('val-cornerrep').innerText = cornerRepStr;
+            document.getElementById('anom-cornerrep').className = isCornerRep ? "anomaly-badge active-red" : "anomaly-badge";
 
             // Driest 4-Number Vertical Column Calculation
             let maxVColAge = -1;
@@ -653,7 +677,7 @@
             });
             document.getElementById('stat-driest-vcol').innerText = driestVColName;
 
-            // 3. 10-2-Win Sector Calculations
+            // 4. 10-2-Win Sector Calculations
             Object.keys(QUADRANTS).forEach(key => {
                 const nums = QUADRANTS[key];
                 const count = window15.filter(n => nums.includes(n)).length;
@@ -674,7 +698,7 @@
                 }
             });
 
-            // 4. Strategy Monitors
+            // 5. Active Strategy Monitors
             const zz1Count = window15.filter(n => ZZ1_NUMBERS.includes(n)).length;
             let zz1Age = 0;
             for (let i = 0; i < spins.length; i++) {
