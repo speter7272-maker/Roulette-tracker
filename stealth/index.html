@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.83.1 - Safe Repeat Engine</title>
+    <title>Roulette Tracker v1.83.2 - Stable Build</title>
     <style>
         * {
             box-sizing: border-box;
@@ -203,7 +203,6 @@
         .strat-title { font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
         .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
 
-        /* Statistical Anomalies Section Styles */
         .anomaly-box-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
         .anomaly-box-row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
         
@@ -243,7 +242,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.83.1</span>
+        <span class="version-tag">v1.83.2</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -633,7 +632,7 @@
 
                 document.getElementById('val-dozs').innerHTML = `${formatVal(d1, d1Age)} / ${formatVal(d2, d2Age)} / ${formatVal(d3, d3Age)}`;
 
-                // 4. Safe Repeats Evaluation (Bounded by spins.length)
+                // 4. Safe Repeats Evaluation (Original Gap Format: #num (gap) and Bounded by spins.length)
                 let maxCheck = Math.min(spins.length, 5);
 
                 // Number Repeats
@@ -813,3 +812,163 @@
                 }
 
                 const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
+                let sofAge = 0;
+                for (let i = 0; i < spins.length; i++) {
+                    if (spins[i] && SOF_NUMBERS.includes(spins[i].number)) break;
+                    sofAge++;
+                }
+                const sofEl = document.getElementById('stat-sof');
+                if (sofEl) {
+                    sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
+                    sofEl.className = "strat-val";
+                    if (sofCount >= 6 || sofAge >= 8) sofEl.classList.add("alert-green");
+                    else if (sofCount === 5 || (sofAge >= 5 && sofAge <= 7)) sofEl.classList.add("alert-yellow");
+                }
+            } catch (err) {
+                console.error("UI Update Error:", err);
+            }
+        }
+
+        function toggleBetNumbers(quadKey) {
+            const panel = document.getElementById("bet-numbers-display");
+            if (activeQuad === quadKey) {
+                panel.style.display = "none";
+                activeQuad = null;
+            } else {
+                activeQuad = quadKey;
+                panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
+                panel.style.display = "block";
+            }
+        }
+
+        function toggleImportPanel() {
+            const panel = document.getElementById("import-panel");
+            panel.style.display = panel.style.display === "block" ? "none" : "block";
+        }
+
+        function processCSVImport() {
+            try {
+                const rawText = document.getElementById("import-textarea").value.trim();
+                if (!rawText) {
+                    alert("Please paste valid CSV spin data.");
+                    return;
+                }
+
+                const lines = rawText.split("\n");
+                let newSpins = [];
+                let detectedCasino = "";
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (!line || line.startsWith("----")) continue;
+
+                    let parts = parseCSVLine(line);
+                    if (parts.length >= 2) {
+                        let num = parts[0].trim();
+                        if (num.toLowerCase() === "number") continue;
+
+                        let casino = parts[1] ? parts[1].trim() : "Imported Casino";
+                        let date = parts[2] ? parts[2].trim() : new Date().toISOString().split('T')[0];
+                        let time = parts[3] ? parts[3].trim() : "00:00:00";
+                        let sId = parts[4] ? parts[4].trim() : sessionId;
+
+                        if (num !== "" && (!isNaN(parseInt(num, 10)) || num === "00")) {
+                            newSpins.push({ number: num, casino: casino, date: date, time: time, session_id: sId });
+                            if (!detectedCasino && casino) detectedCasino = casino;
+                        }
+                    }
+                }
+
+                if (newSpins.length > 0) {
+                    spins = newSpins;
+                    if (detectedCasino) {
+                        document.getElementById("casino-input").value = detectedCasino;
+                    }
+                    toggleImportPanel();
+                    document.getElementById("import-textarea").value = "";
+                    updateUI();
+                    alert(`Successfully imported ${newSpins.length} spins!`);
+                } else {
+                    alert("Could not parse any valid spin rows from the pasted text.");
+                }
+            } catch (err) {
+                alert("Error importing CSV: " + err.message);
+            }
+        }
+
+        function generateCSVString() {
+            if (spins.length === 0) return "";
+            const headers = ["number", "casino", "date", "time", "session_id"];
+            const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
+            return [headers.join(","), ...rows].join("\n");
+        }
+
+        function copyCSV() {
+            const csvText = generateCSVString();
+            if (!csvText) {
+                alert("No spin data to copy.");
+                return;
+            }
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(csvText).then(() => {
+                    alert("CSV copied to clipboard!");
+                }).catch(() => fallbackCopy(csvText));
+            } else {
+                fallbackCopy(csvText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("CSV copied to clipboard!");
+            } catch (err) {
+                alert("Failed to copy CSV.");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function downloadCSV() {
+            const csvText = generateCSVString();
+            if (!csvText) {
+                alert("No spin data to download.");
+                return;
+            }
+
+            const casinoName = (document.getElementById("casino-input").value || "casino")
+                .toLowerCase().replace(/[^a-z0-9]/g, "_");
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
+
+            const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvText);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+
+            try {
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                document.body.removeChild(link);
+                window.open(encodedUri, '_blank');
+            }
+        }
+
+        function resetSession() {
+            if (confirm("Clear all session spins and reset tracking?")) {
+                spins = [];
+                sessionHigh = 0;
+                document.getElementById('high-val').innerText = "$ 0";
+                clearDigit();
+                updateUI();
+            }
+        }
+    </script>
+</body>
+</html>
