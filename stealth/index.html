@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.82.0 - Compact Anomaly Dashboard</title>
+    <title>Roulette Tracker v1.82.1 - CSV Import Fix</title>
     <style>
         * {
             box-sizing: border-box;
@@ -232,7 +232,7 @@
         .btn-import { background: #7c3aed; }
 
         #import-panel { background: #0f172a; border: 1px solid #334155; padding: 8px; border-radius: 6px; display: none; margin-top: 4px; }
-        #import-panel textarea { width: 100%; height: 60px; background: #1e293b; color: #fff; border: 1px solid #475569; padding: 4px; font-size: 0.75rem; border-radius: 4px; resize: none; }
+        #import-panel textarea { width: 100%; height: 70px; background: #1e293b; color: #fff; border: 1px solid #475569; padding: 6px; font-size: 0.75rem; border-radius: 4px; resize: none; }
         .import-actions { display: flex; gap: 6px; margin-top: 4px; }
         .import-actions button { flex: 1; padding: 6px; font-size: 0.7rem; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; }
         .btn-do-import { background: #22c55e; }
@@ -243,7 +243,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.82.0</span>
+        <span class="version-tag">v1.82.1</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -263,163 +263,20 @@
         </div>
 
         <div class="control-row">
-            <button id="btn-enter" onclick="submitCommitedValue()" class="btn btn-enter">ENTER</button>
-            <button id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
+            <button type="button" id="btn-enter" onclick="submitCommitedValue()" class="btn btn-enter">ENTER</button>
+            <button type="button" id="btn-undo" onclick="undoSpin()" class="btn btn-undo">UNDO</button>
         </div>
 
         <div class="numpad-grid">
-            <button onclick="appendDigit('1')">1</button>
-            <button onclick="appendDigit('2')">2</button>
-            <button onclick="appendDigit('3')">3</button>
-            <button onclick="appendDigit('4')">4</button>
-            <button onclick="appendDigit('5')">5</button>
-            <button onclick="appendDigit('6')">6</button>
-            <button onclick="appendDigit('7')">7</button>
-            <button onclick="appendDigit('8')">8</button>
-            <button onclick="appendDigit('9')">9</button>
-            <button onclick="appendDigit('0')">0</button>
-            <button onclick="appendDigit('00')">00</button>
-            <button id="btn-cancel" onclick="clearDigit()" class="btn-clear">C</button>
-        </div>
-
-        <div class="history-strip-container">
-            <span class="history-label">LAST:</span>
-            <div id="history-stream" class="history-stream"></div>
-        </div>
-    </div>
-
-    <div id="main-scroll">
-        <div class="anomaly-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
-            
-            <div class="anomaly-box-row">
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">COLUMNS (C1 / C2 / C3)</div>
-                    <div id="val-cols" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
-                </div>
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">DOZENS (D1 / D2 / D3)</div>
-                    <div id="val-dozs" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
-                </div>
-            </div>
-
-            <div class="anomaly-box-row3">
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">NUM REPEAT</div>
-                    <div id="val-numrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
-                </div>
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">STREET REP</div>
-                    <div id="val-strep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
-                </div>
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">ZZ CORNER REP</div>
-                    <div id="val-cornerrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
-                </div>
-            </div>
-
-            <div style="margin-top:6px; background:#121212; padding:6px; border-radius:4px; font-size:0.7rem; color:#888; display:flex; justify-content:space-between;">
-                <span>DRIEST VERTICAL COL:</span>
-                <span id="stat-driest-vcol" style="font-weight:bold; color:#38bdf8;">--</span>
-            </div>
-        </div>
-
-        <div class="junko-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
-            <div class="junko-grid">
-                <div class="quad-badge" onclick="toggleBetNumbers('GN')">
-                    <div class="quad-title">GN</div>
-                    <div id="stat-gn" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('HO')">
-                    <div class="quad-title">HO</div>
-                    <div id="stat-ho" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('LO')">
-                    <div class="quad-title">LO</div>
-                    <div id="stat-lo" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('M')">
-                    <div class="quad-title">M</div>
-                    <div id="stat-m" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('GR')">
-                    <div class="quad-title">GR</div>
-                    <div id="stat-gr" class="quad-stats">0 (0+)</div>
-                </div>
-            </div>
-            <div id="bet-numbers-display" class="bet-numbers-panel"></div>
-        </div>
-
-        <div class="strategy-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
-            <div class="strat-grid">
-                <div class="strat-row">
-                    <div class="strat-box" style="grid-column: span 2;">
-                        <div class="strat-title">Streets of Fire (0,00,1,2,3,34,35,36) W=15</div>
-                        <div id="stat-sof" class="strat-val">0 (0+)</div>
-                    </div>
-                </div>
-                <div class="strat-row">
-                    <div class="strat-box">
-                        <div class="strat-title">ZZ1 (Base Zigzag) W=15</div>
-                        <div id="stat-zz1" class="strat-val">0(+0)</div>
-                    </div>
-                    <div class="strat-box">
-                        <div class="strat-title">ZZ3 (Reverse Zigzag) W=15</div>
-                        <div id="stat-zz3" class="strat-val">0(+0)</div>
-                    </div>
-                </div>
-                <div class="strat-row">
-                    <div class="strat-box">
-                        <div class="strat-title">Sweet 16 (W=15)</div>
-                        <div id="stat-s16" class="strat-val">0 (0+)</div>
-                    </div>
-                    <div class="strat-box">
-                        <div class="strat-title">10-2-Win (Drought)</div>
-                        <div id="stat-102win" class="strat-val">0 spins</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="controls-card">
-            <div class="input-group">
-                <label for="casino-input">Casino Name</label>
-                <input type="text" id="casino-input" value="RM Smokeshow" placeholder="Enter casino name...">
-            </div>
-
-            <div class="action-row">
-                <button class="btn-reset" onclick="resetSession()">Clear</button>
-                <button class="btn-copy" onclick="copyCSV()">Copy CSV</button>
-                <button class="btn-import" onclick="toggleImportPanel()">Import CSV</button>
-                <button class="btn-dl" onclick="downloadCSV()">Download CSV</button>
-            </div>
-
-            <div id="import-panel">
-                <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 3px;">Paste CSV session data below:</label>
-                <textarea id="import-textarea" placeholder="number,casino,date,time,session_id..."></textarea>
-                <div class="import-actions">
-                    <button class="btn-do-import" onclick="processCSVImport()">Load Session</button>
-                    <button class="btn-cancel-import" onclick="toggleImportPanel()">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const MODE_SPIN = 'SPIN';
-        const MODE_HIGH = 'HIGH';
-        
-        let currentMode = MODE_SPIN;
-        let currentInputText = "";
-        let spins = []; 
-        let sessionHigh = 0;
-        let activeQuad = null;
-        let sessionId = "SESS-" + Math.floor(1000 + Math.random() * 9000);
-
-        const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
-        const GREEN_NUMS = ["0","00"];
-
-        // 12 Non-Overlapping Zigzag Corners Only (ZZ1 + ZZ3)
-        const CORNERS
+            <button type="button" onclick="appendDigit('1')">1</button>
+            <button type="button" onclick="appendDigit('2')">2</button>
+            <button type="button" onclick="appendDigit('3')">3</button>
+            <button type="button" onclick="appendDigit('4')">4</button>
+            <button type="button" onclick="appendDigit('5')">5</button>
+            <button type="button" onclick="appendDigit('6')">6</button>
+            <button type="button" onclick="appendDigit('7')">7</button>
+            <button type="button" onclick="appendDigit('8')">8</button>
+            <button type="button" onclick="appendDigit('9')">9</button>
+            <button type="button" onclick="appendDigit('0')">0</button>
+            <button type="button" onclick="appendDigit('00')">00</button>
+            <button type="button" id="btn-cancel"
