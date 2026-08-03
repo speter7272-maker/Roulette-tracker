@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.81.0 - Aligned Anomalies</title>
+    <title>Roulette Tracker v1.82.0 - Compact Anomaly Dashboard</title>
     <style>
         * {
             box-sizing: border-box;
@@ -204,10 +204,14 @@
         .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
 
         /* Statistical Anomalies Section Styles */
-        .anomaly-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; text-align: center; }
-        .anomaly-badge { background: #121212; border: 1px solid #222; padding: 6px 2px; border-radius: 4px; color: #666; }
-        .anomaly-badge.active-red { background: #450a0a; border-color: #ef4444; color: #fca5a5; font-weight: bold; }
-        .anomaly-badge.active-red .anom-val { color: #ef4444; font-weight: bold; }
+        .anomaly-box-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        .anomaly-box-row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        
+        .anomaly-box { background: #121212; border: 1px solid #222; padding: 6px 4px; border-radius: 6px; text-align: center; }
+        .anomaly-box-title { font-size: 0.6rem; color: #888; font-weight: bold; text-transform: uppercase; }
+        .anomaly-box-val { font-size: 0.85rem; font-weight: bold; margin-top: 2px; color: #ccc; }
+
+        .extreme-red { color: #ef4444 !important; font-weight: bold; }
 
         .alert-yellow { color: #f59e0b; }
         .alert-green { color: #22c55e; }
@@ -239,7 +243,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.81.0</span>
+        <span class="version-tag">v1.82.0</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -287,19 +291,33 @@
     <div id="main-scroll">
         <div class="anomaly-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
-            <div class="anomaly-grid">
-                <div id="anom-c1" class="anomaly-badge"><div style="font-size:0.6rem;">C1 CONC.</div><div id="val-c1" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
-                <div id="anom-c2" class="anomaly-badge"><div style="font-size:0.6rem;">C2 CONC.</div><div id="val-c2" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
-                <div id="anom-c3" class="anomaly-badge"><div style="font-size:0.6rem;">C3 CONC.</div><div id="val-c3" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
-                
-                <div id="anom-d1" class="anomaly-badge"><div style="font-size:0.6rem;">D1 CONC.</div><div id="val-d1" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
-                <div id="anom-d2" class="anomaly-badge"><div style="font-size:0.6rem;">D2 CONC.</div><div id="val-d2" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
-                <div id="anom-d3" class="anomaly-badge"><div style="font-size:0.6rem;">D3 CONC.</div><div id="val-d3" class="anom-val" style="font-size:0.75rem;">0/15</div></div>
-
-                <div id="anom-numrep" class="anomaly-badge"><div style="font-size:0.6rem;">NUM REPEAT</div><div id="val-numrep" class="anom-val" style="font-size:0.7rem;">None</div></div>
-                <div id="anom-strep" class="anomaly-badge"><div style="font-size:0.6rem;">STREET REP</div><div id="val-strep" class="anom-val" style="font-size:0.7rem;">None</div></div>
-                <div id="anom-cornerrep" class="anomaly-badge"><div style="font-size:0.6rem;">ZZ CORNER REP</div><div id="val-cornerrep" class="anom-val" style="font-size:0.7rem;">None</div></div>
+            
+            <div class="anomaly-box-row">
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">COLUMNS (C1 / C2 / C3)</div>
+                    <div id="val-cols" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
+                </div>
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">DOZENS (D1 / D2 / D3)</div>
+                    <div id="val-dozs" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
+                </div>
             </div>
+
+            <div class="anomaly-box-row3">
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">NUM REPEAT</div>
+                    <div id="val-numrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
+                </div>
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">STREET REP</div>
+                    <div id="val-strep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
+                </div>
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">ZZ CORNER REP</div>
+                    <div id="val-cornerrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
+                </div>
+            </div>
+
             <div style="margin-top:6px; background:#121212; padding:6px; border-radius:4px; font-size:0.7rem; color:#888; display:flex; justify-content:space-between;">
                 <span>DRIEST VERTICAL COL:</span>
                 <span id="stat-driest-vcol" style="font-weight:bold; color:#38bdf8;">--</span>
@@ -404,516 +422,4 @@
         const GREEN_NUMS = ["0","00"];
 
         // 12 Non-Overlapping Zigzag Corners Only (ZZ1 + ZZ3)
-        const CORNERS = {
-            "1/5": [1,2,4,5], "8/12": [8,9,11,12], "13/17": [13,14,16,17],
-            "20/24": [20,21,23,24], "25/29": [25,26,28,29], "32/36": [32,33,35,36],
-            "2/6": [2,3,5,6], "7/11": [7,8,10,11], "14/18": [14,15,17,18],
-            "19/23": [19,20,22,23], "26/30": [26,27,29,30], "31/35": [31,32,34,35]
-        };
-
-        const QUADRANTS = {
-            GN: ["00","0","1","2","9","10","13","14","27","28"],
-            HO: ["23","24","25","26","30","33","34","35","36"],
-            LO: ["3","4","11","12","15","16","21","22","23","24"],
-            M:  ["5","6","7","8","17","18","19","20","31","32"],
-            GR: ["0","00"]
-        };
-
-        const VERTICAL_COLUMNS = {
-            "D1/C1": [1,4,7,10], "D1/C2": [2,5,8,11], "D1/C3": [3,6,9,12],
-            "D2/C1": [13,16,19,22], "D2/C2": [14,17,20,23], "D2/C3": [15,18,21,24],
-            "D3/C1": [25,28,31,34], "D3/C2": [26,29,32,35], "D3/C3": [27,30,33,36]
-        };
-
-        const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
-        const SOF_NUMBERS = ["0","00","1","2","3","34","35","36"];
-        const ZZ1_NUMBERS = ["1","4","9","12","13","16","21","24","25","28","33","36"];
-        const ZZ3_NUMBERS = ["3","6","7","10","15","18","19","22","27","30","31","34"];
-
-        function toggleInputMode() {
-            const bankrollEl = document.getElementById('bankroll');
-            const cancelBtn = document.getElementById('btn-cancel');
-
-            if (currentMode === MODE_SPIN) {
-                currentMode = MODE_HIGH;
-                currentInputText = "";
-                bankrollEl.className = 'readout-cell c-high';
-                cancelBtn.innerText = 'X';
-                cancelBtn.className = 'btn-cancel';
-            } else {
-                currentMode = MODE_SPIN;
-                currentInputText = "";
-                bankrollEl.className = 'readout-cell c-spin';
-                cancelBtn.innerText = 'C';
-                cancelBtn.className = 'btn-clear';
-            }
-            updateDisplay();
-        }
-
-        function appendDigit(val) {
-            if (currentMode === MODE_SPIN) {
-                if (val === '00') { currentInputText = '00'; updateDisplay(); return; }
-                if (currentInputText === '0' || currentInputText === '00') currentInputText = '';
-                if ((currentInputText + val).length <= 2) {
-                    let numVal = parseInt(currentInputText + val, 10);
-                    if (numVal <= 36 || isNaN(numVal)) { currentInputText += val; }
-                }
-            } else if (currentMode === MODE_HIGH) {
-                if (val === '00') val = '0';
-                if (currentInputText === '0') currentInputText = '';
-                if (currentInputText.length < 6) { currentInputText += val; }
-            }
-            updateDisplay();
-        }
-
-        function clearDigit() {
-            currentInputText = "";
-            updateDisplay();
-        }
-
-        function updateDisplay() {
-            document.getElementById('input-buffer').innerText = currentInputText === "" ? "--" : currentInputText;
-        }
-
-        function submitCommitedValue() {
-            if (currentMode === MODE_SPIN) {
-                handleSpinSubmission();
-            } else if (currentMode === MODE_HIGH) {
-                handleHighSubmission();
-            }
-        }
-
-        function handleSpinSubmission() {
-            if (currentInputText === "") return;
-            
-            const now = new Date();
-            const spinData = {
-                number: currentInputText,
-                casino: document.getElementById("casino-input").value || "Unknown",
-                date: now.toISOString().split('T')[0],
-                time: now.toTimeString().split(' ')[0],
-                session_id: sessionId
-            };
-
-            spins.unshift(spinData);
-            clearDigit();
-            updateUI();
-        }
-
-        function handleHighSubmission() {
-            if (currentInputText !== "") {
-                let newHigh = parseInt(currentInputText, 10);
-                if (!isNaN(newHigh) && newHigh >= 0) {
-                    sessionHigh = newHigh;
-                    document.getElementById('high-val').innerText = `$ ${sessionHigh.toLocaleString()}`;
-                }
-            }
-            toggleInputMode();
-        }
-
-        function undoSpin() {
-            if (currentMode !== MODE_SPIN || spins.length === 0) return;
-            spins.shift();
-            updateUI();
-        }
-
-        function getStreet(num) {
-            let n = parseInt(num, 10);
-            if (isNaN(n) || n < 1 || n > 36) return null;
-            return Math.ceil(n / 3);
-        }
-
-        function getCornersForNum(numStr) {
-            let n = parseInt(numStr, 10);
-            if (isNaN(n)) return [];
-            let res = [];
-            Object.keys(CORNERS).forEach(cName => {
-                if (CORNERS[cName].includes(n)) res.push(cName);
-            });
-            return res;
-        }
-
-        function updateUI() {
-            document.getElementById('spin-val').innerText = `# ${spins.length}`;
-
-            // 1. History Chips
-            const container = document.getElementById('history-stream');
-            container.innerHTML = "";
-            const displayList = spins.slice(0, 10);
-
-            displayList.forEach((spin, index) => {
-                const chip = document.createElement('div');
-                chip.className = 'spin-chip';
-                if (index === 0) chip.classList.add('chip-latest');
-
-                if (GREEN_NUMS.includes(spin.number)) {
-                    chip.classList.add('chip-green');
-                } else if (RED_NUMS.includes(spin.number)) {
-                    chip.classList.add('chip-red');
-                } else {
-                    chip.classList.add('chip-black');
-                }
-
-                chip.innerText = spin.number;
-                container.appendChild(chip);
-            });
-
-            const window15 = spins.slice(0, 15).map(s => s.number);
-
-            // 2. Column & Dozen Concentration Analytics (Box 1 & Box 2)
-            let c1 = 0, c2 = 0, c3 = 0;
-            let d1 = 0, d2 = 0, d3 = 0;
-
-            window15.forEach(num => {
-                let n = parseInt(num, 10);
-                if (!isNaN(n) && n >= 1 && n <= 36) {
-                    // Columns
-                    if (n % 3 === 1) c1++;
-                    else if (n % 3 === 2) c2++;
-                    else if (n % 3 === 0) c3++;
-
-                    // Dozens
-                    if (n >= 1 && n <= 12) d1++;
-                    else if (n >= 13 && n <= 24) d2++;
-                    else if (n >= 25 && n <= 36) d3++;
-                }
-            });
-
-            document.getElementById('val-c1').innerText = `${c1}/15`;
-            document.getElementById('val-c2').innerText = `${c2}/15`;
-            document.getElementById('val-c3').innerText = `${c3}/15`;
-
-            document.getElementById('val-d1').innerText = `${d1}/15`;
-            document.getElementById('val-d2').innerText = `${d2}/15`;
-            document.getElementById('val-d3').innerText = `${d3}/15`;
-
-            let setExtremeStyle = (id, count) => {
-                let el = document.getElementById(id);
-                el.className = "anomaly-badge";
-                if (count >= 7) el.classList.add("active-red");
-            };
-
-            setExtremeStyle('anom-c1', c1);
-            setExtremeStyle('anom-c2', c2);
-            setExtremeStyle('anom-c3', c3);
-            setExtremeStyle('anom-d1', d1);
-            setExtremeStyle('anom-d2', d2);
-            setExtremeStyle('anom-d3', d3);
-
-            // 3. Repeats with Gap Tracking (Box 3)
-            // Number Repeats
-            let numRepStr = "None";
-            let isNumRep = false;
-            for (let i = 0; i < spins.length && i < 10; i++) {
-                for (let j = i + 1; j < spins.length && j <= i + 5; j++) {
-                    if (spins[i].number === spins[j].number) {
-                        let gap = j - i - 1;
-                        numRepStr = `#${spins[i].number} (gap ${gap})`;
-                        isNumRep = true;
-                        break;
-                    }
-                }
-                if (isNumRep) break;
-            }
-            document.getElementById('val-numrep').innerText = numRepStr;
-            document.getElementById('anom-numrep').className = isNumRep ? "anomaly-badge active-red" : "anomaly-badge";
-
-            // Street Repeats
-            let streetRepStr = "None";
-            let isStreetRep = false;
-            for (let i = 0; i < spins.length && i < 10; i++) {
-                let st1 = getStreet(spins[i].number);
-                if (!st1) continue;
-                for (let j = i + 1; j < spins.length && j <= i + 6; j++) {
-                    let st2 = getStreet(spins[j].number);
-                    if (st1 === st2) {
-                        let gap = j - i - 1;
-                        streetRepStr = `St ${st1} (gap ${gap})`;
-                        isStreetRep = true;
-                        break;
-                    }
-                }
-                if (isStreetRep) break;
-            }
-            document.getElementById('val-strep').innerText = streetRepStr;
-            document.getElementById('anom-strep').className = isStreetRep ? "anomaly-badge active-red" : "anomaly-badge";
-
-            // Zigzag Corner Repeats
-            let cornerRepStr = "None";
-            let isCornerRep = false;
-            for (let i = 0; i < spins.length && i < 10; i++) {
-                let cList1 = getCornersForNum(spins[i].number);
-                if (cList1.length === 0) continue;
-                for (let j = i + 1; j < spins.length && j <= i + 5; j++) {
-                    let cList2 = getCornersForNum(spins[j].number);
-                    let shared = cList1.filter(c => cList2.includes(c));
-                    if (shared.length > 0) {
-                        let gap = j - i - 1;
-                        cornerRepStr = `${shared[0]} (gap ${gap})`;
-                        isCornerRep = true;
-                        break;
-                    }
-                }
-                if (isCornerRep) break;
-            }
-            document.getElementById('val-cornerrep').innerText = cornerRepStr;
-            document.getElementById('anom-cornerrep').className = isCornerRep ? "anomaly-badge active-red" : "anomaly-badge";
-
-            // Driest 4-Number Vertical Column Calculation
-            let maxVColAge = -1;
-            let driestVColName = "--";
-            Object.keys(VERTICAL_COLUMNS).forEach(vKey => {
-                let vNums = VERTICAL_COLUMNS[vKey];
-                let age = 0;
-                for (let i = 0; i < spins.length; i++) {
-                    let n = parseInt(spins[i].number, 10);
-                    if (vNums.includes(n)) break;
-                    age++;
-                }
-                if (age > maxVColAge) {
-                    maxVColAge = age;
-                    driestVColName = `${vKey} (${age}+ spins)`;
-                }
-            });
-            document.getElementById('stat-driest-vcol').innerText = driestVColName;
-
-            // 4. 10-2-Win Sector Calculations
-            Object.keys(QUADRANTS).forEach(key => {
-                const nums = QUADRANTS[key];
-                const count = window15.filter(n => nums.includes(n)).length;
-                let age = 0;
-                for (let i = 0; i < spins.length; i++) {
-                    if (nums.includes(spins[i].number)) break;
-                    age++;
-                }
-                const el = document.getElementById(`stat-${key.toLowerCase()}`);
-                el.innerText = `${count} (${age}+)`;
-                el.className = "quad-stats";
-                if (key === "GR") {
-                    if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
-                    else if (age > 15) el.classList.add("alert-green");
-                } else {
-                    if (age >= 5 && age <= 8) el.classList.add("alert-yellow");
-                    else if (age > 8) el.classList.add("alert-green");
-                }
-            });
-
-            // 5. Active Strategy Monitors
-            const zz1Count = window15.filter(n => ZZ1_NUMBERS.includes(n)).length;
-            let zz1Age = 0;
-            for (let i = 0; i < spins.length; i++) {
-                if (ZZ1_NUMBERS.includes(spins[i].number)) break;
-                zz1Age++;
-            }
-            const zz1El = document.getElementById('stat-zz1');
-            zz1El.innerText = `${zz1Count}(+${zz1Age})`;
-            zz1El.className = "strat-val";
-            if (zz1Count >= 6 || zz1Age >= 6) zz1El.classList.add("alert-green");
-            else if (zz1Count === 5 || (zz1Age >= 3 && zz1Age <= 5)) zz1El.classList.add("alert-yellow");
-
-            const zz3Count = window15.filter(n => ZZ3_NUMBERS.includes(n)).length;
-            let zz3Age = 0;
-            for (let i = 0; i < spins.length; i++) {
-                if (ZZ3_NUMBERS.includes(spins[i].number)) break;
-                zz3Age++;
-            }
-            const zz3El = document.getElementById('stat-zz3');
-            zz3El.innerText = `${zz3Count}(+${zz3Age})`;
-            zz3El.className = "strat-val";
-            if (zz3Count >= 6 || zz3Age >= 6) zz3El.classList.add("alert-green");
-            else if (zz3Count === 5 || (zz3Age >= 3 && zz3Age <= 5)) zz3El.classList.add("alert-yellow");
-
-            const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
-            let s16Age = 0;
-            for (let i = 0; i < spins.length; i++) {
-                if (SWEET_16_EXCLUSIONS.includes(spins[i].number)) break;
-                s16Age++;
-            }
-            const s16El = document.getElementById('stat-s16');
-            s16El.innerText = `${s16Count} (${s16Age}+)`;
-            s16El.className = "strat-val";
-            if (s16Count >= 6 || s16Age >= 6) s16El.classList.add("alert-green");
-            else if (s16Count === 5 || (s16Age >= 3 && s16Age <= 5)) s16El.classList.add("alert-yellow");
-
-            let maxDrought = 0;
-            if (spins.length >= 5) {
-                ['d1','d2','d3','c1','c2','c3'].forEach(group => {
-                    let dCount = 0;
-                    for (let i = 0; i < spins.length; i++) {
-                        let n = parseInt(spins[i].number, 10);
-                        if (isNaN(n)) continue;
-                        let matched = false;
-                        if (group === 'd1' && n >= 1 && n <= 12) matched = true;
-                        if (group === 'd2' && n >= 13 && n <= 24) matched = true;
-                        if (group === 'd3' && n >= 25 && n <= 36) matched = true;
-                        if (group === 'c1' && n % 3 === 1) matched = true;
-                        if (group === 'c2' && n % 3 === 2) matched = true;
-                        if (group === 'c3' && (n % 3 === 0 && n !== 0)) matched = true;
-                        if (matched) break;
-                        dCount++;
-                    }
-                    if (dCount > maxDrought) maxDrought = dCount;
-                });
-            }
-
-            const win10El = document.getElementById('stat-102win');
-            win10El.innerText = `${maxDrought} spins`;
-            win10El.className = "strat-val";
-            if (maxDrought >= 10) win10El.classList.add("alert-green");
-            else if (maxDrought >= 7) win10El.classList.add("alert-yellow");
-
-            const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
-            let sofAge = 0;
-            for (let i = 0; i < spins.length; i++) {
-                if (SOF_NUMBERS.includes(spins[i].number)) break;
-                sofAge++;
-            }
-            const sofEl = document.getElementById('stat-sof');
-            sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
-            sofEl.className = "strat-val";
-            if (sofCount >= 6 || sofAge >= 8) sofEl.classList.add("alert-green");
-            else if (sofCount === 5 || (sofAge >= 5 && sofAge <= 7)) sofEl.classList.add("alert-yellow");
-        }
-
-        function toggleBetNumbers(quadKey) {
-            const panel = document.getElementById("bet-numbers-display");
-            if (activeQuad === quadKey) {
-                panel.style.display = "none";
-                activeQuad = null;
-            } else {
-                activeQuad = quadKey;
-                panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
-                panel.style.display = "block";
-            }
-        }
-
-        function toggleImportPanel() {
-            const panel = document.getElementById("import-panel");
-            panel.style.display = panel.style.display === "block" ? "none" : "block";
-        }
-
-        function processCSVImport() {
-            const rawText = document.getElementById("import-textarea").value.trim();
-            if (!rawText) {
-                alert("Please paste valid CSV spin data.");
-                return;
-            }
-
-            const lines = rawText.split("\n");
-            if (lines.length < 2) {
-                alert("Invalid format. Make sure headers and rows are included.");
-                return;
-            }
-
-            let newSpins = [];
-            let detectedCasino = "";
-
-            for (let i = 1; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (!line) continue;
-
-                let parts = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
-                if (parts.length >= 2) {
-                    let num = parts[0].replace(/["']/g, "").trim();
-                    let casino = parts[1] ? parts[1].replace(/["']/g, "").trim() : "Imported Casino";
-                    let date = parts[2] ? parts[2].replace(/["']/g, "").trim() : new Date().toISOString().split('T')[0];
-                    let time = parts[3] ? parts[3].replace(/["']/g, "").trim() : "00:00:00";
-                    let sId = parts[4] ? parts[4].replace(/["']/g, "").trim() : sessionId;
-
-                    if (num !== "" && !isNaN(num) || num === "00") {
-                        newSpins.push({ number: num, casino: casino, date: date, time: time, session_id: sId });
-                        if (!detectedCasino && casino) detectedCasino = casino;
-                    }
-                }
-            }
-
-            if (newSpins.length > 0) {
-                spins = newSpins;
-                if (detectedCasino) {
-                    document.getElementById("casino-input").value = detectedCasino;
-                }
-                toggleImportPanel();
-                document.getElementById("import-textarea").value = "";
-                updateUI();
-                alert(`Successfully imported ${newSpins.length} spins!`);
-            } else {
-                alert("Could not parse any valid spin rows from the pasted text.");
-            }
-        }
-
-        function generateCSVString() {
-            if (spins.length === 0) return "";
-            const headers = ["number", "casino", "date", "time", "session_id"];
-            const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
-            return [headers.join(","), ...rows].join("\n");
-        }
-
-        function copyCSV() {
-            const csvText = generateCSVString();
-            if (!csvText) {
-                alert("No spin data to copy.");
-                return;
-            }
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(csvText).then(() => {
-                    alert("CSV copied to clipboard!");
-                }).catch(() => fallbackCopy(csvText));
-            } else {
-                fallbackCopy(csvText);
-            }
-        }
-
-        function fallbackCopy(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert("CSV copied to clipboard!");
-            } catch (err) {
-                alert("Failed to copy CSV.");
-            }
-            document.body.removeChild(textArea);
-        }
-
-        function downloadCSV() {
-            const csvText = generateCSVString();
-            if (!csvText) {
-                alert("No spin data to download.");
-                return;
-            }
-
-            const casinoName = (document.getElementById("casino-input").value || "casino")
-                .toLowerCase().replace(/[^a-z0-9]/g, "_");
-            const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
-
-            const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvText);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-
-            try {
-                link.click();
-                document.body.removeChild(link);
-            } catch (err) {
-                document.body.removeChild(link);
-                window.open(encodedUri, '_blank');
-            }
-        }
-
-        function resetSession() {
-            if (confirm("Clear all session spins and reset tracking?")) {
-                spins = [];
-                sessionHigh = 0;
-                document.getElementById('high-val').innerText = "$ 0";
-                clearDigit();
-                updateUI();
-            }
-        }
-    </script>
-</body>
-</html>
+        const CORNERS
