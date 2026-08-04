@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.86.0 - Event Listener Fix</title>
+    <title>Roulette Tracker v1.87.0 - Stats Population Fix</title>
     <style>
         * {
             box-sizing: border-box;
@@ -250,7 +250,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.86.0</span>
+        <span class="version-tag">v1.87.0</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -301,24 +301,24 @@
             <div class="s2w-grid">
                 <div class="s2w-col">
                     <div class="s2w-title">DOZEN 1</div>
-                    <div class="s2w-split-row"><span>1|2</span><span id="s2w-d1-1">0</span></div>
-                    <div class="s2w-split-row"><span>6|9</span><span id="s2w-d1-2">0</span></div>
-                    <div class="s2w-split-row"><span>8|11</span><span id="s2w-d1-3">0</span></div>
-                    <div class="s2w-split-row"><span>7|10</span><span id="s2w-d1-4">0</span></div>
+                    <div class="s2w-split-row"><span>1|2</span><span id="s2w-d1-1">(0)</span></div>
+                    <div class="s2w-split-row"><span>6|9</span><span id="s2w-d1-2">(0)</span></div>
+                    <div class="s2w-split-row"><span>8|11</span><span id="s2w-d1-3">(0)</span></div>
+                    <div class="s2w-split-row"><span>7|10</span><span id="s2w-d1-4">(0)</span></div>
                 </div>
                 <div class="s2w-col">
                     <div class="s2w-title">DOZEN 2</div>
-                    <div class="s2w-split-row"><span>13|14</span><span id="s2w-d2-1">0</span></div>
-                    <div class="s2w-split-row"><span>16|19</span><span id="s2w-d2-2">0</span></div>
-                    <div class="s2w-split-row"><span>17|20</span><span id="s2w-d2-3">0</span></div>
-                    <div class="s2w-split-row"><span>23|24</span><span id="s2w-d2-4">0</span></div>
+                    <div class="s2w-split-row"><span>13|14</span><span id="s2w-d2-1">(0)</span></div>
+                    <div class="s2w-split-row"><span>16|19</span><span id="s2w-d2-2">(0)</span></div>
+                    <div class="s2w-split-row"><span>17|20</span><span id="s2w-d2-3">(0)</span></div>
+                    <div class="s2w-split-row"><span>23|24</span><span id="s2w-d2-4">(0)</span></div>
                 </div>
                 <div class="s2w-col">
                     <div class="s2w-title">DOZEN 3</div>
-                    <div class="s2w-split-row"><span>27|30</span><span id="s2w-d3-1">0</span></div>
-                    <div class="s2w-split-row"><span>28|31</span><span id="s2w-d3-2">0</span></div>
-                    <div class="s2w-split-row"><span>32|33</span><span id="s2w-d3-3">0</span></div>
-                    <div class="s2w-split-row"><span>35|36</span><span id="s2w-d3-4">0</span></div>
+                    <div class="s2w-split-row"><span>27|30</span><span id="s2w-d3-1">(0)</span></div>
+                    <div class="s2w-split-row"><span>28|31</span><span id="s2w-d3-2">(0)</span></div>
+                    <div class="s2w-split-row"><span>32|33</span><span id="s2w-d3-3">(0)</span></div>
+                    <div class="s2w-split-row"><span>35|36</span><span id="s2w-d3-4">(0)</span></div>
                 </div>
             </div>
         </div>
@@ -548,9 +548,10 @@
             if (currentInputText === "") return;
             
             const now = new Date();
+            const casinoVal = document.getElementById("casino-input") ? document.getElementById("casino-input").value : "Unknown";
             const spinData = {
                 number: currentInputText,
-                casino: document.getElementById("casino-input") ? document.getElementById("casino-input").value : "Unknown",
+                casino: casinoVal || "Unknown",
                 date: now.toISOString().split('T')[0],
                 time: now.toTimeString().split(' ')[0],
                 session_id: sessionId
@@ -651,22 +652,24 @@
 
                 const window15 = spins.slice(0, 15).map(s => s.number);
 
-                // Spin-2-Win Splits
+                // Spin-2-Win Splits Age Tracking (FIXED TYPO HERE)
                 ['d1', 'd2', 'd3'].forEach(dKey => {
-                    S2W_SPLITS[dKey].forEach((splitObj, idx) => {
-                        let age = 0;
-                        for (let i = 0; i < spins.length; i++) {
-                            if (!spins[i]) continue;
-                            let n = parseInt(spins[i].number, 10);
-                            if (!isNaN(n) && splitObj.nums.includes(n)) break;
-                            age++;
-                        }
-                        let el = document.getElementById(`s2w-${dkey}-${idx+1}`);
-                        if (el) {
-                            el.innerText = `(${age})`;
-                            el.className = age >= 12 ? "extreme-red" : "";
-                        }
-                    });
+                    if (S2W_SPLITS[dKey]) {
+                        S2W_SPLITS[dKey].forEach((splitObj, idx) => {
+                            let age = 0;
+                            for (let i = 0; i < spins.length; i++) {
+                                if (!spins[i]) continue;
+                                let n = parseInt(spins[i].number, 10);
+                                if (!isNaN(n) && splitObj.nums.includes(n)) break;
+                                age++;
+                            }
+                            let el = document.getElementById(`s2w-${dKey}-${idx+1}`);
+                            if (el) {
+                                el.innerText = `(${age})`;
+                                el.className = age >= 12 ? "extreme-red" : "";
+                            }
+                        });
+                    }
                 });
 
                 // Columns
@@ -699,7 +702,7 @@
                 const valDozs = document.getElementById('val-dozs');
                 if (valDozs) valDozs.innerHTML = `${formatVal(d1, d1Age)} / ${formatVal(d2, d2Age)} / ${formatVal(d3, d3Age)}`;
 
-                // Repeats
+                // Safe Repeats
                 let maxCheck = Math.min(spins.length, 5);
 
                 let numRepStr = "None";
@@ -885,196 +888,8 @@
 
         // Safe Event Binding Initialization
         window.addEventListener('DOMContentLoaded', () => {
-            // Keypad numbers
             document.querySelectorAll('.numpad-grid button[data-val]').forEach(btn => {
                 btn.addEventListener('click', () => appendDigit(btn.getAttribute('data-val')));
             });
 
-            // Action buttons
-            const enterBtn = document.getElementById('btn-enter');
-            if (enterBtn) enterBtn.addEventListener('click', submitCommitedValue);
-
-            const undoBtn = document.getElementById('btn-undo');
-            if (undoBtn) undoBtn.addEventListener('click', undoSpin);
-
-            const cancelBtn = document.getElementById('btn-cancel');
-            if (cancelBtn) cancelBtn.addEventListener('click', clearDigit);
-
-            const bankrollCell = document.getElementById('bankroll');
-            if (bankrollCell) bankrollCell.addEventListener('click', toggleInputMode);
-
-            // CSV & Controls
-            const resetBtn = document.querySelector('.btn-reset');
-            if (resetBtn) resetBtn.addEventListener('click', resetSession);
-
-            const copyBtn = document.querySelector('.btn-copy');
-            if (copyBtn) copyBtn.addEventListener('click', copyCSV);
-
-            const importToggleBtn = document.getElementById('btn-import-toggle');
-            if (importToggleBtn) importToggleBtn.addEventListener('click', toggleImportPanel);
-
-            const dlBtn = document.querySelector('.btn-dl');
-            if (dlBtn) dlBtn.addEventListener('click', downloadCSV);
-
-            const doImportBtn = document.getElementById('btn-do-import');
-            if (doImportBtn) doImportBtn.addEventListener('click', processCSVImport);
-
-            const cancelImportBtn = document.getElementById('btn-cancel-import');
-            if (cancelImportBtn) cancelImportBtn.addEventListener('click', toggleImportPanel);
-
-            // Quadrant badges
-            document.querySelectorAll('.quad-badge').forEach(badge => {
-                badge.addEventListener('click', () => toggleBetNumbers(badge.getAttribute('data-quad')));
-            });
-
-            updateUI();
-        });
-
-        function toggleBetNumbers(quadKey) {
-            const panel = document.getElementById("bet-numbers-display");
-            if (!panel) return;
-            if (activeQuad === quadKey) {
-                panel.style.display = "none";
-                activeQuad = null;
-            } else {
-                activeQuad = quadKey;
-                panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
-                panel.style.display = "block";
-            }
-        }
-
-        function toggleImportPanel() {
-            const panel = document.getElementById("import-panel");
-            if (panel) {
-                panel.style.display = panel.style.display === "block" ? "none" : "block";
-            }
-        }
-
-        function processCSVImport() {
-            try {
-                const rawText = document.getElementById("import-textarea").value.trim();
-                if (!rawText) {
-                    alert("Please paste valid CSV spin data.");
-                    return;
-                }
-
-                const lines = rawText.split("\n");
-                let newSpins = [];
-                let detectedCasino = "";
-
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i].trim();
-                    if (!line || line.startsWith("----")) continue;
-
-                    let parts = parseCSVLine(line);
-                    if (parts.length >= 2) {
-                        let num = parts[0].trim();
-                        if (num.toLowerCase() === "number") continue;
-
-                        let casino = parts[1] ? parts[1].trim() : "Imported Casino";
-                        let date = parts[2] ? parts[2].trim() : new Date().toISOString().split('T')[0];
-                        let time = parts[3] ? parts[3].trim() : "00:00:00";
-                        let sId = parts[4] ? parts[4].trim() : sessionId;
-
-                        if (num !== "" && (!isNaN(parseInt(num, 10)) || num === "00")) {
-                            newSpins.push({ number: num, casino: casino, date: date, time: time, session_id: sId });
-                            if (!detectedCasino && casino) detectedCasino = casino;
-                        }
-                    }
-                }
-
-                if (newSpins.length > 0) {
-                    spins = newSpins;
-                    if (detectedCasino && document.getElementById("casino-input")) {
-                        document.getElementById("casino-input").value = detectedCasino;
-                    }
-                    toggleImportPanel();
-                    const ta = document.getElementById("import-textarea");
-                    if (ta) ta.value = "";
-                    updateUI();
-                    alert(`Successfully imported ${newSpins.length} spins!`);
-                } else {
-                    alert("Could not parse any valid spin rows from the pasted text.");
-                }
-            } catch (err) {
-                alert("Error importing CSV: " + err.message);
-            }
-        }
-
-        function generateCSVString() {
-            if (spins.length === 0) return "";
-            const headers = ["number", "casino", "date", "time", "session_id"];
-            const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
-            return [headers.join(","), ...rows].join("\n");
-        }
-
-        function copyCSV() {
-            const csvText = generateCSVString();
-            if (!csvText) {
-                alert("No spin data to copy.");
-                return;
-            }
-
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(csvText).then(() => {
-                    alert("CSV copied to clipboard!");
-                }).catch(() => fallbackCopy(csvText));
-            } else {
-                fallbackCopy(csvText);
-            }
-        }
-
-        function fallbackCopy(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert("CSV copied to clipboard!");
-            } catch (err) {
-                alert("Failed to copy CSV.");
-            }
-            document.body.removeChild(textArea);
-        }
-
-        function downloadCSV() {
-            const csvText = generateCSVString();
-            if (!csvText) {
-                alert("No spin data to download.");
-                return;
-            }
-
-            const casinoEl = document.getElementById("casino-input");
-            const casinoName = (casinoEl ? casinoEl.value : "casino").toLowerCase().replace(/[^a-z0-9]/g, "_");
-            const dateStr = new Date().toISOString().split('T')[0];
-            const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
-
-            const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvText);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-
-            try {
-                link.click();
-                document.body.removeChild(link);
-            } catch (err) {
-                document.body.removeChild(link);
-                window.open(encodedUri, '_blank');
-            }
-        }
-
-        function resetSession() {
-            if (confirm("Clear all session spins and reset tracking?")) {
-                spins = [];
-                sessionHigh = 0;
-                const highVal = document.getElementById('high-val');
-                if (highVal) highVal.innerText = "$ 0";
-                clearDigit();
-                updateUI();
-            }
-        }
-    </script>
-</body>
-</html>
+            const enter
