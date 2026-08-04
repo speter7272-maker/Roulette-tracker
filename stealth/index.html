@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.83.2 - Stable Build</title>
+    <title>Roulette Tracker v1.84.0 - Spin-2-Win Splits Tracker</title>
     <style>
         * {
             box-sizing: border-box;
@@ -177,9 +177,9 @@
             flex-shrink: 0;
         }
 
-        .chip-red { background: #d32f2f; color: #fff; }
+        .chip-red { background: #b71c1c; color: #fff; }
         .chip-black { background: #212121; color: #fff; border: 1px solid #555; }
-        .chip-green { background: #2e7d32; color: #fff; }
+        .chip-green { background: #15803d; color: #fff; }
         .chip-latest { outline: 2px solid #ffeb3b; transform: scale(1.05); }
 
         #main-scroll {
@@ -191,11 +191,18 @@
             padding-bottom: 10px;
         }
 
-        .junko-card, .strategy-card, .anomaly-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        .junko-card, .strategy-card, .anomaly-card, .s2w-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
         .junko-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
         .quad-badge { background: #121212; padding: 8px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #333; }
         .quad-title { font-size: 0.7rem; font-weight: bold; color: #888; }
         .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
+
+        /* Spin-2-Win 3-Column Layout */
+        .s2w-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
+        .s2w-col { background: #121212; border: 1px solid #222; padding: 6px 4px; border-radius: 6px; }
+        .s2w-title { font-size: 0.65rem; color: #38bdf8; font-weight: bold; margin-bottom: 4px; }
+        .s2w-split-row { font-size: 0.7rem; color: #bbb; display: flex; justify-content: space-between; padding: 2px 4px; border-bottom: 1px solid #1a1a1a; }
+        .s2w-split-row:last-child { border-bottom: none; }
 
         .strat-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
         .strat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -242,7 +249,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.83.2</span>
+        <span class="version-tag">v1.84.0</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -288,9 +295,35 @@
     </div>
 
     <div id="main-scroll">
+        <div class="s2w-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">SPIN-2-WIN SPLITS TRACKER</div>
+            <div class="s2w-grid">
+                <div class="s2w-col">
+                    <div class="s2w-title">DOZEN 1</div>
+                    <div class="s2w-split-row"><span>1|2</span><span id="s2w-d1-1">0</span></div>
+                    <div class="s2w-split-row"><span>6|9</span><span id="s2w-d1-2">0</span></div>
+                    <div class="s2w-split-row"><span>8|11</span><span id="s2w-d1-3">0</span></div>
+                    <div class="s2w-split-row"><span>7|10</span><span id="s2w-d1-4">0</span></div>
+                </div>
+                <div class="s2w-col">
+                    <div class="s2w-title">DOZEN 2</div>
+                    <div class="s2w-split-row"><span>13|14</span><span id="s2w-d2-1">0</span></div>
+                    <div class="s2w-split-row"><span>16|19</span><span id="s2w-d2-2">0</span></div>
+                    <div class="s2w-split-row"><span>17|20</span><span id="s2w-d2-3">0</span></div>
+                    <div class="s2w-split-row"><span>23|24</span><span id="s2w-d2-4">0</span></div>
+                </div>
+                <div class="s2w-col">
+                    <div class="s2w-title">DOZEN 3</div>
+                    <div class="s2w-split-row"><span>27|30</span><span id="s2w-d3-1">0</span></div>
+                    <div class="s2w-split-row"><span>28|31</span><span id="s2w-d3-2">0</span></div>
+                    <div class="s2w-split-row"><span>32|33</span><span id="s2w-d3-3">0</span></div>
+                    <div class="s2w-split-row"><span>35|36</span><span id="s2w-d3-4">0</span></div>
+                </div>
+            </div>
+        </div>
+
         <div class="anomaly-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
-            
             <div class="anomaly-box-row">
                 <div class="anomaly-box">
                     <div class="anomaly-box-title">COLUMNS (C1 / C2 / C3)</div>
@@ -420,12 +453,17 @@
         const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
         const GREEN_NUMS = ["0","00"];
 
-        // 12 Non-Overlapping Zigzag Corners Only (ZZ1 + ZZ3)
         const CORNERS = {
             "1/5": [1,2,4,5], "8/12": [8,9,11,12], "13/17": [13,14,16,17],
             "20/24": [20,21,23,24], "25/29": [25,26,28,29], "32/36": [32,33,35,36],
             "2/6": [2,3,5,6], "7/11": [7,8,10,11], "14/18": [14,15,17,18],
             "19/23": [19,20,22,23], "26/30": [26,27,29,30], "31/35": [31,32,34,35]
+        };
+
+        const S2W_SPLITS = {
+            d1: [ {name: "1|2", nums: [1,2]}, {name: "6|9", nums: [6,9]}, {name: "8|11", nums: [8,11]}, {name: "7|10", nums: [7,10]} ],
+            d2: [ {name: "13|14", nums: [13,14]}, {name: "16|19", nums: [16,19]}, {name: "17|20", nums: [17,20]}, {name: "23|24", nums: [23,24]} ],
+            d3: [ {name: "27|30", nums: [27,30]}, {name: "28|31", nums: [28,31]}, {name: "32|33", nums: [32,33]}, {name: "35|36", nums: [35,36]} ]
         };
 
         const QUADRANTS = {
@@ -604,7 +642,25 @@
 
                 const window15 = spins.slice(0, 15).map(s => s.number);
 
-                // 2. Column Hits and Drought Ages
+                // 2. Spin-2-Win Splits Age Tracking
+                ['d1', 'd2', 'd3'].forEach(dKey => {
+                    S2W_SPLITS[dKey].forEach((splitObj, idx) => {
+                        let age = 0;
+                        for (let i = 0; i < spins.length; i++) {
+                            if (!spins[i]) continue;
+                            let n = parseInt(spins[i].number, 10);
+                            if (!isNaN(n) && splitObj.nums.includes(n)) break;
+                            age++;
+                        }
+                        let el = document.getElementById(`s2w-${dkey}-${idx+1}`);
+                        if (el) {
+                            el.innerText = `(${age})`;
+                            el.className = age >= 12 ? "extreme-red" : "";
+                        }
+                    });
+                });
+
+                // 3. Column Hits and Drought Ages
                 let c1 = window15.filter(num => { let n = parseInt(num,10); return n % 3 === 1; }).length;
                 let c2 = window15.filter(num => { let n = parseInt(num,10); return n % 3 === 2; }).length;
                 let c3 = window15.filter(num => { let n = parseInt(num,10); return n % 3 === 0 && n !== 0; }).length;
@@ -621,7 +677,7 @@
 
                 document.getElementById('val-cols').innerHTML = `${formatVal(c1, c1Age)} / ${formatVal(c2, c2Age)} / ${formatVal(c3, c3Age)}`;
 
-                // 3. Dozen Hits and Drought Ages
+                // 4. Dozen Hits and Drought Ages
                 let d1 = window15.filter(num => { let n = parseInt(num,10); return n >= 1 && n <= 12; }).length;
                 let d2 = window15.filter(num => { let n = parseInt(num,10); return n >= 13 && n <= 24; }).length;
                 let d3 = window15.filter(num => { let n = parseInt(num,10); return n >= 25 && n <= 36; }).length;
@@ -632,10 +688,9 @@
 
                 document.getElementById('val-dozs').innerHTML = `${formatVal(d1, d1Age)} / ${formatVal(d2, d2Age)} / ${formatVal(d3, d3Age)}`;
 
-                // 4. Safe Repeats Evaluation (Original Gap Format: #num (gap) and Bounded by spins.length)
+                // 5. Safe Repeats Evaluation
                 let maxCheck = Math.min(spins.length, 5);
 
-                // Number Repeats
                 let numRepStr = "None";
                 let isNumRep = false;
                 for (let i = 0; i < maxCheck; i++) {
@@ -652,7 +707,6 @@
                 document.getElementById('val-numrep').innerText = numRepStr;
                 document.getElementById('val-numrep').className = isNumRep ? "anomaly-box-val extreme-red" : "anomaly-box-val";
 
-                // Street Repeats
                 let streetRepStr = "None";
                 let isStreetRep = false;
                 for (let i = 0; i < maxCheck; i++) {
@@ -674,7 +728,6 @@
                 document.getElementById('val-strep').innerText = streetRepStr;
                 document.getElementById('val-strep').className = isStreetRep ? "anomaly-box-val extreme-red" : "anomaly-box-val";
 
-                // Zigzag Corner Repeats
                 let cornerRepStr = "None";
                 let isCornerRep = false;
                 for (let i = 0; i < maxCheck; i++) {
@@ -715,7 +768,7 @@
                 });
                 document.getElementById('stat-driest-vcol').innerText = driestVColName;
 
-                // 5. 10-2-Win Sector Calculations
+                // 6. 10-2-Win Sector Calculations
                 Object.keys(QUADRANTS).forEach(key => {
                     const nums = QUADRANTS[key];
                     const count = window15.filter(n => nums.includes(n)).length;
@@ -738,13 +791,9 @@
                     }
                 });
 
-                // 6. Strategy Monitors
+                // 7. Strategy Monitors
                 const zz1Count = window15.filter(n => ZZ1_NUMBERS.includes(n)).length;
-                let zz1Age = 0;
-                for (let i = 0; i < spins.length; i++) {
-                    if (spins[i] && ZZ1_NUMBERS.includes(spins[i].number)) break;
-                    zz1Age++;
-                }
+                let zz1Age = getAgeForGroup(n => ZZ1_NUMBERS.includes(n));
                 const zz1El = document.getElementById('stat-zz1');
                 if (zz1El) {
                     zz1El.innerText = `${zz1Count}(+${zz1Age})`;
@@ -754,11 +803,7 @@
                 }
 
                 const zz3Count = window15.filter(n => ZZ3_NUMBERS.includes(n)).length;
-                let zz3Age = 0;
-                for (let i = 0; i < spins.length; i++) {
-                    if (spins[i] && ZZ3_NUMBERS.includes(spins[i].number)) break;
-                    zz3Age++;
-                }
+                let zz3Age = getAgeForGroup(n => ZZ3_NUMBERS.includes(n));
                 const zz3El = document.getElementById('stat-zz3');
                 if (zz3El) {
                     zz3El.innerText = `${zz3Count}(+${zz3Age})`;
@@ -768,11 +813,7 @@
                 }
 
                 const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
-                let s16Age = 0;
-                for (let i = 0; i < spins.length; i++) {
-                    if (spins[i] && SWEET_16_EXCLUSIONS.includes(spins[i].number)) break;
-                    s16Age++;
-                }
+                let s16Age = getAgeForGroup(n => SWEET_16_EXCLUSIONS.includes(n));
                 const s16El = document.getElementById('stat-s16');
                 if (s16El) {
                     s16El.innerText = `${s16Count} (${s16Age}+)`;
@@ -812,11 +853,7 @@
                 }
 
                 const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
-                let sofAge = 0;
-                for (let i = 0; i < spins.length; i++) {
-                    if (spins[i] && SOF_NUMBERS.includes(spins[i].number)) break;
-                    sofAge++;
-                }
+                let sofAge = getAgeForGroup(n => SOF_NUMBERS.includes(n));
                 const sofEl = document.getElementById('stat-sof');
                 if (sofEl) {
                     sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
