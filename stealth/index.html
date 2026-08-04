@@ -207,4 +207,874 @@
 
         .strat-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
         .strat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .strat-box { background: #121212; padding: 8px; border-radius: 6px; border: 1px
+        .strat-box { background: #121212; padding: 8px; border-radius: 6px; border: 1px solid #333; text-align: center; }
+        .strat-title { font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
+        .strat-val { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
+
+        .anomaly-box-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        .anomaly-box-row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        
+        .anomaly-box { background: #121212; border: 1px solid #222; padding: 6px 4px; border-radius: 6px; text-align: center; }
+        .anomaly-box-title { font-size: 0.6rem; color: #888; font-weight: bold; text-transform: uppercase; }
+        .anomaly-box-val { font-size: 0.85rem; font-weight: bold; margin-top: 2px; color: #ccc; }
+
+        .extreme-red { color: #ef4444 !important; font-weight: bold; }
+
+        .alert-yellow { color: #f59e0b; }
+        .alert-green { color: #22c55e; }
+        .alert-red { color: #ef4444; }
+
+        .bet-numbers-panel { margin-top: 8px; background: #0f172a; padding: 8px; border-radius: 6px; font-size: 0.8rem; color: #38bdf8; word-break: break-word; display: none; }
+
+        .controls-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; display: flex; flex-direction: column; gap: 8px; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 0.75rem; color: #888; }
+        .input-group input { background: #121212; border: 1px solid #333; color: white; padding: 8px; border-radius: 4px; }
+
+        .action-row { display: flex; gap: 6px; }
+        .action-row button { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: bold; color: white; cursor: pointer; font-size: 0.75rem; }
+        .btn-reset { background: #ef4444; }
+        .btn-copy { background: #2563eb; }
+        .btn-dl { background: #16a34a; }
+        .btn-import { background: #7c3aed; }
+
+        #import-panel { background: #0f172a; border: 1px solid #334155; padding: 8px; border-radius: 6px; display: none; margin-top: 4px; }
+        #import-panel textarea { width: 100%; height: 70px; background: #1e293b; color: #fff; border: 1px solid #475569; padding: 6px; font-size: 0.75rem; border-radius: 4px; resize: none; }
+        .import-actions { display: flex; gap: 6px; margin-top: 4px; }
+        .import-actions button { flex: 1; padding: 6px; font-size: 0.7rem; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-do-import { background: #22c55e; }
+        .btn-cancel-import { background: #64748b; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ROULETTE TRACKER</h1>
+        <span class="version-tag">v1.86.0</span>
+    </header>
+
+    <div id="slim-tracker-container">
+        <div class="readout-bar">
+            <div id="spin-counter" class="readout-cell c-spin">
+                <span id="spin-val" class="r-val"># 0</span>
+            </div>
+            
+            <div id="input-center" class="readout-cell c-ent">
+                <span class="r-lab">NEWEST:</span>
+                <span id="input-buffer" class="r-val">--</span>
+            </div>
+
+            <div id="bankroll" class="readout-cell c-spin">
+                <span id="high-val" class="r-val">$ 0</span>
+            </div>
+        </div>
+
+        <div class="control-row">
+            <button type="button" id="btn-enter" class="btn btn-enter">ENTER</button>
+            <button type="button" id="btn-undo" class="btn btn-undo">UNDO</button>
+        </div>
+
+        <div class="numpad-grid">
+            <button type="button" data-val="1">1</button>
+            <button type="button" data-val="2">2</button>
+            <button type="button" data-val="3">3</button>
+            <button type="button" data-val="4">4</button>
+            <button type="button" data-val="5">5</button>
+            <button type="button" data-val="6">6</button>
+            <button type="button" data-val="7">7</button>
+            <button type="button" data-val="8">8</button>
+            <button type="button" data-val="9">9</button>
+            <button type="button" data-val="0">0</button>
+            <button type="button" data-val="00">00</button>
+            <button type="button" id="btn-cancel" class="btn-clear">C</button>
+        </div>
+
+        <div class="history-strip-container">
+            <span class="history-label">LAST:</span>
+            <div id="history-stream" class="history-stream"></div>
+        </div>
+    </div>
+
+    <div id="main-scroll">
+        <div class="s2w-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">SPIN-2-WIN SPLITS TRACKER</div>
+            <div class="s2w-grid">
+                <div class="s2w-col">
+                    <div class="s2w-title">DOZEN 1</div>
+                    <div class="s2w-split-row"><span>1|2</span><span id="s2w-d1-1">0</span></div>
+                    <div class="s2w-split-row"><span>6|9</span><span id="s2w-d1-2">0</span></div>
+                    <div class="s2w-split-row"><span>8|11</span><span id="s2w-d1-3">0</span></div>
+                    <div class="s2w-split-row"><span>7|10</span><span id="s2w-d1-4">0</span></div>
+                </div>
+                <div class="s2w-col">
+                    <div class="s2w-title">DOZEN 2</div>
+                    <div class="s2w-split-row"><span>13|14</span><span id="s2w-d2-1">0</span></div>
+                    <div class="s2w-split-row"><span>16|19</span><span id="s2w-d2-2">0</span></div>
+                    <div class="s2w-split-row"><span>17|20</span><span id="s2w-d2-3">0</span></div>
+                    <div class="s2w-split-row"><span>23|24</span><span id="s2w-d2-4">0</span></div>
+                </div>
+                <div class="s2w-col">
+                    <div class="s2w-title">DOZEN 3</div>
+                    <div class="s2w-split-row"><span>27|30</span><span id="s2w-d3-1">0</span></div>
+                    <div class="s2w-split-row"><span>28|31</span><span id="s2w-d3-2">0</span></div>
+                    <div class="s2w-split-row"><span>32|33</span><span id="s2w-d3-3">0</span></div>
+                    <div class="s2w-split-row"><span>35|36</span><span id="s2w-d3-4">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="anomaly-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
+            <div class="anomaly-box-row">
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">COLUMNS (C1 / C2 / C3)</div>
+                    <div id="val-cols" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
+                </div>
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">DOZENS (D1 / D2 / D3)</div>
+                    <div id="val-dozs" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
+                </div>
+            </div>
+
+            <div class="anomaly-box-row3">
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">NUM REPEAT</div>
+                    <div id="val-numrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
+                </div>
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">STREET REP</div>
+                    <div id="val-strep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
+                </div>
+                <div class="anomaly-box">
+                    <div class="anomaly-box-title">ZZ CORNER REP</div>
+                    <div id="val-cornerrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
+                </div>
+            </div>
+
+            <div style="margin-top:6px; background:#121212; padding:6px; border-radius:4px; font-size:0.7rem; color:#888; display:flex; justify-content:space-between;">
+                <span>DRIEST VERTICAL COL:</span>
+                <span id="stat-driest-vcol" style="font-weight:bold; color:#38bdf8;">--</span>
+            </div>
+        </div>
+
+        <div class="junko-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
+            <div class="junko-grid">
+                <div class="quad-badge" data-quad="GN">
+                    <div class="quad-title">GN</div>
+                    <div id="stat-gn" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" data-quad="HO">
+                    <div class="quad-title">HO</div>
+                    <div id="stat-ho" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" data-quad="LO">
+                    <div class="quad-title">LO</div>
+                    <div id="stat-lo" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" data-quad="M">
+                    <div class="quad-title">M</div>
+                    <div id="stat-m" class="quad-stats">0 (0+)</div>
+                </div>
+                <div class="quad-badge" data-quad="GR">
+                    <div class="quad-title">GR</div>
+                    <div id="stat-gr" class="quad-stats">0 (0+)</div>
+                </div>
+            </div>
+            <div id="bet-numbers-display" class="bet-numbers-panel"></div>
+        </div>
+
+        <div class="strategy-card">
+            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
+            <div class="strat-grid">
+                <div class="strat-row">
+                    <div class="strat-box" style="grid-column: span 2;">
+                        <div class="strat-title">Streets of Fire (0,00,1,2,3,34,35,36) W=15</div>
+                        <div id="stat-sof" class="strat-val">0 (0+)</div>
+                    </div>
+                </div>
+                <div class="strat-row">
+                    <div class="strat-box">
+                        <div class="strat-title">ZZ1 (Base Zigzag) W=15</div>
+                        <div id="stat-zz1" class="strat-val">0(+0)</div>
+                    </div>
+                    <div class="strat-box">
+                        <div class="strat-title">ZZ3 (Reverse Zigzag) W=15</div>
+                        <div id="stat-zz3" class="strat-val">0(+0)</div>
+                    </div>
+                </div>
+                <div class="strat-row">
+                    <div class="strat-box">
+                        <div class="strat-title">Sweet 16 (W=15)</div>
+                        <div id="stat-s16" class="strat-val">0 (0+)</div>
+                    </div>
+                    <div class="strat-box">
+                        <div class="strat-title">10-2-Win (Drought)</div>
+                        <div id="stat-102win" class="strat-val">0 spins</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-card">
+            <div class="input-group">
+                <label for="casino-input">Casino Name</label>
+                <input type="text" id="casino-input" value="RM Smokeshow" placeholder="Enter casino name...">
+            </div>
+
+            <div class="action-row">
+                <button type="button" id="btn-reset" class="btn-reset">Clear</button>
+                <button type="button" id="btn-copy" class="btn-copy">Copy CSV</button>
+                <button type="button" id="btn-import-toggle" class="btn-import">Import CSV</button>
+                <button type="button" id="btn-dl" class="btn-dl">Download CSV</button>
+            </div>
+
+            <div id="import-panel">
+                <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 3px;">Paste CSV session data below:</label>
+                <textarea id="import-textarea" placeholder="number,casino,date,time,session_id..."></textarea>
+                <div class="import-actions">
+                    <button type="button" id="btn-do-import" class="btn-do-import">Load Session</button>
+                    <button type="button" id="btn-cancel-import" class="btn-cancel-import">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MODE_SPIN = 'SPIN';
+        const MODE_HIGH = 'HIGH';
+        
+        let currentMode = MODE_SPIN;
+        let currentInputText = "";
+        let spins = []; 
+        let sessionHigh = 0;
+        let activeQuad = null;
+        let sessionId = "SESS-" + Math.floor(1000 + Math.random() * 9000);
+
+        const RED_NUMS = ["1","3","5","7","9","12","14","16","18","19","21","23","25","27","30","32","34","36"];
+        const GREEN_NUMS = ["0","00"];
+
+        const CORNERS = {
+            "1/5": [1,2,4,5], "8/12": [8,9,11,12], "13/17": [13,14,16,17],
+            "20/24": [20,21,23,24], "25/29": [25,26,28,29], "32/36": [32,33,35,36],
+            "2/6": [2,3,5,6], "7/11": [7,8,10,11], "14/18": [14,15,17,18],
+            "19/23": [19,20,22,23], "26/30": [26,27,29,30], "31/35": [31,32,34,35]
+        };
+
+        const S2W_SPLITS = {
+            d1: [ {name: "1|2", nums: [1,2]}, {name: "6|9", nums: [6,9]}, {name: "8|11", nums: [8,11]}, {name: "7|10", nums: [7,10]} ],
+            d2: [ {name: "13|14", nums: [13,14]}, {name: "16|19", nums: [16,19]}, {name: "17|20", nums: [17,20]}, {name: "23|24", nums: [23,24]} ],
+            d3: [ {name: "27|30", nums: [27,30]}, {name: "28|31", nums: [28,31]}, {name: "32|33", nums: [32,33]}, {name: "35|36", nums: [35,36]} ]
+        };
+
+        const QUADRANTS = {
+            GN: ["00","0","1","2","9","10","13","14","27","28"],
+            HO: ["23","24","25","26","30","33","34","35","36"],
+            LO: ["3","4","11","12","15","16","21","22","23","24"],
+            M:  ["5","6","7","8","17","18","19","20","31","32"],
+            GR: ["0","00"]
+        };
+
+        const VERTICAL_COLUMNS = {
+            "D1/C1": [1,4,7,10], "D1/C2": [2,5,8,11], "D1/C3": [3,6,9,12],
+            "D2/C1": [13,16,19,22], "D2/C2": [14,17,20,23], "D2/C3": [15,18,21,24],
+            "D3/C1": [25,28,31,34], "D3/C2": [26,29,32,35], "D3/C3": [27,30,33,36]
+        };
+
+        const SWEET_16_EXCLUSIONS = ["3","6","9","12","13","16","19","22","0","00"];
+        const SOF_NUMBERS = ["0","00","1","2","3","34","35","36"];
+        const ZZ1_NUMBERS = ["1","4","9","12","13","16","21","24","25","28","33","36"];
+        const ZZ3_NUMBERS = ["3","6","7","10","15","18","19","22","27","30","31","34"];
+
+        function toggleInputMode() {
+            const bankrollEl = document.getElementById('bankroll');
+            const cancelBtn = document.getElementById('btn-cancel');
+
+            if (currentMode === MODE_SPIN) {
+                currentMode = MODE_HIGH;
+                currentInputText = "";
+                if (bankrollEl) bankrollEl.className = 'readout-cell c-high';
+                if (cancelBtn) {
+                    cancelBtn.innerText = 'X';
+                    cancelBtn.className = 'btn-cancel';
+                }
+            } else {
+                currentMode = MODE_SPIN;
+                currentInputText = "";
+                if (bankrollEl) bankrollEl.className = 'readout-cell c-spin';
+                if (cancelBtn) {
+                    cancelBtn.innerText = 'C';
+                    cancelBtn.className = 'btn-clear';
+                }
+            }
+            updateDisplay();
+        }
+
+        function appendDigit(val) {
+            if (currentMode === MODE_SPIN) {
+                if (val === '00') { currentInputText = '00'; updateDisplay(); return; }
+                if (currentInputText === '0' || currentInputText === '00') currentInputText = '';
+                if ((currentInputText + val).length <= 2) {
+                    let numVal = parseInt(currentInputText + val, 10);
+                    if (numVal <= 36 || isNaN(numVal)) { currentInputText += val; }
+                }
+            } else if (currentMode === MODE_HIGH) {
+                if (val === '00') val = '0';
+                if (currentInputText === '0') currentInputText = '';
+                if (currentInputText.length < 6) { currentInputText += val; }
+            }
+            updateDisplay();
+        }
+
+        function clearDigit() {
+            currentInputText = "";
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const buf = document.getElementById('input-buffer');
+            if (buf) buf.innerText = currentInputText === "" ? "--" : currentInputText;
+        }
+
+        function submitCommitedValue() {
+            if (currentMode === MODE_SPIN) {
+                handleSpinSubmission();
+            } else if (currentMode === MODE_HIGH) {
+                handleHighSubmission();
+            }
+        }
+
+        function handleSpinSubmission() {
+            if (currentInputText === "") return;
+            
+            const now = new Date();
+            const spinData = {
+                number: currentInputText,
+                casino: document.getElementById("casino-input") ? document.getElementById("casino-input").value : "Unknown",
+                date: now.toISOString().split('T')[0],
+                time: now.toTimeString().split(' ')[0],
+                session_id: sessionId
+            };
+
+            spins.unshift(spinData);
+            clearDigit();
+            updateUI();
+        }
+
+        function handleHighSubmission() {
+            if (currentInputText !== "") {
+                let newHigh = parseInt(currentInputText, 10);
+                if (!isNaN(newHigh) && newHigh >= 0) {
+                    sessionHigh = newHigh;
+                    const highVal = document.getElementById('high-val');
+                    if (highVal) highVal.innerText = `$ ${sessionHigh.toLocaleString()}`;
+                }
+            }
+            toggleInputMode();
+        }
+
+        function undoSpin() {
+            if (currentMode !== MODE_SPIN || spins.length === 0) return;
+            spins.shift();
+            updateUI();
+        }
+
+        function getStreet(num) {
+            let n = parseInt(num, 10);
+            if (isNaN(n) || n < 1 || n > 36) return null;
+            return Math.ceil(n / 3);
+        }
+
+        function getCornersForNum(numStr) {
+            let n = parseInt(numStr, 10);
+            if (isNaN(n)) return [];
+            let res = [];
+            Object.keys(CORNERS).forEach(cName => {
+                if (CORNERS[cName].includes(n)) res.push(cName);
+            });
+            return res;
+        }
+
+        function getAgeForGroup(checkFn) {
+            let age = 0;
+            for (let i = 0; i < spins.length; i++) {
+                if (spins[i] && checkFn(spins[i].number)) break;
+                age++;
+            }
+            return age;
+        }
+
+        function parseCSVLine(line) {
+            let result = [];
+            let start = 0;
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                let c = line[i];
+                if (c === '"') {
+                    inQuotes = !inQuotes;
+                } else if (c === ',' && !inQuotes) {
+                    result.push(line.substring(start, i).trim().replace(/^"+|"+$/g, ''));
+                    start = i + 1;
+                }
+            }
+            result.push(line.substring(start).trim().replace(/^"+|"+$/g, ''));
+            return result;
+        }
+
+        function updateUI() {
+            try {
+                const spinValEl = document.getElementById('spin-val');
+                if (spinValEl) spinValEl.innerText = `# ${spins.length}`;
+
+                // History Chips
+                const container = document.getElementById('history-stream');
+                if (container) {
+                    container.innerHTML = "";
+                    const displayList = spins.slice(0, 10);
+                    displayList.forEach((spin, index) => {
+                        const chip = document.createElement('div');
+                        chip.className = `spin-chip`;
+                        if (index === 0) chip.classList.add('chip-latest');
+
+                        if (GREEN_NUMS.includes(spin.number)) {
+                            chip.classList.add('chip-green');
+                        } else if (RED_NUMS.includes(spin.number)) {
+                            chip.classList.add('chip-red');
+                        } else {
+                            chip.classList.add('chip-black');
+                        }
+
+                        chip.innerText = spin.number;
+                        container.appendChild(chip);
+                    });
+                }
+
+                const window15 = spins.slice(0, 15).map(s => s.number);
+
+                // Spin-2-Win Splits
+                ['d1', 'd2', 'd3'].forEach(dKey => {
+                    S2W_SPLITS[dKey].forEach((splitObj, idx) => {
+                        let age = 0;
+                        for (let i = 0; i < spins.length; i++) {
+                            if (!spins[i]) continue;
+                            let n = parseInt(spins[i].number, 10);
+                            if (!isNaN(n) && splitObj.nums.includes(n)) break;
+                            age++;
+                        }
+                        let el = document.getElementById(`s2w-${dkey}-${idx+1}`);
+                        if (el) {
+                            el.innerText = `(${age})`;
+                            el.className = age >= 12 ? "extreme-red" : "";
+                        }
+                    });
+                });
+
+                // Columns
+                let c1 = window15.filter(num => { let n = parseInt(num,10); return n % 3 === 1; }).length;
+                let c2 = window15.filter(num => { let n = parseInt(num,10); return n % 3 === 2; }).length;
+                let c3 = window15.filter(num => { let n = parseInt(num,10); return n % 3 === 0 && n !== 0; }).length;
+
+                let c1Age = getAgeForGroup(num => { let n = parseInt(num,10); return n % 3 === 1; });
+                let c2Age = getAgeForGroup(num => { let n = parseInt(num,10); return n % 3 === 2; });
+                let c3Age = getAgeForGroup(num => { let n = parseInt(num,10); return n % 3 === 0 && n !== 0; });
+
+                let formatVal = (hits, age) => {
+                    let text = `${hits}(${age})`;
+                    if (hits >= 7 || age >= 8) return `<span class="extreme-red">${text}</span>`;
+                    return text;
+                };
+
+                const valCols = document.getElementById('val-cols');
+                if (valCols) valCols.innerHTML = `${formatVal(c1, c1Age)} / ${formatVal(c2, c2Age)} / ${formatVal(c3, c3Age)}`;
+
+                // Dozens
+                let d1 = window15.filter(num => { let n = parseInt(num,10); return n >= 1 && n <= 12; }).length;
+                let d2 = window15.filter(num => { let n = parseInt(num,10); return n >= 13 && n <= 24; }).length;
+                let d3 = window15.filter(num => { let n = parseInt(num,10); return n >= 25 && n <= 36; }).length;
+
+                let d1Age = getAgeForGroup(num => { let n = parseInt(num,10); return n >= 1 && n <= 12; });
+                let d2Age = getAgeForGroup(num => { let n = parseInt(num,10); return n >= 13 && n <= 24; });
+                let d3Age = getAgeForGroup(num => { let n = parseInt(num,10); return n >= 25 && n <= 36; });
+
+                const valDozs = document.getElementById('val-dozs');
+                if (valDozs) valDozs.innerHTML = `${formatVal(d1, d1Age)} / ${formatVal(d2, d2Age)} / ${formatVal(d3, d3Age)}`;
+
+                // Repeats
+                let maxCheck = Math.min(spins.length, 5);
+
+                let numRepStr = "None";
+                let isNumRep = false;
+                for (let i = 0; i < maxCheck; i++) {
+                    for (let j = i + 1; j < maxCheck; j++) {
+                        if (spins[i] && spins[j] && spins[i].number === spins[j].number) {
+                            let gap = j - i - 1;
+                            numRepStr = `#${spins[i].number} (${gap})`;
+                            isNumRep = true;
+                            break;
+                        }
+                    }
+                    if (isNumRep) break;
+                }
+                const valNumrep = document.getElementById('val-numrep');
+                if (valNumrep) {
+                    valNumrep.innerText = numRepStr;
+                    valNumrep.className = isNumRep ? "anomaly-box-val extreme-red" : "anomaly-box-val";
+                }
+
+                let streetRepStr = "None";
+                let isStreetRep = false;
+                for (let i = 0; i < maxCheck; i++) {
+                    if (!spins[i]) continue;
+                    let st1 = getStreet(spins[i].number);
+                    if (!st1) continue;
+                    for (let j = i + 1; j < maxCheck; j++) {
+                        if (!spins[j]) continue;
+                        let st2 = getStreet(spins[j].number);
+                        if (st1 === st2) {
+                            let gap = j - i - 1;
+                            streetRepStr = `St ${st1} (${gap})`;
+                            isStreetRep = true;
+                            break;
+                        }
+                    }
+                    if (isStreetRep) break;
+                }
+                const valStrep = document.getElementById('val-strep');
+                if (valStrep) {
+                    valStrep.innerText = streetRepStr;
+                    valStrep.className = isStreetRep ? "anomaly-box-val extreme-red" : "anomaly-box-val";
+                }
+
+                let cornerRepStr = "None";
+                let isCornerRep = false;
+                for (let i = 0; i < maxCheck; i++) {
+                    if (!spins[i]) continue;
+                    let cList1 = getCornersForNum(spins[i].number);
+                    if (cList1.length === 0) continue;
+                    for (let j = i + 1; j < maxCheck; j++) {
+                        if (!spins[j]) continue;
+                        let cList2 = getCornersForNum(spins[j].number);
+                        let shared = cList1.filter(c => cList2.includes(c));
+                        if (shared.length > 0) {
+                            let gap = j - i - 1;
+                            cornerRepStr = `${shared[0]} (${gap})`;
+                            isCornerRep = true;
+                            break;
+                        }
+                    }
+                    if (isCornerRep) break;
+                }
+                const valCornerrep = document.getElementById('val-cornerrep');
+                if (valCornerrep) {
+                    valCornerrep.innerText = cornerRepStr;
+                    valCornerrep.className = isCornerRep ? "anomaly-box-val extreme-red" : "anomaly-box-val";
+                }
+
+                // Vertical Column Calculation
+                let maxVColAge = -1;
+                let driestVColName = "--";
+                Object.keys(VERTICAL_COLUMNS).forEach(vKey => {
+                    let vNums = VERTICAL_COLUMNS[vKey];
+                    let age = 0;
+                    for (let i = 0; i < spins.length; i++) {
+                        let n = parseInt(spins[i].number, 10);
+                        if (vNums.includes(n)) break;
+                        age++;
+                    }
+                    if (age > maxVColAge) {
+                        maxVColAge = age;
+                        driestVColName = `${vKey} (${age}+ spins)`;
+                    }
+                });
+                const statDriestVcol = document.getElementById('stat-driest-vcol');
+                if (statDriestVcol) statDriestVcol.innerText = driestVColName;
+
+                // Quadrants
+                Object.keys(QUADRANTS).forEach(key => {
+                    const nums = QUADRANTS[key];
+                    const count = window15.filter(n => nums.includes(n)).length;
+                    let age = getAgeForGroup(n => nums.includes(n));
+                    const el = document.getElementById(`stat-${key.toLowerCase()}`);
+                    if (el) {
+                        el.innerText = `${count} (${age}+)`;
+                        el.className = "quad-stats";
+                        if (key === "GR") {
+                            if (age >= 9 && age <= 15) el.classList.add("alert-yellow");
+                            else if (age > 15) el.classList.add("alert-green");
+                        } else {
+                            if (age >= 5 && age <= 8) el.classList.add("alert-yellow");
+                            else if (age > 8) el.classList.add("alert-green");
+                        }
+                    }
+                });
+
+                // Strategy Monitors
+                const zz1Count = window15.filter(n => ZZ1_NUMBERS.includes(n)).length;
+                let zz1Age = getAgeForGroup(n => ZZ1_NUMBERS.includes(n));
+                const zz1El = document.getElementById('stat-zz1');
+                if (zz1El) {
+                    zz1El.innerText = `${zz1Count}(+${zz1Age})`;
+                    zz1El.className = "strat-val";
+                    if (zz1Count >= 6 || zz1Age >= 6) zz1El.classList.add("alert-green");
+                    else if (zz1Count === 5 || (zz1Age >= 3 && zz1Age <= 5)) zz1El.classList.add("alert-yellow");
+                }
+
+                const zz3Count = window15.filter(n => ZZ3_NUMBERS.includes(n)).length;
+                let zz3Age = getAgeForGroup(n => ZZ3_NUMBERS.includes(n));
+                const zz3El = document.getElementById('stat-zz3');
+                if (zz3El) {
+                    zz3El.innerText = `${zz3Count}(+${zz3Age})`;
+                    zz3El.className = "strat-val";
+                    if (zz3Count >= 6 || zz3Age >= 6) zz3El.classList.add("alert-green");
+                    else if (zz3Count === 5 || (zz3Age >= 3 && zz3Age <= 5)) zz3El.classList.add("alert-yellow");
+                }
+
+                const s16Count = window15.filter(n => SWEET_16_EXCLUSIONS.includes(n)).length;
+                let s16Age = getAgeForGroup(n => SWEET_16_EXCLUSIONS.includes(n));
+                const s16El = document.getElementById('stat-s16');
+                if (s16El) {
+                    s16El.innerText = `${s16Count} (${s16Age}+)`;
+                    s16El.className = "strat-val";
+                    if (s16Count >= 6 || s16Age >= 6) s16El.classList.add("alert-green");
+                    else if (s16Count === 5 || (s16Age >= 3 && s16Age <= 5)) s16El.classList.add("alert-yellow");
+                }
+
+                let maxDrought = 0;
+                if (spins.length >= 5) {
+                    ['d1','d2','d3','c1','c2','c3'].forEach(group => {
+                        let dCount = 0;
+                        for (let i = 0; i < spins.length; i++) {
+                            if (!spins[i]) continue;
+                            let n = parseInt(spins[i].number, 10);
+                            if (isNaN(n)) continue;
+                            let matched = false;
+                            if (group === 'd1' && n >= 1 && n <= 12) matched = true;
+                            if (group === 'd2' && n >= 13 && n <= 24) matched = true;
+                            if (group === 'd3' && n >= 25 && n <= 36) matched = true;
+                            if (group === 'c1' && n % 3 === 1) matched = true;
+                            if (group === 'c2' && n % 3 === 2) matched = true;
+                            if (group === 'c3' && (n % 3 === 0 && n !== 0)) matched = true;
+                            if (matched) break;
+                            dCount++;
+                        }
+                        if (dCount > maxDrought) maxDrought = dCount;
+                    });
+                }
+
+                const win10El = document.getElementById('stat-102win');
+                if (win10El) {
+                    win10El.innerText = `${maxDrought} spins`;
+                    win10El.className = "strat-val";
+                    if (maxDrought >= 10) win10El.classList.add("alert-green");
+                    else if (maxDrought >= 7) win10El.classList.add("alert-yellow");
+                }
+
+                const sofCount = window15.filter(n => SOF_NUMBERS.includes(n)).length;
+                let sofAge = getAgeForGroup(n => SOF_NUMBERS.includes(n));
+                const sofEl = document.getElementById('stat-sof');
+                if (sofEl) {
+                    sofEl.innerText = `${sofCount} hits in last 15 | Age: ${sofAge}+`;
+                    sofEl.className = "strat-val";
+                    if (sofCount >= 6 || sofAge >= 8) sofEl.classList.add("alert-green");
+                    else if (sofCount === 5 || (sofAge >= 5 && sofAge <= 7)) sofEl.classList.add("alert-yellow");
+                }
+            } catch (err) {
+                console.error("UI Update Error:", err);
+            }
+        }
+
+        // Safe Event Binding Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            // Keypad numbers
+            document.querySelectorAll('.numpad-grid button[data-val]').forEach(btn => {
+                btn.addEventListener('click', () => appendDigit(btn.getAttribute('data-val')));
+            });
+
+            // Action buttons
+            const enterBtn = document.getElementById('btn-enter');
+            if (enterBtn) enterBtn.addEventListener('click', submitCommitedValue);
+
+            const undoBtn = document.getElementById('btn-undo');
+            if (undoBtn) undoBtn.addEventListener('click', undoSpin);
+
+            const cancelBtn = document.getElementById('btn-cancel');
+            if (cancelBtn) cancelBtn.addEventListener('click', clearDigit);
+
+            const bankrollCell = document.getElementById('bankroll');
+            if (bankrollCell) bankrollCell.addEventListener('click', toggleInputMode);
+
+            // CSV & Controls
+            const resetBtn = document.querySelector('.btn-reset');
+            if (resetBtn) resetBtn.addEventListener('click', resetSession);
+
+            const copyBtn = document.querySelector('.btn-copy');
+            if (copyBtn) copyBtn.addEventListener('click', copyCSV);
+
+            const importToggleBtn = document.getElementById('btn-import-toggle');
+            if (importToggleBtn) importToggleBtn.addEventListener('click', toggleImportPanel);
+
+            const dlBtn = document.querySelector('.btn-dl');
+            if (dlBtn) dlBtn.addEventListener('click', downloadCSV);
+
+            const doImportBtn = document.getElementById('btn-do-import');
+            if (doImportBtn) doImportBtn.addEventListener('click', processCSVImport);
+
+            const cancelImportBtn = document.getElementById('btn-cancel-import');
+            if (cancelImportBtn) cancelImportBtn.addEventListener('click', toggleImportPanel);
+
+            // Quadrant badges
+            document.querySelectorAll('.quad-badge').forEach(badge => {
+                badge.addEventListener('click', () => toggleBetNumbers(badge.getAttribute('data-quad')));
+            });
+
+            updateUI();
+        });
+
+        function toggleBetNumbers(quadKey) {
+            const panel = document.getElementById("bet-numbers-display");
+            if (!panel) return;
+            if (activeQuad === quadKey) {
+                panel.style.display = "none";
+                activeQuad = null;
+            } else {
+                activeQuad = quadKey;
+                panel.innerText = `${quadKey} Numbers: ` + QUADRANTS[quadKey].join(", ");
+                panel.style.display = "block";
+            }
+        }
+
+        function toggleImportPanel() {
+            const panel = document.getElementById("import-panel");
+            if (panel) {
+                panel.style.display = panel.style.display === "block" ? "none" : "block";
+            }
+        }
+
+        function processCSVImport() {
+            try {
+                const rawText = document.getElementById("import-textarea").value.trim();
+                if (!rawText) {
+                    alert("Please paste valid CSV spin data.");
+                    return;
+                }
+
+                const lines = rawText.split("\n");
+                let newSpins = [];
+                let detectedCasino = "";
+
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (!line || line.startsWith("----")) continue;
+
+                    let parts = parseCSVLine(line);
+                    if (parts.length >= 2) {
+                        let num = parts[0].trim();
+                        if (num.toLowerCase() === "number") continue;
+
+                        let casino = parts[1] ? parts[1].trim() : "Imported Casino";
+                        let date = parts[2] ? parts[2].trim() : new Date().toISOString().split('T')[0];
+                        let time = parts[3] ? parts[3].trim() : "00:00:00";
+                        let sId = parts[4] ? parts[4].trim() : sessionId;
+
+                        if (num !== "" && (!isNaN(parseInt(num, 10)) || num === "00")) {
+                            newSpins.push({ number: num, casino: casino, date: date, time: time, session_id: sId });
+                            if (!detectedCasino && casino) detectedCasino = casino;
+                        }
+                    }
+                }
+
+                if (newSpins.length > 0) {
+                    spins = newSpins;
+                    if (detectedCasino && document.getElementById("casino-input")) {
+                        document.getElementById("casino-input").value = detectedCasino;
+                    }
+                    toggleImportPanel();
+                    const ta = document.getElementById("import-textarea");
+                    if (ta) ta.value = "";
+                    updateUI();
+                    alert(`Successfully imported ${newSpins.length} spins!`);
+                } else {
+                    alert("Could not parse any valid spin rows from the pasted text.");
+                }
+            } catch (err) {
+                alert("Error importing CSV: " + err.message);
+            }
+        }
+
+        function generateCSVString() {
+            if (spins.length === 0) return "";
+            const headers = ["number", "casino", "date", "time", "session_id"];
+            const rows = spins.map(s => [s.number, `"${s.casino}"`, s.date, s.time, s.session_id].join(","));
+            return [headers.join(","), ...rows].join("\n");
+        }
+
+        function copyCSV() {
+            const csvText = generateCSVString();
+            if (!csvText) {
+                alert("No spin data to copy.");
+                return;
+            }
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(csvText).then(() => {
+                    alert("CSV copied to clipboard!");
+                }).catch(() => fallbackCopy(csvText));
+            } else {
+                fallbackCopy(csvText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("CSV copied to clipboard!");
+            } catch (err) {
+                alert("Failed to copy CSV.");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function downloadCSV() {
+            const csvText = generateCSVString();
+            if (!csvText) {
+                alert("No spin data to download.");
+                return;
+            }
+
+            const casinoEl = document.getElementById("casino-input");
+            const casinoName = (casinoEl ? casinoEl.value : "casino").toLowerCase().replace(/[^a-z0-9]/g, "_");
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `roulette_spins_${casinoName}_${dateStr}.csv`;
+
+            const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvText);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+
+            try {
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                document.body.removeChild(link);
+                window.open(encodedUri, '_blank');
+            }
+        }
+
+        function resetSession() {
+            if (confirm("Clear all session spins and reset tracking?")) {
+                spins = [];
+                sessionHigh = 0;
+                const highVal = document.getElementById('high-val');
+                if (highVal) highVal.innerText = "$ 0";
+                clearDigit();
+                updateUI();
+            }
+        }
+    </script>
+</body>
+</html>
