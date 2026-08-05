@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.89.0 - Spin-2-Win Header Metrics</title>
+    <title>Roulette Tracker v1.90.0 - Stable Header Build</title>
     <style>
         * {
             box-sizing: border-box;
@@ -198,8 +198,8 @@
         .quad-title { font-size: 0.7rem; font-weight: bold; color: #888; }
         .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
 
-        /* Spin-2-Win Layout */
-        .s2w-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        /* Spin-2-Win Layout with Left-Aligned Metrics */
+        .s2w-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
         .s2w-header-title { font-size: 0.75rem; font-weight: bold; color: #888; }
         .s2w-header-metrics { font-size: 0.7rem; color: #38bdf8; font-weight: bold; }
         .s2w-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
@@ -253,7 +253,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.89.0</span>
+        <span class="version-tag">v1.90.0</span>
     </header>
 
     <div id="slim-tracker-container">
@@ -324,117 +324,4 @@
                     <div class="s2w-split-row"><span>27|30</span><span id="s2w-d3-1">(0)</span></div>
                     <div class="s2w-split-row"><span>28|31</span><span id="s2w-d3-2">(0)</span></div>
                     <div class="s2w-split-row"><span>32|33</span><span id="s2w-d3-3">(0)</span></div>
-                    <div class="s2w-split-row"><span>35|36</span><span id="s2w-d3-4">(0)</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="anomaly-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
-            <div class="anomaly-box-row">
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">COLUMNS (C1 / C2 / C3)</div>
-                    <div id="val-cols" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
-                </div>
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">DOZENS (D1 / D2 / D3)</div>
-                    <div id="val-dozs" class="anomaly-box-val">0(0) / 0(0) / 0(0)</div>
-                </div>
-            </div>
-
-            <div class="anomaly-box-row3">
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">NUM REPEAT</div>
-                    <div id="val-numrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
-                </div>
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">STREET REP</div>
-                    <div id="val-strep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
-                </div>
-                <div class="anomaly-box">
-                    <div class="anomaly-box-title">ZZ CORNER REP</div>
-                    <div id="val-cornerrep" class="anomaly-box-val" style="font-size:0.7rem;">None</div>
-                </div>
-            </div>
-
-            <div style="margin-top:6px; background:#121212; padding:6px; border-radius:4px; font-size:0.7rem; color:#888; display:flex; justify-content:space-between;">
-                <span>DRIEST VERTICAL COL:</span>
-                <span id="stat-driest-vcol" style="font-weight:bold; color:#38bdf8;">--</span>
-            </div>
-        </div>
-
-        <div class="junko-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
-            <div class="junko-grid">
-                <div class="quad-badge" onclick="toggleBetNumbers('GN')">
-                    <div class="quad-title">GN</div>
-                    <div id="stat-gn" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('HO')">
-                    <div class="quad-title">HO</div>
-                    <div id="stat-ho" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('LO')">
-                    <div class="quad-title">LO</div>
-                    <div id="stat-lo" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('M')">
-                    <div class="quad-title">M</div>
-                    <div id="stat-m" class="quad-stats">0 (0+)</div>
-                </div>
-                <div class="quad-badge" onclick="toggleBetNumbers('GR')">
-                    <div class="quad-title">GR</div>
-                    <div id="stat-gr" class="quad-stats">0 (0+)</div>
-                </div>
-            </div>
-            <div id="bet-numbers-display" class="bet-numbers-panel"></div>
-        </div>
-
-        <div class="strategy-card">
-            <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
-            <div class="strat-grid">
-                <div class="strat-row">
-                    <div class="strat-box" style="grid-column: span 2;">
-                        <div class="strat-title">Streets of Fire (0,00,1,2,3,34,35,36) W=15</div>
-                        <div id="stat-sof" class="strat-val">0 (0+)</div>
-                    </div>
-                </div>
-                <div class="strat-row">
-                    <div class="strat-box">
-                        <div class="strat-title">ZZ1 (Base Zigzag) W=15</div>
-                        <div id="stat-zz1" class="strat-val">0(+0)</div>
-                    </div>
-                    <div class="strat-box">
-                        <div class="strat-title">ZZ3 (Reverse Zigzag) W=15</div>
-                        <div id="stat-zz3" class="strat-val">0(+0)</div>
-                    </div>
-                </div>
-                <div class="strat-row">
-                    <div class="strat-box">
-                        <div class="strat-title">Sweet 16 (W=15)</div>
-                        <div id="stat-s16" class="strat-val">0 (0+)</div>
-                    </div>
-                    <div class="strat-box">
-                        <div class="strat-title">10-2-Win (Drought)</div>
-                        <div id="stat-102win" class="strat-val">0 spins</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="controls-card">
-            <div class="input-group">
-                <label for="casino-input">Casino Name</label>
-                <input type="text" id="casino-input" value="RM Smokeshow" placeholder="Enter casino name...">
-            </div>
-
-            <div class="action-row">
-                <button type="button" class="btn-reset" onclick="resetSession()">Clear</button>
-                <button type="button" class="btn-copy" onclick="copyCSV()">Copy CSV</button>
-                <button type="button" class="btn-import" onclick="toggleImportPanel()">Import CSV</button>
-                <button type="button" class="btn-dl" onclick="downloadCSV()">Download CSV</button>
-            </div>
-
-            <div id="import-panel">
-                <label style="font-size: 0.7rem; color: #cbd5e1; display: block; margin-bottom: 3px;">Paste CSV session data below:</label>
-                <textarea id="import-textarea" placeholder="number,casino,date,time,session_id..."></textarea
+                    <div class="s2w-split-row"><span>35|36</span><span id="s
