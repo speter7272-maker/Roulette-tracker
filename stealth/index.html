@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.90.0 - Stable Header Build</title>
+    <title>Roulette Tracker v1.91.0 - Updated High Orphans</title>
     <style>
         * {
             box-sizing: border-box;
@@ -198,7 +198,7 @@
         .quad-title { font-size: 0.7rem; font-weight: bold; color: #888; }
         .quad-stats { font-size: 0.85rem; font-weight: bold; margin-top: 2px; }
 
-        /* Spin-2-Win Layout with Left-Aligned Metrics */
+        /* Spin-2-Win Layout */
         .s2w-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
         .s2w-header-title { font-size: 0.75rem; font-weight: bold; color: #888; }
         .s2w-header-metrics { font-size: 0.7rem; color: #38bdf8; font-weight: bold; }
@@ -253,9 +253,10 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.90.0</span>
+        <span class="version-tag">v1.91.0</span>
     </header>
 
+    <!-- DUAL MODE INPUT BLOCK -->
     <div id="slim-tracker-container">
         <div class="readout-bar">
             <div id="spin-counter" class="readout-cell c-spin">
@@ -298,13 +299,16 @@
         </div>
     </div>
 
+    <!-- SCROLLABLE LOWER SECTION -->
     <div id="main-scroll">
+        <!-- SPIN-2-WIN 3-COLUMN SPLITS TRACKER -->
         <div class="s2w-card">
             <div class="s2w-header-row">
                 <span class="s2w-header-title">SPIN-2-WIN SPLITS TRACKER</span>
                 <span id="s2w-header-metrics" class="s2w-header-metrics">0/00: (0) | Overall: 0(0)</span>
             </div>
             <div class="s2w-grid">
+                <!-- Dozen 1 Splits -->
                 <div class="s2w-col">
                     <div class="s2w-title">DOZEN 1</div>
                     <div class="s2w-split-row"><span>1|2</span><span id="s2w-d1-1">(0)</span></div>
@@ -312,6 +316,7 @@
                     <div class="s2w-split-row"><span>8|11</span><span id="s2w-d1-3">(0)</span></div>
                     <div class="s2w-split-row"><span>7|10</span><span id="s2w-d1-4">(0)</span></div>
                 </div>
+                <!-- Dozen 2 Splits -->
                 <div class="s2w-col">
                     <div class="s2w-title">DOZEN 2</div>
                     <div class="s2w-split-row"><span>13|14</span><span id="s2w-d2-1">(0)</span></div>
@@ -319,6 +324,7 @@
                     <div class="s2w-split-row"><span>17|20</span><span id="s2w-d2-3">(0)</span></div>
                     <div class="s2w-split-row"><span>23|24</span><span id="s2w-d2-4">(0)</span></div>
                 </div>
+                <!-- Dozen 3 Splits -->
                 <div class="s2w-col">
                     <div class="s2w-title">DOZEN 3</div>
                     <div class="s2w-split-row"><span>27|30</span><span id="s2w-d3-1">(0)</span></div>
@@ -329,6 +335,7 @@
             </div>
         </div>
 
+        <!-- STATISTICAL ANOMALY DASHBOARD -->
         <div class="anomaly-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">STATISTICAL ANOMALIES & REPEATS</div>
             <div class="anomaly-box-row">
@@ -363,6 +370,7 @@
             </div>
         </div>
 
+        <!-- 10-2-WIN MODULE -->
         <div class="junko-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">10-2-WIN (W=15)</div>
             <div class="junko-grid">
@@ -390,6 +398,7 @@
             <div id="bet-numbers-display" class="bet-numbers-panel"></div>
         </div>
 
+        <!-- STRATEGY MONITORS -->
         <div class="strategy-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
             <div class="strat-grid">
@@ -422,6 +431,7 @@
             </div>
         </div>
 
+        <!-- CONTROLS & CSV SECTION -->
         <div class="controls-card">
             <div class="input-group">
                 <label for="casino-input">Casino Name</label>
@@ -480,9 +490,10 @@
             "27","30","28","31","32","33","35","36"
         ];
 
+        // UPDATED: High Orphans (HO) now includes 22 and 29 (11 numbers total)
         const QUADRANTS = {
             GN: ["00","0","1","2","9","10","13","14","27","28"],
-            HO: ["23","24","25","26","30","33","34","35","36"],
+            HO: ["22","23","24","25","26","29","30","33","34","35","36"],
             LO: ["3","4","11","12","15","16","21","22","23","24"],
             M:  ["5","6","7","8","17","18","19","20","31","32"],
             GR: ["0","00"]
