@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Practice Simulator (v2.1.0)</title>
+  <title>Ultimate Practice Simulator (v2.1.1)</title>
   <style>
     :root {
       --table-felt: #0d382c;
@@ -365,7 +365,7 @@
   <div>
     <div class="card">
       <div class="header-bar">
-        <h2 style="margin:0;">Ultimate Practice Simulator <span class="version-tag">v2.1.0</span></h2>
+        <h2 style="margin:0;">Ultimate Practice Simulator <span class="version-tag">v2.1.1</span></h2>
         <div id="tableStateBadge" class="state-badge">STATE: OBSERVATION (Spins 1-15)</div>
       </div>
 
@@ -509,7 +509,7 @@
   let activeSessionSpins = sessionDatabase["Al Chin | 01/20/2026 | Seg 1"];
   let currentSpinIdx = 0;
   
-  // Strategy & State Variables
+  // Strategy Variables
   let activeStrategy = 'MASTERS_FAV';
   let spinHistory = [];
   let sessionPnL = 0;
@@ -535,20 +535,21 @@
   const zz1NonCol2 = new Set([1, 4, 10, 11, 13, 16, 22, 23, 25, 28, 34, 35]);
   const zz3NonCol2 = new Set([3, 6, 7, 10, 15, 18, 19, 22, 27, 30, 31, 34]);
 
+  // Recalibrated Corner Intersections: Uses top-right corner of bottom-left cell in 2x2 block
   const zz1Corners = [
-    { name: "1/5", anchorNum: 4, numbers: [1,2,4,5] },
-    { name: "8/12", anchorNum: 11, numbers: [8,9,11,12] },
-    { name: "13/17", anchorNum: 16, numbers: [13,14,16,17] },
-    { name: "20/24", anchorNum: 23, numbers: [20,21,23,24] },
-    { name: "25/29", anchorNum: 28, numbers: [25,26,28,29] }
+    { name: "1/5", anchorNum: 1, numbers: [1,2,4,5] },    // Anchor cell 1: Top-Right corner = 1/5 intersection
+    { name: "8/12", anchorNum: 8, numbers: [8,9,11,12] },  // Anchor cell 8: Top-Right corner = 8/12 intersection
+    { name: "13/17", anchorNum: 13, numbers: [13,14,16,17] },// Anchor cell 13: Top-Right corner = 13/17 intersection
+    { name: "20/24", anchorNum: 20, numbers: [20,21,23,24] },// Anchor cell 20: Top-Right corner = 20/24 intersection
+    { name: "25/29", anchorNum: 25, numbers: [25,26,28,29] } // Anchor cell 25: Top-Right corner = 25/29 intersection
   ];
 
   const zz3Corners = [
-    { name: "2/6", anchorNum: 5, numbers: [2,3,5,6] },
-    { name: "7/11", anchorNum: 10, numbers: [7,8,10,11] },
-    { name: "14/18", anchorNum: 17, numbers: [14,15,17,18] },
-    { name: "19/23", anchorNum: 22, numbers: [19,20,22,23] },
-    { name: "26/30", anchorNum: 29, numbers: [26,27,29,30] }
+    { name: "2/6", anchorNum: 2, numbers: [2,3,5,6] },    // Anchor cell 2: Top-Right corner = 2/6 intersection
+    { name: "7/11", anchorNum: 7, numbers: [7,8,10,11] },  // Anchor cell 7: Top-Right corner = 7/11 intersection
+    { name: "14/18", anchorNum: 14, numbers: [14,15,17,18] },// Anchor cell 14: Top-Right corner = 14/18 intersection
+    { name: "19/23", anchorNum: 19, numbers: [19,20,22,23] },// Anchor cell 19: Top-Right corner = 19/23 intersection
+    { name: "26/30", anchorNum: 26, numbers: [26,27,29,30] } // Anchor cell 26: Top-Right corner = 26/30 intersection
   ];
 
   const unitProgression = [5, 15, 25, 35, 45, 55, 60];
@@ -798,7 +799,6 @@
       lastSpinNet = isGreen ? -36 : 0;
       sessionPnL += lastSpinNet;
     } else {
-      // General Fallback Simulation Logic
       lastSpinNet = (winningNum % 2 === 0 && winningNum !== 0 && winningNum !== 99) ? 10 : -10;
       sessionPnL += lastSpinNet;
     }
@@ -854,6 +854,7 @@
         const cell = document.getElementById(`cell-${corner.anchorNum}`);
         if (cell) {
           const cellRect = cell.getBoundingClientRect();
+          // Precise Intersection Calculation: Right edge of anchor cell, Top border of anchor cell
           const posX = (cellRect.right - boardRect.left);
           const posY = (cellRect.top - boardRect.top);
 
