@@ -83,7 +83,7 @@
     }
 
     /* ==========================================================================
-       AUTHENTIC CASINO ROULETTE TABLE FELT (MATCHING SCREENSHOT LAYOUT)
+       AUTHENTIC CASINO ROULETTE TABLE FELT
        ========================================================================== */
     .table-felt-wrapper {
       background: var(--table-felt);
@@ -132,6 +132,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
     }
 
     /* Oval Number Pills */
@@ -342,9 +343,6 @@
     board.appendChild(zerosContainer);
 
     // 2. Main Numbers Grid (3 Rows x 12 Columns)
-    // Row 1: 3, 6, 9 ... 36
-    // Row 2: 2, 5, 8 ... 35
-    // Row 3: 1, 4, 7 ... 34
     for (let r = 1; r <= 3; r++) {
       for (let col = 0; col < 12; col++) {
         let num;
@@ -372,12 +370,9 @@
     }
 
     // 4. Dozens Row (Grid Row 4, Columns 2..13)
-    const doz1 = createOutsideCell('1ST 12', 4, '2 / span 4');
-    const doz2 = createOutsideCell('2ND 12', 4, '6 / span 4');
-    const doz3 = createOutsideCell('3RD 12', 4, '10 / span 4');
-    board.appendChild(doz1);
-    board.appendChild(doz2);
-    board.appendChild(doz3);
+    board.appendChild(createOutsideCell('1ST 12', 4, '2 / span 4'));
+    board.appendChild(createOutsideCell('2ND 12', 4, '6 / span 4'));
+    board.appendChild(createOutsideCell('3RD 12', 4, '10 / span 4'));
 
     // 5. Outside Bets Row (Grid Row 5, Columns 2..13)
     board.appendChild(createOutsideCell('1-18', 5, '2 / span 2'));
@@ -407,14 +402,17 @@
     spinHistory.push(num);
     currentSpinIdx++;
 
-    // Clear previous flash highlights
-    document.querySelectorAll('.num-pill, .grid-cell').forEach(c => c.classList.remove('flash-win'));
+    // Clear previous flash highlights comprehensively across all element types
+    document.querySelectorAll('.flash-win').forEach(c => c.classList.remove('flash-win'));
 
-    // Highlight Winning Number Pill
-    const cellId = num === 0 ? 'cell-0' : (num === '00' ? 'cell-00' : `cell-${num}`);
+    // Highlight Winning Number Pill or Container Box
+    const cellId = (num === 0 || num === '0') ? 'cell-0' : ((num === '00' || num === 99 || num === '99') ? 'cell-00' : `cell-${num}`);
     const winPill = document.getElementById(cellId);
     if (winPill) {
-      winPill.parentElement.classList.add('flash-win');
+      winPill.classList.add('flash-win');
+      if (winPill.parentElement) {
+        winPill.parentElement.classList.add('flash-win');
+      }
     }
 
     renderHistory();
@@ -434,8 +432,8 @@
     bar.innerHTML = '';
     const slice = spinHistory.slice(-15);
     slice.forEach(n => {
-      const bg = n === 0 || n === '00' ? '#27ae60' : (redNumbers.has(n) ? '#c0392b' : '#181818');
-      bar.innerHTML += `<div class="history-pill" style="background:${bg};">${n}</div>`;
+      const bg = (n === 0 || n === '0' || n === '00' || n === 99) ? '#27ae60' : (redNumbers.has(n) ? '#c0392b' : '#181818');
+      bar.innerHTML += `<div class="history-pill" style="background:${bg};">${n === 99 ? '00' : n}</div>`;
     });
   }
 
@@ -489,7 +487,7 @@
     sessionPnL = 0;
     activeCorners = [0, 1, 2, 3, 4];
     unitSize = 5;
-    document.querySelectorAll('.num-pill, .grid-cell').forEach(c => c.classList.remove('flash-win'));
+    document.querySelectorAll('.flash-win').forEach(c => c.classList.remove('flash-win'));
     document.querySelectorAll('.coin').forEach(c => c.remove());
     renderHistory();
     updateDashboard();
