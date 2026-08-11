@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Master's Favorite Training Lab ($60 Cap Variant)</title>
+  <title>Ultimate Practice Simulator (v2.1.0)</title>
   <style>
     :root {
       --table-felt: #0d382c;
@@ -55,6 +55,12 @@
       margin-bottom: 16px;
     }
 
+    .version-tag {
+      font-size: 11px;
+      color: var(--gold);
+      margin-left: 8px;
+    }
+
     .state-badge {
       background: #e67e22;
       color: #fff;
@@ -62,6 +68,64 @@
       border-radius: 20px;
       font-weight: bold;
       font-size: 13px;
+    }
+
+    /* Selectors & File Upload Controls */
+    .config-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: #252525;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 180px;
+    }
+    .config-group label {
+      font-size: 11px;
+      color: #aaa;
+      font-weight: bold;
+    }
+    .config-select, .file-btn-label {
+      background: #111;
+      color: #fff;
+      border: 1px solid #444;
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .file-btn-label {
+      background: #2980b9;
+      text-align: center;
+      font-weight: bold;
+      border: none;
+    }
+
+    /* Strategy Info Drawer */
+    .info-panel {
+      background: #18221c;
+      border: 1px solid var(--table-border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .info-title {
+      font-weight: bold;
+      color: var(--gold);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
     }
 
     /* History Pill Stream */
@@ -136,7 +200,6 @@
       user-select: none;
     }
 
-    /* Overlay container for exact chip intersections */
     #chipOverlay {
       position: absolute;
       top: 0;
@@ -147,7 +210,6 @@
       z-index: 50;
     }
 
-    /* Zeros Wing (Far Left) */
     .zeros-container {
       grid-column: 1;
       grid-row: 1 / span 3;
@@ -165,7 +227,6 @@
       position: relative;
     }
 
-    /* Oval Number Pills */
     .num-pill {
       width: 38px;
       height: 50px;
@@ -182,7 +243,6 @@
     .num-pill.black { background: var(--casino-black); border: 1px solid #444; }
     .num-pill.green { background: var(--casino-green); border: 1px solid #2ecc71; width: 44px; height: 68px; }
 
-    /* Outside Bets Cells */
     .outside-label {
       font-size: 14px;
       letter-spacing: 1px;
@@ -191,7 +251,6 @@
     .bet-box-red { background: var(--casino-red) !important; border-radius: 4px; margin: 3px; }
     .bet-box-black { background: var(--casino-black) !important; border-radius: 4px; margin: 3px; }
 
-    /* Winning Flash Highlight */
     .flash-win .num-pill, .flash-win {
       background: var(--win-yellow) !important;
       color: #000000 !important;
@@ -202,7 +261,6 @@
       100% { transform: scale(1.12); }
     }
 
-    /* Coin Chip Overlays */
     .coin {
       width: 28px;
       height: 28px;
@@ -221,7 +279,6 @@
       pointer-events: none;
     }
 
-    /* Buttons & Controls */
     .controls-row {
       margin-top: 16px;
       background: #282828;
@@ -245,7 +302,6 @@
     .btn-secondary { background: #2980b9; }
     .btn-warning { background: #e67e22; }
 
-    /* Sidebar Stats */
     .stat-row {
       display: flex;
       justify-content: space-between;
@@ -256,7 +312,6 @@
     .pnl-pos { color: #2ecc71; font-size: 22px; font-weight: bold; }
     .pnl-neg { color: #e74c3c; font-size: 22px; font-weight: bold; }
 
-    /* 10-2-WIN Module Styles */
     .win10-container {
       background: #141414;
       border: 1px solid #333;
@@ -306,12 +361,45 @@
 <body>
 
 <div class="app-container">
-  <!-- Left Column: Table Felt & Interactive Training Lab -->
+  <!-- Left Column: Controls, Felt & Simulator -->
   <div>
     <div class="card">
       <div class="header-bar">
-        <h2 style="margin:0;">Master's Favorite Training Lab ($60 Cap Variant)</h2>
+        <h2 style="margin:0;">Ultimate Practice Simulator <span class="version-tag">v2.1.0</span></h2>
         <div id="tableStateBadge" class="state-badge">STATE: OBSERVATION (Spins 1-15)</div>
+      </div>
+
+      <!-- Import & Selector Bar -->
+      <div class="config-bar">
+        <div class="config-group" style="max-width: 150px;">
+          <label>Import Spin File:</label>
+          <label class="file-btn-label" for="csvFileInput">📁 Load CSV</label>
+          <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
+        </div>
+
+        <div class="config-group">
+          <label for="sessionSelect">Select Session Data:</label>
+          <select id="sessionSelect" class="config-select" onchange="loadSelectedSession()"></select>
+        </div>
+
+        <div class="config-group">
+          <label for="strategySelect">Practicing Strategy:</label>
+          <select id="strategySelect" class="config-select" onchange="loadSelectedStrategy()">
+            <option value="MASTERS_FAV">Master's Favorite ($60 Cap Variant)</option>
+            <option value="JUNKO_102WIN">10-2-WIN (Junko Quadrant Style)</option>
+            <option value="COMP_1_36">Comp Grinder (1–36 All Numbers)</option>
+            <option value="CASSANDRA_V5">Cassandra v5 (Balanced Safe)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Dynamic Strategy Info Section -->
+      <div class="info-panel">
+        <div class="info-title" onclick="toggleInfoBody()">
+          <span id="infoTitle">Strategy Blueprint: Master's Favorite ($60 Cap Variant)</span>
+          <span id="infoToggleIcon">▼ (Hide/Show)</span>
+        </div>
+        <div id="infoBody" style="display:block; margin-top:8px; color:#ddd;"></div>
       </div>
 
       <!-- History Stream (Newest on Left) -->
@@ -324,18 +412,16 @@
 
       <!-- Authentic Roulette Table Felt -->
       <div class="table-felt-wrapper">
-        <div class="roulette-main-grid" id="rouletteBoard">
-          <!-- Generated Dynamically via JS -->
-        </div>
+        <div class="roulette-main-grid" id="rouletteBoard"></div>
         <div id="chipOverlay"></div>
       </div>
 
-      <!-- Interactive Execution Bar -->
+      <!-- Interactive Controls -->
       <div class="controls-row">
         <button class="btn" id="btnNextSpin" onclick="triggerNextSpin()">Next Spin (Execute)</button>
         <button class="btn btn-warning" id="btnRevealBet" onclick="toggleSuggestedBets()">Reveal Suggested Bets</button>
-        <button class="btn btn-secondary" onclick="resetSimulator()">Reset Training Session</button>
-        <span id="practiceInstruction" style="font-style: italic; color: #f1c40f; font-size:13px;">Spin 1 of 15 (Lookback Phase)</span>
+        <button class="btn btn-secondary" onclick="resetSimulator()">Reset Session</button>
+        <span id="practiceInstruction" style="font-style: italic; color: #f1c40f; font-size:13px;">Lookback Phase (Spins 1–15)</span>
       </div>
     </div>
 
@@ -370,7 +456,7 @@
 
   <!-- Right Column: Live Strategy Metrics & Decision Engine -->
   <div class="card">
-    <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:10px;">Strategy Metrics & Decision Engine</h3>
+    <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:10px;">Strategy Metrics & Engine</h3>
     
     <div class="stat-row">
       <span>Session PnL:</span>
@@ -394,7 +480,7 @@
     </div>
     <div class="stat-row">
       <span>Active Unit Size:</span>
-      <span id="lblUnitSize" class="stat-val">$5 / corner</span>
+      <span id="lblUnitSize" class="stat-val">$5 / unit</span>
     </div>
     <div class="stat-row">
       <span>Total Spin Handle:</span>
@@ -412,11 +498,19 @@
 </div>
 
 <script>
-  // Sample Dataset
-  const sampleSpins = [25, 4, 34, 1, 16, 6, 2, 12, 0, 25, 20, 30, 5, 4, 0, 36, 34, 11, 3, 7, 16, 25, 25];
+  // Standard Sample Session Data
+  const defaultSessions = {
+    "Al Chin | 01/20/2026 | Seg 1": [25, 4, 34, 1, 16, 6, 2, 12, 0, 25, 20, 30, 5, 4, 0, 36, 34, 11, 3, 7, 16, 25, 25],
+    "Horseshoe | 01/16/2026 | Seg 1": [14, 22, 9, 31, 18, 0, 27, 3, 35, 12, 2, 16, 20, 25, 4, 36, 11, 1, 8, 23, 17, 30],
+    "Virgin Live | 02/08/2026 | Seg 1": [29, 19, 6, 28, 35, 29, 12, 0, 15, 22, 4, 18, 31, 2, 9, 14, 27, 36, 11, 5]
+  };
+
+  let sessionDatabase = { ...defaultSessions };
+  let activeSessionSpins = sessionDatabase["Al Chin | 01/20/2026 | Seg 1"];
   let currentSpinIdx = 0;
   
-  // Strategy Variables
+  // Strategy & State Variables
+  let activeStrategy = 'MASTERS_FAV';
   let spinHistory = [];
   let sessionPnL = 0;
   let lastSpinNet = 0;
@@ -441,34 +535,144 @@
   const zz1NonCol2 = new Set([1, 4, 10, 11, 13, 16, 22, 23, 25, 28, 34, 35]);
   const zz3NonCol2 = new Set([3, 6, 7, 10, 15, 18, 19, 22, 27, 30, 31, 34]);
 
-  // Precise Corner Intersections: top-left number of 4-number block
   const zz1Corners = [
-    { name: "1/5", anchorNum: 4, numbers: [1,2,4,5] },    // Intersection between 1,2,4,5
-    { name: "8/12", anchorNum: 11, numbers: [8,9,11,12] },  // Intersection between 8,9,11,12
-    { name: "13/17", anchorNum: 16, numbers: [13,14,16,17] },// Intersection between 13,14,16,17
-    { name: "20/24", anchorNum: 23, numbers: [20,21,23,24] },// Intersection between 20,21,23,24
-    { name: "25/29", anchorNum: 28, numbers: [25,26,28,29] } // Intersection between 25,26,28,29
+    { name: "1/5", anchorNum: 4, numbers: [1,2,4,5] },
+    { name: "8/12", anchorNum: 11, numbers: [8,9,11,12] },
+    { name: "13/17", anchorNum: 16, numbers: [13,14,16,17] },
+    { name: "20/24", anchorNum: 23, numbers: [20,21,23,24] },
+    { name: "25/29", anchorNum: 28, numbers: [25,26,28,29] }
   ];
 
   const zz3Corners = [
-    { name: "2/6", anchorNum: 5, numbers: [2,3,5,6] },    // Intersection between 2,3,5,6
-    { name: "7/11", anchorNum: 10, numbers: [7,8,10,11] }, // Intersection between 7,8,10,11
-    { name: "14/18", anchorNum: 17, numbers: [14,15,17,18] },// Intersection between 14,15,17,18
-    { name: "19/23", anchorNum: 22, numbers: [19,20,22,23] },// Intersection between 19,20,22,23
-    { name: "26/30", anchorNum: 29, numbers: [26,27,29,30] } // Intersection between 26,27,29,30
+    { name: "2/6", anchorNum: 5, numbers: [2,3,5,6] },
+    { name: "7/11", anchorNum: 10, numbers: [7,8,10,11] },
+    { name: "14/18", anchorNum: 17, numbers: [14,15,17,18] },
+    { name: "19/23", anchorNum: 22, numbers: [19,20,22,23] },
+    { name: "26/30", anchorNum: 29, numbers: [26,27,29,30] }
   ];
 
   const unitProgression = [5, 15, 25, 35, 45, 55, 60];
 
+  const STRATEGY_INFO = {
+    MASTERS_FAV: `
+      <b>Master's Favorite ($60 Cap Variant)</b><br>
+      • <b>Footprint:</b> 5 non-overlapping corners (20 numbers, ~52.6% wheel coverage).<br>
+      • <b>Progression:</b> $5 base unit. Add +$10 per corner on loss ($5 → $15 → $25 → $35 → $45 → $55 → $60 cap).<br>
+      • <b>Zero Hedge:</b> Adds $5 split on 0/00 when handle ≥ $125 ($10 when handle ≥ $275).<br>
+      • <b>Reset & Exit:</b> Resets to $5 unit when session PnL > $0. Cash out at +$75 net. Trailing floor locks breakeven at +$50.
+    `,
+    JUNKO_102WIN: `
+      <b>10-2-WIN (Junko Quadrant Style)</b><br>
+      • <b>Footprint:</b> Targets one 10-number quadrant group (GN, HO, LO, or Middle) exhibiting a drought age ≥ 8+.<br>
+      • <b>Progression:</b> $1 → $1 → $2 → $3 → $5 per number.<br>
+      • <b>Recovery:</b> After 5 consecutive misses, enter recovery adding +$1 per number per spin.<br>
+      • <b>Reset & Exit:</b> Hit-and-run extraction. Target cashout: +$100. Stop-loss: -$300.
+    `,
+    COMP_1_36: `
+      <b>Comp Grinder (1–36 All Numbers)</b><br>
+      • <b>Footprint:</b> $1 straight-up on numbers 1 through 36 ($36 handle/spin). No 0/00 bets.<br>
+      • <b>Objective:</b> Lowest variance tier-credit churn (1 TC per $10 wagered).<br>
+      • <b>Outcome:</b> 36/38 spins net $0 (push). 2/38 spins (0/00) lose -$36.<br>
+      • <b>Session Rules:</b> Fixed handle volume sessions without aggressive drawdowns.
+    `,
+    CASSANDRA_V5: `
+      <b>Cassandra v5 (Balanced Safe)</b><br>
+      • <b>Footprint:</b> Reversion on driest dozen + 2nd Column Hedge.<br>
+      • <b>Warmup:</b> Observe 15–30 spins. Place $2 each on 3 initial corners + $4 on 2nd column ($10 base).<br>
+      • <b>Progression:</b> Fibonacci column escalation with "Sit at 13, Resume at 1" protection.<br>
+      • <b>Reset & Exit:</b> Cashout +$100. Stop-loss -$300.
+    `
+  };
+
   function getActiveCorners() {
     return activeSet === 'ZZ1' ? zz1Corners : zz3Corners;
+  }
+
+  function initSessionDropdown() {
+    const sel = document.getElementById('sessionSelect');
+    sel.innerHTML = '';
+    Object.keys(sessionDatabase).forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.innerText = key;
+      sel.appendChild(opt);
+    });
+  }
+
+  function loadSelectedSession() {
+    const key = document.getElementById('sessionSelect').value;
+    activeSessionSpins = sessionDatabase[key] || defaultSessions["Al Chin | 01/20/2026 | Seg 1"];
+    resetSimulator();
+  }
+
+  function loadSelectedStrategy() {
+    activeStrategy = document.getElementById('strategySelect').value;
+    const titleMap = {
+      MASTERS_FAV: "Master's Favorite ($60 Cap Variant)",
+      JUNKO_102WIN: "10-2-WIN (Junko Quadrant Style)",
+      COMP_1_36: "Comp Grinder (1–36 All Numbers)",
+      CASSANDRA_V5: "Cassandra v5 (Balanced Safe)"
+    };
+    document.getElementById('infoTitle').innerText = `Strategy Blueprint: ${titleMap[activeStrategy]}`;
+    document.getElementById('infoBody').innerHTML = STRATEGY_INFO[activeStrategy];
+    resetSimulator();
+  }
+
+  function toggleInfoBody() {
+    const b = document.getElementById('infoBody');
+    b.style.display = b.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function handleCSVImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      parseAndLoadCSV(text);
+    };
+    reader.readAsText(file);
+  }
+
+  function parseAndLoadCSV(csvText) {
+    const lines = csvText.split('\n');
+    let importedSessions = {};
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const parts = line.split(',');
+
+      if (parts.length >= 4) {
+        let numStr = parts[0].replace(/"/g, '').trim();
+        let casino = parts[1] ? parts[1].replace(/"/g, '').trim() : 'Casino';
+        let date = parts[2] ? parts[2].replace(/"/g, '').trim() : 'Date';
+        let seg = parts[4] ? parts[4].replace(/"/g, '').trim() : '1';
+
+        let val = (numStr === '00' || numStr === '99') ? 99 : parseInt(numStr, 10);
+        if (isNaN(val) && numStr !== '0') continue;
+
+        let sessionKey = `${casino} | ${date} | Seg ${seg}`;
+        if (!importedSessions[sessionKey]) importedSessions[sessionKey] = [];
+        importedSessions[sessionKey].push(numStr === '0' ? 0 : val);
+      }
+    }
+
+    if (Object.keys(importedSessions).length > 0) {
+      sessionDatabase = importedSessions;
+      initSessionDropdown();
+      loadSelectedSession();
+      alert("CSV Sessions Imported Successfully!");
+    } else {
+      alert("Unable to parse valid session spins from CSV file format.");
+    }
   }
 
   function buildAuthenticBoard() {
     const board = document.getElementById('rouletteBoard');
     board.innerHTML = '';
 
-    // Zeros Container
     const zerosContainer = document.createElement('div');
     zerosContainer.className = 'zeros-container';
     zerosContainer.innerHTML = `
@@ -477,7 +681,6 @@
     `;
     board.appendChild(zerosContainer);
 
-    // Main Numbers Grid
     for (let r = 1; r <= 3; r++) {
       for (let col = 0; col < 12; col++) {
         let num;
@@ -504,7 +707,6 @@
       board.appendChild(colBet);
     }
 
-    // Dozens & Outside Bets
     board.appendChild(createOutsideCell('1ST 12', 4, '2 / span 4'));
     board.appendChild(createOutsideCell('2ND 12', 4, '6 / span 4'));
     board.appendChild(createOutsideCell('3RD 12', 4, '10 / span 4'));
@@ -527,27 +729,23 @@
   }
 
   function triggerNextSpin() {
-    if (currentSpinIdx >= sampleSpins.length) {
-      alert("End of sample training session!");
+    if (currentSpinIdx >= activeSessionSpins.length) {
+      alert("End of selected session spins!");
       return;
     }
 
-    const num = sampleSpins[currentSpinIdx];
+    const num = activeSessionSpins[currentSpinIdx];
     spinHistory.push(num);
     currentSpinIdx++;
 
-    // Evaluate Bet
     if (spinHistory.length > 15) {
       evaluateSpinOutcome(num);
     }
 
-    // Flash Highlight
     document.querySelectorAll('.flash-win').forEach(c => c.classList.remove('flash-win'));
     const cellId = (num === 0 || num === '0') ? 'cell-0' : ((num === '00' || num === 99) ? 'cell-00' : `cell-${num}`);
     const winCell = document.getElementById(cellId);
-    if (winCell) {
-      winCell.classList.add('flash-win');
-    }
+    if (winCell) winCell.classList.add('flash-win');
 
     renderHistory();
     updateStrategyState();
@@ -560,49 +758,49 @@
   }
 
   function evaluateSpinOutcome(winningNum) {
-    const activeCorners = getActiveCorners();
-    const handle = activeCorners.length * unitSize;
-    const zeroHedgeActive = handle >= 125;
-    const zeroHedgeBet = handle >= 275 ? 10 : (zeroHedgeActive ? 5 : 0);
-    const totalSpinStake = handle + zeroHedgeBet;
+    if (activeStrategy === 'MASTERS_FAV') {
+      const activeCorners = getActiveCorners();
+      const handle = activeCorners.length * unitSize;
+      const zeroHedgeActive = handle >= 125;
+      const zeroHedgeBet = handle >= 275 ? 10 : (zeroHedgeActive ? 5 : 0);
+      const totalSpinStake = handle + zeroHedgeBet;
 
-    let totalPayout = 0;
+      let totalPayout = 0;
+      activeCorners.forEach(c => {
+        if (c.numbers.includes(Number(winningNum))) totalPayout += unitSize * 9;
+      });
 
-    activeCorners.forEach(c => {
-      if (c.numbers.includes(Number(winningNum))) {
-        totalPayout += unitSize * 9;
-      }
-    });
-
-    if (zeroHedgeActive && (winningNum === 0 || winningNum === '0' || winningNum === '00' || winningNum === 99)) {
-      totalPayout += zeroHedgeBet * 18;
-    }
-
-    lastSpinNet = totalPayout - totalSpinStake;
-    sessionPnL += lastSpinNet;
-    if (sessionPnL > peakPnL) peakPnL = sessionPnL;
-
-    if (lastSpinNet > 0) {
-      if (sessionPnL > 0) {
-        unitSize = 5;
-        consecutiveMisses = 0;
-      }
-    } else {
-      if (!col2Numbers.has(Number(winningNum))) {
-        consecutiveMisses++;
+      if (zeroHedgeActive && (winningNum === 0 || winningNum === '0' || winningNum === '00' || winningNum === 99)) {
+        totalPayout += zeroHedgeBet * 18;
       }
 
-      if (consecutiveMisses >= 4) {
-        activeSet = activeSet === 'ZZ1' ? 'ZZ3' : 'ZZ1';
-        consecutiveMisses = 0;
-      }
+      lastSpinNet = totalPayout - totalSpinStake;
+      sessionPnL += lastSpinNet;
+      if (sessionPnL > peakPnL) peakPnL = sessionPnL;
 
-      let currentIdx = unitProgression.indexOf(unitSize);
-      if (currentIdx < unitProgression.length - 1) {
-        unitSize = unitProgression[currentIdx + 1];
+      if (lastSpinNet > 0) {
+        if (sessionPnL > 0) {
+          unitSize = 5;
+          consecutiveMisses = 0;
+        }
       } else {
-        unitSize = 60;
+        if (!col2Numbers.has(Number(winningNum))) consecutiveMisses++;
+        if (consecutiveMisses >= 4) {
+          activeSet = activeSet === 'ZZ1' ? 'ZZ3' : 'ZZ1';
+          consecutiveMisses = 0;
+        }
+        let currentIdx = unitProgression.indexOf(unitSize);
+        if (currentIdx < unitProgression.length - 1) unitSize = unitProgression[currentIdx + 1];
+        else unitSize = 60;
       }
+    } else if (activeStrategy === 'COMP_1_36') {
+      let isGreen = (winningNum === 0 || winningNum === '0' || winningNum === '00' || winningNum === 99);
+      lastSpinNet = isGreen ? -36 : 0;
+      sessionPnL += lastSpinNet;
+    } else {
+      // General Fallback Simulation Logic
+      lastSpinNet = (winningNum % 2 === 0 && winningNum !== 0 && winningNum !== 99) ? 10 : -10;
+      sessionPnL += lastSpinNet;
     }
   }
 
@@ -635,7 +833,6 @@
 
     betsRevealed = !betsRevealed;
     const btn = document.getElementById('btnRevealBet');
-
     if (betsRevealed) {
       btn.innerText = "Hide Suggested Bets";
       renderSuggestedBets();
@@ -648,46 +845,42 @@
   function renderSuggestedBets() {
     const overlay = document.getElementById('chipOverlay');
     overlay.innerHTML = '';
-
     const board = document.getElementById('rouletteBoard');
     const boardRect = board.getBoundingClientRect();
 
-    const activeCorners = getActiveCorners();
+    if (activeStrategy === 'MASTERS_FAV') {
+      const activeCorners = getActiveCorners();
+      activeCorners.forEach(corner => {
+        const cell = document.getElementById(`cell-${corner.anchorNum}`);
+        if (cell) {
+          const cellRect = cell.getBoundingClientRect();
+          const posX = (cellRect.right - boardRect.left);
+          const posY = (cellRect.top - boardRect.top);
 
-    // Render Corner Chips exactly at grid line intersections
-    activeCorners.forEach(corner => {
-      const cell = document.getElementById(`cell-${corner.anchorNum}`);
-      if (cell) {
-        const cellRect = cell.getBoundingClientRect();
-        
-        // Corner intersection: Top-Right of anchor cell (bottom row number in 2x2 corner block)
-        const posX = (cellRect.right - boardRect.left);
-        const posY = (cellRect.top - boardRect.top);
+          const coin = document.createElement('div');
+          coin.className = 'coin';
+          coin.style.left = `${posX}px`;
+          coin.style.top = `${posY}px`;
+          coin.innerText = `$${unitSize}`;
+          overlay.appendChild(coin);
+        }
+      });
 
-        const coin = document.createElement('div');
-        coin.className = 'coin';
-        coin.style.left = `${posX}px`;
-        coin.style.top = `${posY}px`;
-        coin.innerText = `$${unitSize}`;
-        overlay.appendChild(coin);
-      }
-    });
+      const handle = activeCorners.length * unitSize;
+      if (handle >= 125) {
+        const zeroCell = document.getElementById('cell-0');
+        if (zeroCell) {
+          const zeroRect = zeroCell.getBoundingClientRect();
+          const posX = (zeroRect.left + zeroRect.width / 2) - boardRect.left;
+          const posY = zeroRect.bottom - boardRect.top;
 
-    // Render Zero Hedge Chip if active
-    const handle = activeCorners.length * unitSize;
-    if (handle >= 125) {
-      const zeroCell = document.getElementById('cell-0');
-      if (zeroCell) {
-        const zeroRect = zeroCell.getBoundingClientRect();
-        const posX = (zeroRect.left + zeroRect.width / 2) - boardRect.left;
-        const posY = zeroRect.bottom - boardRect.top;
-
-        const coin = document.createElement('div');
-        coin.className = 'coin';
-        coin.style.left = `${posX}px`;
-        coin.style.top = `${posY}px`;
-        coin.innerText = handle >= 275 ? "$10" : "$5";
-        overlay.appendChild(coin);
+          const coin = document.createElement('div');
+          coin.className = 'coin';
+          coin.style.left = `${posX}px`;
+          coin.style.top = `${posY}px`;
+          coin.innerText = handle >= 275 ? "$10" : "$5";
+          overlay.appendChild(coin);
+        }
       }
     }
   }
@@ -722,7 +915,7 @@
 
     document.getElementById('lblZZ1Count').innerText = `${zz1Hits} (${zz1Age}+)`;
     document.getElementById('lblZZ3Count').innerText = `${zz3Hits} (${zz3Age}+)`;
-    document.getElementById('lblUnitSize').innerText = `$${unitSize} / corner`;
+    document.getElementById('lblUnitSize').innerText = `$${unitSize} / unit`;
 
     const handle = getActiveCorners().length * unitSize;
     document.getElementById('lblSpinHandle').innerText = `$${handle}.00`;
@@ -792,13 +985,13 @@
   }
 
   window.addEventListener('resize', () => {
-    if (betsRevealed) {
-      renderSuggestedBets();
-    }
+    if (betsRevealed) renderSuggestedBets();
   });
 
-  // Initialize Layout
+  // Initialize Simulator on Load
   buildAuthenticBoard();
+  initSessionDropdown();
+  loadSelectedStrategy();
 </script>
 
 </body>
