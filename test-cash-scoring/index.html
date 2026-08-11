@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Practice Simulator (v2.1.1)</title>
+  <title>Ultimate Practice Simulator (v2.1.2)</title>
   <style>
     :root {
       --table-felt: #0d382c;
@@ -301,6 +301,7 @@
     }
     .btn-secondary { background: #2980b9; }
     .btn-warning { background: #e67e22; }
+    .btn-undo { background: #8e44ad; }
 
     .stat-row {
       display: flex;
@@ -365,7 +366,7 @@
   <div>
     <div class="card">
       <div class="header-bar">
-        <h2 style="margin:0;">Ultimate Practice Simulator <span class="version-tag">v2.1.1</span></h2>
+        <h2 style="margin:0;">Ultimate Practice Simulator <span class="version-tag">v2.1.2</span></h2>
         <div id="tableStateBadge" class="state-badge">STATE: OBSERVATION (Spins 1-15)</div>
       </div>
 
@@ -419,6 +420,7 @@
       <!-- Interactive Controls -->
       <div class="controls-row">
         <button class="btn" id="btnNextSpin" onclick="triggerNextSpin()">Next Spin (Execute)</button>
+        <button class="btn btn-undo" id="btnPrevSpin" onclick="triggerPrevSpin()">⏮ Previous Spin</button>
         <button class="btn btn-warning" id="btnRevealBet" onclick="toggleSuggestedBets()">Reveal Suggested Bets</button>
         <button class="btn btn-secondary" onclick="resetSimulator()">Reset Session</button>
         <span id="practiceInstruction" style="font-style: italic; color: #f1c40f; font-size:13px;">Lookback Phase (Spins 1–15)</span>
@@ -535,21 +537,21 @@
   const zz1NonCol2 = new Set([1, 4, 10, 11, 13, 16, 22, 23, 25, 28, 34, 35]);
   const zz3NonCol2 = new Set([3, 6, 7, 10, 15, 18, 19, 22, 27, 30, 31, 34]);
 
-  // Recalibrated Corner Intersections: Uses top-right corner of bottom-left cell in 2x2 block
+  // Recalibrated Corner Anchors: Bottom-Right of cell 1 = 1/5 intersection
   const zz1Corners = [
-    { name: "1/5", anchorNum: 1, numbers: [1,2,4,5] },    // Anchor cell 1: Top-Right corner = 1/5 intersection
-    { name: "8/12", anchorNum: 8, numbers: [8,9,11,12] },  // Anchor cell 8: Top-Right corner = 8/12 intersection
-    { name: "13/17", anchorNum: 13, numbers: [13,14,16,17] },// Anchor cell 13: Top-Right corner = 13/17 intersection
-    { name: "20/24", anchorNum: 20, numbers: [20,21,23,24] },// Anchor cell 20: Top-Right corner = 20/24 intersection
-    { name: "25/29", anchorNum: 25, numbers: [25,26,28,29] } // Anchor cell 25: Top-Right corner = 25/29 intersection
+    { name: "1/5", anchorNum: 1, numbers: [1,2,4,5] },    
+    { name: "8/12", anchorNum: 8, numbers: [8,9,11,12] },  
+    { name: "13/17", anchorNum: 13, numbers: [13,14,16,17] },
+    { name: "20/24", anchorNum: 20, numbers: [20,21,23,24] },
+    { name: "25/29", anchorNum: 25, numbers: [25,26,28,29] } 
   ];
 
   const zz3Corners = [
-    { name: "2/6", anchorNum: 2, numbers: [2,3,5,6] },    // Anchor cell 2: Top-Right corner = 2/6 intersection
-    { name: "7/11", anchorNum: 7, numbers: [7,8,10,11] },  // Anchor cell 7: Top-Right corner = 7/11 intersection
-    { name: "14/18", anchorNum: 14, numbers: [14,15,17,18] },// Anchor cell 14: Top-Right corner = 14/18 intersection
-    { name: "19/23", anchorNum: 19, numbers: [19,20,22,23] },// Anchor cell 19: Top-Right corner = 19/23 intersection
-    { name: "26/30", anchorNum: 26, numbers: [26,27,29,30] } // Anchor cell 26: Top-Right corner = 26/30 intersection
+    { name: "2/6", anchorNum: 2, numbers: [2,3,5,6] },    
+    { name: "7/11", anchorNum: 7, numbers: [7,8,10,11] },  
+    { name: "14/18", anchorNum: 14, numbers: [14,15,17,18] },
+    { name: "19/23", anchorNum: 19, numbers: [19,20,22,23] },
+    { name: "26/30", anchorNum: 26, numbers: [26,27,29,30] } 
   ];
 
   const unitProgression = [5, 15, 25, 35, 45, 55, 60];
@@ -743,10 +745,51 @@
       evaluateSpinOutcome(num);
     }
 
+    updateUIState(num);
+  }
+
+  function triggerPrevSpin() {
+    if (spinHistory.length === 0) {
+      alert("At start of session!");
+      return;
+    }
+
+    spinHistory.pop();
+    currentSpinIdx--;
+
+    // Recompute entire state from start up to current spinHistory point
+    recalculateSessionState();
+
+    const lastNum = spinHistory.length > 0 ? spinHistory[spinHistory.length - 1] : null;
+    updateUIState(lastNum);
+  }
+
+  function recalculateSessionState() {
+    sessionPnL = 0;
+    lastSpinNet = 0;
+    unitSize = 5;
+    activeSet = 'ZZ1';
+    consecutiveMisses = 0;
+    peakPnL = 0;
+
+    const fullHistory = [...spinHistory];
+    spinHistory = [];
+
+    fullHistory.forEach((num, idx) => {
+      spinHistory.push(num);
+      if (idx >= 15) {
+        evaluateSpinOutcome(num);
+      }
+    });
+  }
+
+  function updateUIState(currentNum) {
     document.querySelectorAll('.flash-win').forEach(c => c.classList.remove('flash-win'));
-    const cellId = (num === 0 || num === '0') ? 'cell-0' : ((num === '00' || num === 99) ? 'cell-00' : `cell-${num}`);
-    const winCell = document.getElementById(cellId);
-    if (winCell) winCell.classList.add('flash-win');
+    if (currentNum !== null && currentNum !== undefined) {
+      const cellId = (currentNum === 0 || currentNum === '0') ? 'cell-0' : ((currentNum === '00' || currentNum === 99) ? 'cell-00' : `cell-${currentNum}`);
+      const winCell = document.getElementById(cellId);
+      if (winCell) winCell.classList.add('flash-win');
+    }
 
     renderHistory();
     updateStrategyState();
@@ -854,9 +897,9 @@
         const cell = document.getElementById(`cell-${corner.anchorNum}`);
         if (cell) {
           const cellRect = cell.getBoundingClientRect();
-          // Precise Intersection Calculation: Right edge of anchor cell, Top border of anchor cell
+          // Corrected Intersection: Right edge and Bottom edge of anchor cell (bottom-left cell of 2x2 corner block)
           const posX = (cellRect.right - boardRect.left);
-          const posY = (cellRect.top - boardRect.top);
+          const posY = (cellRect.bottom - boardRect.top);
 
           const coin = document.createElement('div');
           coin.className = 'coin';
