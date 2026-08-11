@@ -42,6 +42,7 @@
       border-radius: 10px;
       padding: 16px;
       border: 1px solid #333;
+      margin-bottom: 12px;
     }
 
     .header-bar {
@@ -64,6 +65,24 @@
     }
 
     /* History Pill Stream */
+    .history-label-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+    .spin-num-badge {
+      background: #333;
+      color: var(--gold);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 13px;
+      border: 1px solid var(--gold);
+    }
+
     .history-bar {
       display: flex;
       gap: 6px;
@@ -82,9 +101,7 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.4);
     }
 
-    /* ==========================================================================
-       AUTHENTIC CASINO ROULETTE TABLE FELT
-       ========================================================================== */
+    /* Table Felt Wrapper */
     .table-felt-wrapper {
       background: var(--table-felt);
       border: 2px solid var(--table-border);
@@ -92,6 +109,7 @@
       padding: 12px;
       box-shadow: inset 0 0 25px rgba(0,0,0,0.7);
       overflow-x: auto;
+      position: relative;
     }
 
     .roulette-main-grid {
@@ -103,6 +121,7 @@
       border: 2px solid var(--table-border);
       border-radius: 6px;
       min-width: 780px;
+      position: relative;
     }
 
     .grid-cell {
@@ -158,16 +177,8 @@
       letter-spacing: 1px;
       font-family: 'Segoe UI', sans-serif;
     }
-    .bet-box-red {
-      background: var(--casino-red) !important;
-      border-radius: 4px;
-      margin: 3px;
-    }
-    .bet-box-black {
-      background: var(--casino-black) !important;
-      border-radius: 4px;
-      margin: 3px;
-    }
+    .bet-box-red { background: var(--casino-red) !important; border-radius: 4px; margin: 3px; }
+    .bet-box-black { background: var(--casino-black) !important; border-radius: 4px; margin: 3px; }
 
     /* Winning Flash Highlight */
     .flash-win .num-pill, .flash-win {
@@ -180,24 +191,26 @@
       100% { transform: scale(1.12); }
     }
 
-    /* Coin Chip Overlays */
+    /* Corrected Corner Coin Positioning */
     .coin {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
       background: radial-gradient(circle, var(--gold) 60%, #b8860b 100%);
       color: #000;
       border-radius: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 900;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.6);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.8);
       position: absolute;
-      z-index: 20;
+      z-index: 30;
+      pointer-events: none;
     }
-    .corner-coin { transform: translate(50%, 50%); bottom: 0; right: 0; }
-    .split-coin { transform: translate(0, 50%); bottom: 0; }
+    /* Intersection positioning for corner bets */
+    .corner-coin { transform: translate(-50%, -50%); top: 100%; left: 100%; }
+    .split-coin { transform: translate(-50%, -50%); top: 100%; left: 50%; }
 
     /* Buttons & Controls */
     .controls-row {
@@ -233,35 +246,115 @@
     .stat-val { font-weight: bold; color: #00ffcc; }
     .pnl-pos { color: #2ecc71; font-size: 22px; font-weight: bold; }
     .pnl-neg { color: #e74c3c; font-size: 22px; font-weight: bold; }
+
+    /* 10-2-WIN Module Styles */
+    .win10-container {
+      background: #141414;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .win10-header {
+      font-size: 13px;
+      font-weight: bold;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+    .win10-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .win10-box {
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .win10-box:hover { border-color: var(--gold); }
+    .win10-box.active-quad { border-color: var(--win-yellow); background: #2c2912; }
+    .win10-title { font-size: 11px; color: #888; font-weight: bold; margin-bottom: 4px; }
+    .win10-val { font-size: 14px; font-weight: 900; color: #fff; }
+    .age-watch { color: #f1c40f !important; font-weight: bold; }
+    .age-prime { color: #2ecc71 !important; font-weight: bold; }
+
+    .quad-inspector {
+      background: #252525;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
   </style>
 </head>
 <body>
 
 <div class="app-container">
   <!-- Left Column: Table Felt & Interactive Training Lab -->
-  <div class="card">
-    <div class="header-bar">
-      <h2 style="margin:0;">Master's Favorite Training Lab ($60 Cap Variant)</h2>
-      <div id="tableStateBadge" class="state-badge">STATE: OBSERVATION (Spins 1-15)</div>
-    </div>
+  <div>
+    <div class="card">
+      <div class="header-bar">
+        <h2 style="margin:0;">Master's Favorite Training Lab ($60 Cap Variant)</h2>
+        <div id="tableStateBadge" class="state-badge">STATE: OBSERVATION (Spins 1-15)</div>
+      </div>
 
-    <!-- Last 15 History Stream -->
-    <div style="font-size:12px; color:#aaa; margin-bottom:4px;">LAST 15 SPINS (Newest on Right):</div>
-    <div class="history-bar" id="historyBar"></div>
+      <!-- History Stream (Newest on Left) -->
+      <div class="history-label-row">
+        <span>SPIN:</span>
+        <div id="spinNumBadge" class="spin-num-badge">#0</div>
+        <span>LAST 15 SPINS (Newest on Left):</span>
+      </div>
+      <div class="history-bar" id="historyBar"></div>
 
-    <!-- Authentic Roulette Table Felt -->
-    <div class="table-felt-wrapper">
-      <div class="roulette-main-grid" id="rouletteBoard">
-        <!-- Generated Dynamically via JS -->
+      <!-- Authentic Roulette Table Felt -->
+      <div class="table-felt-wrapper">
+        <div class="roulette-main-grid" id="rouletteBoard">
+          <!-- Generated Dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Interactive Execution Bar -->
+      <div class="controls-row">
+        <button class="btn" id="btnNextSpin" onclick="triggerNextSpin()">Next Spin (Execute)</button>
+        <button class="btn btn-warning" id="btnRevealBet" onclick="toggleSuggestedBets()">Reveal Suggested Bets</button>
+        <button class="btn btn-secondary" onclick="resetSimulator()">Reset Training Session</button>
+        <span id="practiceInstruction" style="font-style: italic; color: #f1c40f; font-size:13px;">Spin 1 of 15 (Lookback Phase)</span>
       </div>
     </div>
 
-    <!-- Interactive Execution Bar -->
-    <div class="controls-row">
-      <button class="btn" id="btnNextSpin" onclick="triggerNextSpin()">Next Spin (Execute)</button>
-      <button class="btn btn-warning" id="btnRevealBet" onclick="revealSuggestedBets()">Reveal Suggested Bets</button>
-      <button class="btn btn-secondary" onclick="resetSimulator()">Reset Training Session</button>
-      <span id="practiceInstruction" style="font-style: italic; color: #f1c40f; font-size:13px;">Spin 1 of 15 (Lookback Phase)</span>
+    <!-- 10-2-WIN (W=15) Sniper Monitor Module -->
+    <div class="win10-container">
+      <div class="win10-header">10-2-WIN (W=15) - Quadrant Sniper Monitor</div>
+      <div class="win10-grid">
+        <div class="win10-box" id="box-GN" onclick="toggleInspector('GN')">
+          <div class="win10-title">GN</div>
+          <div class="win10-val" id="val-GN">0 (0+)</div>
+        </div>
+        <div class="win10-box" id="box-HO" onclick="toggleInspector('HO')">
+          <div class="win10-title">HO</div>
+          <div class="win10-val" id="val-HO">0 (0+)</div>
+        </div>
+        <div class="win10-box" id="box-LO" onclick="toggleInspector('LO')">
+          <div class="win10-title">LO</div>
+          <div class="win10-val" id="val-LO">0 (0+)</div>
+        </div>
+        <div class="win10-box" id="box-M" onclick="toggleInspector('M')">
+          <div class="win10-title">M</div>
+          <div class="win10-val" id="val-M">0 (0+)</div>
+        </div>
+        <div class="win10-box" id="box-GR" onclick="toggleInspector('GR')">
+          <div class="win10-title">GR</div>
+          <div class="win10-val" id="val-GR">0 (0+)</div>
+        </div>
+      </div>
+      <div id="quadInspector" class="quad-inspector"></div>
     </div>
   </div>
 
@@ -309,31 +402,63 @@
 </div>
 
 <script>
-  // Sample Session Dataset (Al Chin 01/20/2026 Seg 1)
+  // Dataset (Al Chin 01/20/2026 Seg 1)
   const sampleSpins = [25, 4, 34, 1, 16, 6, 2, 12, 0, 25, 20, 30, 5, 4, 0, 36, 34, 11, 3, 7, 16, 25, 25];
   let currentSpinIdx = 0;
   
   // Strategy Variables
   let spinHistory = [];
   let sessionPnL = 0;
-  let activeCorners = [0, 1, 2, 3, 4]; // 1/5, 8/12, 13/17, 20/24, 25/29
+  let lastSpinNet = 0;
   let unitSize = 5;
+  let activeSet = 'ZZ1';
+  let consecutiveMisses = 0;
+  let peakPnL = 0;
+  let betsRevealed = false;
+  let activeInspectorQuad = null;
 
   const redNumbers = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+  const col2Numbers = new Set([2,5,8,11,14,17,20,23,26,29,32,35]);
+
+  // Quadrant Number Maps
+  const QUADRANTS = {
+    GN: [0, 99, 1, 2, 9, 10, 13, 14, 27, 28],
+    HO: [23, 24, 25, 26, 29, 30, 33, 34, 35, 36],
+    LO: [3, 4, 8, 11, 12, 15, 16, 22],
+    M:  [5, 6, 7, 17, 18, 19, 20, 21, 31, 32],
+    GR: [0, 99]
+  };
+
+  const zz1NonCol2 = new Set([1, 4, 10, 11, 13, 16, 22, 23, 25, 28, 34, 35]);
+  const zz3NonCol2 = new Set([3, 6, 7, 10, 15, 18, 19, 22, 27, 30, 31, 34]);
 
   const zz1Corners = [
-    { name: "1/5", cellId: "cell-1" },
-    { name: "8/12", cellId: "cell-8" },
-    { name: "13/17", cellId: "cell-13" },
-    { name: "20/24", cellId: "cell-20" },
-    { name: "25/29", cellId: "cell-25" }
+    { name: "1/5", cellId: "cell-1", numbers: [1,2,4,5] },
+    { name: "8/12", cellId: "cell-8", numbers: [8,9,11,12] },
+    { name: "13/17", cellId: "cell-13", numbers: [13,14,16,17] },
+    { name: "20/24", cellId: "cell-20", numbers: [20,21,23,24] },
+    { name: "25/29", cellId: "cell-25", numbers: [25,26,28,29] }
   ];
+
+  const zz3Corners = [
+    { name: "2/6", cellId: "cell-2", numbers: [2,3,5,6] },
+    { name: "7/11", cellId: "cell-7", numbers: [7,8,10,11] },
+    { name: "14/18", cellId: "cell-14", numbers: [14,15,17,18] },
+    { name: "19/23", cellId: "cell-19", numbers: [19,20,22,23] },
+    { name: "26/30", cellId: "cell-26", numbers: [26,27,29,30] }
+  ];
+
+  const unitProgression = [5, 15, 25, 35, 45, 55, 60];
+
+  function getActiveCorners() {
+    return activeSet === 'ZZ1' ? zz1Corners : zz3Corners;
+  }
 
   function buildAuthenticBoard() {
     const board = document.getElementById('rouletteBoard');
     board.innerHTML = '';
 
-    // 1. Zeros Container (Far Left, Grid Column 1, Grid Rows 1..3)
+    // Zeros Container
     const zerosContainer = document.createElement('div');
     zerosContainer.className = 'zeros-container';
     zerosContainer.innerHTML = `
@@ -342,7 +467,7 @@
     `;
     board.appendChild(zerosContainer);
 
-    // 2. Main Numbers Grid (3 Rows x 12 Columns)
+    // Main Numbers Grid
     for (let r = 1; r <= 3; r++) {
       for (let col = 0; col < 12; col++) {
         let num;
@@ -360,7 +485,6 @@
         board.appendChild(cell);
       }
 
-      // 3. "2 to 1" Column Bets (Far Right, Column 14)
       const colBet = document.createElement('div');
       colBet.className = 'grid-cell outside-label';
       colBet.style.gridRow = r;
@@ -369,12 +493,11 @@
       board.appendChild(colBet);
     }
 
-    // 4. Dozens Row (Grid Row 4, Columns 2..13)
+    // Dozens & Outside Bets
     board.appendChild(createOutsideCell('1ST 12', 4, '2 / span 4'));
     board.appendChild(createOutsideCell('2ND 12', 4, '6 / span 4'));
     board.appendChild(createOutsideCell('3RD 12', 4, '10 / span 4'));
 
-    // 5. Outside Bets Row (Grid Row 5, Columns 2..13)
     board.appendChild(createOutsideCell('1-18', 5, '2 / span 2'));
     board.appendChild(createOutsideCell('EVEN', 5, '4 / span 2'));
     board.appendChild(createOutsideCell('RED', 5, '6 / span 2', 'bet-box-red'));
@@ -402,53 +525,123 @@
     spinHistory.push(num);
     currentSpinIdx++;
 
-    // Clear previous flash highlights comprehensively across all element types
-    document.querySelectorAll('.flash-win').forEach(c => c.classList.remove('flash-win'));
+    // Evaluate Bet
+    if (spinHistory.length > 15) {
+      evaluateSpinOutcome(num);
+    }
 
-    // Highlight Winning Number Pill or Container Box
-    const cellId = (num === 0 || num === '0') ? 'cell-0' : ((num === '00' || num === 99 || num === '99') ? 'cell-00' : `cell-${num}`);
+    // Flash Highlight
+    document.querySelectorAll('.flash-win').forEach(c => c.classList.remove('flash-win'));
+    const cellId = (num === 0 || num === '0') ? 'cell-0' : ((num === '00' || num === 99) ? 'cell-00' : `cell-${num}`);
     const winPill = document.getElementById(cellId);
     if (winPill) {
       winPill.classList.add('flash-win');
-      if (winPill.parentElement) {
-        winPill.parentElement.classList.add('flash-win');
-      }
+      if (winPill.parentElement) winPill.parentElement.classList.add('flash-win');
+    }
+
+    // Auto-refresh coins if revealed
+    if (betsRevealed) {
+      renderSuggestedBets();
     }
 
     renderHistory();
+    updateStrategyState();
+    updateDashboard();
+    update102WinModule();
+  }
 
+  function evaluateSpinOutcome(winningNum) {
+    const activeCorners = getActiveCorners();
+    const handle = activeCorners.length * unitSize;
+    const zeroHedgeActive = handle >= 125;
+    const zeroHedgeBet = handle >= 275 ? 10 : (zeroHedgeActive ? 5 : 0);
+    const totalSpinStake = handle + zeroHedgeBet;
+
+    let totalPayout = 0;
+
+    activeCorners.forEach(c => {
+      if (c.numbers.includes(Number(winningNum))) {
+        totalPayout += unitSize * 9;
+      }
+    });
+
+    if (zeroHedgeActive && (winningNum === 0 || winningNum === '0' || winningNum === '00' || winningNum === 99)) {
+      totalPayout += zeroHedgeBet * 18;
+    }
+
+    lastSpinNet = totalPayout - totalSpinStake;
+    sessionPnL += lastSpinNet;
+    if (sessionPnL > peakPnL) peakPnL = sessionPnL;
+
+    if (lastSpinNet > 0) {
+      if (sessionPnL > 0) {
+        unitSize = 5;
+        consecutiveMisses = 0;
+      }
+    } else {
+      if (!col2Numbers.has(Number(winningNum))) {
+        consecutiveMisses++;
+      }
+
+      if (consecutiveMisses >= 4) {
+        activeSet = activeSet === 'ZZ1' ? 'ZZ3' : 'ZZ1';
+        consecutiveMisses = 0;
+      }
+
+      let currentIdx = unitProgression.indexOf(unitSize);
+      if (currentIdx < unitProgression.length - 1) {
+        unitSize = unitProgression[currentIdx + 1];
+      } else {
+        unitSize = 60;
+      }
+    }
+  }
+
+  function updateStrategyState() {
+    document.getElementById('spinNumBadge').innerText = `#${spinHistory.length}`;
     if (spinHistory.length > 15) {
       document.getElementById('tableStateBadge').innerText = "STATE: ACTIVE BETTING";
       document.getElementById('practiceInstruction').innerText = "Guess bet positions, then click 'Reveal Suggested Bets'!";
     } else {
+      document.getElementById('tableStateBadge').innerText = "STATE: OBSERVATION (Spins 1-15)";
       document.getElementById('practiceInstruction').innerText = `Lookback Spin ${spinHistory.length} of 15`;
     }
-
-    updateDashboard();
   }
 
   function renderHistory() {
     const bar = document.getElementById('historyBar');
     bar.innerHTML = '';
-    const slice = spinHistory.slice(-15);
+    // Reverse slice so newest spin is on the far LEFT
+    const slice = spinHistory.slice(-15).reverse();
     slice.forEach(n => {
       const bg = (n === 0 || n === '0' || n === '00' || n === 99) ? '#27ae60' : (redNumbers.has(n) ? '#c0392b' : '#181818');
       bar.innerHTML += `<div class="history-pill" style="background:${bg};">${n === 99 ? '00' : n}</div>`;
     });
   }
 
-  function revealSuggestedBets() {
+  function toggleSuggestedBets() {
     if (spinHistory.length <= 15) {
       alert("Still in 15-spin observation window!");
       return;
     }
 
-    // Clear old coins
+    betsRevealed = !betsRevealed;
+    const btn = document.getElementById('btnRevealBet');
+
+    if (betsRevealed) {
+      btn.innerText = "Hide Suggested Bets";
+      renderSuggestedBets();
+    } else {
+      btn.innerText = "Reveal Suggested Bets";
+      document.querySelectorAll('.coin').forEach(c => c.remove());
+    }
+  }
+
+  function renderSuggestedBets() {
     document.querySelectorAll('.coin').forEach(c => c.remove());
 
-    // Place Corner Coins
-    activeCorners.forEach(cIdx => {
-      const corner = zz1Corners[cIdx];
+    const activeCorners = getActiveCorners();
+    activeCorners.forEach(corner => {
       const cell = document.getElementById(corner.cellId);
       if (cell) {
         const coin = document.createElement('div');
@@ -458,13 +651,13 @@
       }
     });
 
-    // Place Zero Hedge Coin if total bet >= $125
-    if (activeCorners.length * unitSize >= 125) {
+    const handle = activeCorners.length * unitSize;
+    if (handle >= 125) {
       const zeroCell = document.getElementById('cell-0');
       if (zeroCell) {
         const coin = document.createElement('div');
         coin.className = 'coin split-coin';
-        coin.innerText = `$5`;
+        coin.innerText = handle >= 275 ? "$10" : "$5";
         zeroCell.parentElement.appendChild(coin);
       }
     }
@@ -475,23 +668,99 @@
     pnlLbl.innerText = `$${sessionPnL.toFixed(2)}`;
     pnlLbl.className = sessionPnL >= 0 ? 'pnl-pos' : 'pnl-neg';
 
+    document.getElementById('lblLastSpinNet').innerText = `$${lastSpinNet.toFixed(2)}`;
+    document.getElementById('lblActiveSet').innerText = `${activeSet} (${activeSet === 'ZZ1' ? 'Standard' : 'Reverse'})`;
+
+    // Dynamic ZZ1/ZZ3 trailing 15 counters + age
+    const trailing15 = spinHistory.slice(-15);
+    let zz1Hits = 0, zz3Hits = 0;
+    trailing15.forEach(n => {
+      const num = Number(n);
+      if (zz1NonCol2.has(num)) zz1Hits++;
+      if (zz3NonCol2.has(num)) zz3Hits++;
+    });
+
+    let zz1Age = 0;
+    for (let i = spinHistory.length - 1; i >= 0; i--) {
+      if (zz1NonCol2.has(Number(spinHistory[i]))) break;
+      zz1Age++;
+    }
+
+    let zz3Age = 0;
+    for (let i = spinHistory.length - 1; i >= 0; i--) {
+      if (zz3NonCol2.has(Number(spinHistory[i]))) break;
+      zz3Age++;
+    }
+
+    document.getElementById('lblZZ1Count').innerText = `${zz1Hits} (${zz1Age}+)`;
+    document.getElementById('lblZZ3Count').innerText = `${zz3Hits} (${zz3Age}+)`;
     document.getElementById('lblUnitSize').innerText = `$${unitSize} / corner`;
-    const handle = activeCorners.length * unitSize;
+
+    const handle = getActiveCorners().length * unitSize;
     document.getElementById('lblSpinHandle').innerText = `$${handle}.00`;
-    document.getElementById('lblZeroHedge').innerText = handle >= 125 ? "YES ($5)" : "NO ($0)";
+    document.getElementById('lblZeroHedge').innerText = handle >= 125 ? (handle >= 275 ? "YES ($10)" : "YES ($5)") : "NO ($0)";
+
+    if (peakPnL >= 75) {
+      document.getElementById('lblTrailingFloor').innerText = "+$35 Floor Locked";
+    } else if (peakPnL >= 50) {
+      document.getElementById('lblTrailingFloor').innerText = "$0 Breakeven Floor";
+    } else {
+      document.getElementById('lblTrailingFloor').innerText = "OFF (-$500 Stop)";
+    }
+  }
+
+  function update102WinModule() {
+    const trailing15 = spinHistory.slice(-15);
+
+    Object.keys(QUADRANTS).forEach(qKey => {
+      const qNums = QUADRANTS[qKey];
+      const hits = trailing15.filter(n => qNums.includes(Number(n))).length;
+
+      let age = 0;
+      for (let i = spinHistory.length - 1; i >= 0; i--) {
+        if (qNums.includes(Number(spinHistory[i]))) break;
+        age++;
+      }
+
+      const valEl = document.getElementById(`val-${qKey}`);
+      valEl.innerHTML = `${hits} <span class="${age >= 8 ? 'age-prime' : (age >= 5 ? 'age-watch' : '')}">(${age}+)</span>`;
+    });
+  }
+
+  function toggleInspector(quadKey) {
+    const panel = document.getElementById('quadInspector');
+    document.querySelectorAll('.win10-box').forEach(b => b.classList.remove('active-quad'));
+
+    if (activeInspectorQuad === quadKey) {
+      panel.style.display = 'none';
+      activeInspectorQuad = null;
+    } else {
+      activeInspectorQuad = quadKey;
+      document.getElementById(`box-${quadKey}`).classList.add('active-quad');
+      panel.style.display = 'block';
+      const formattedNums = QUADRANTS[quadKey].map(n => n === 99 ? '00' : n).join(', ');
+      panel.innerText = `${quadKey} Quadrant Numbers: [ ${formattedNums} ]`;
+    }
   }
 
   function resetSimulator() {
     currentSpinIdx = 0;
     spinHistory = [];
     sessionPnL = 0;
-    activeCorners = [0, 1, 2, 3, 4];
+    lastSpinNet = 0;
     unitSize = 5;
+    activeSet = 'ZZ1';
+    consecutiveMisses = 0;
+    peakPnL = 0;
+    betsRevealed = false;
+
+    document.getElementById('btnRevealBet').innerText = "Reveal Suggested Bets";
     document.querySelectorAll('.flash-win').forEach(c => c.classList.remove('flash-win'));
     document.querySelectorAll('.coin').forEach(c => c.remove());
     renderHistory();
+    updateStrategyState();
     updateDashboard();
-    document.getElementById('tableStateBadge').innerText = "STATE: OBSERVATION (Spins 1-15)";
+    update102WinModule();
   }
 
   // Initialize Authentic Layout on Load
