@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Roulette Tracker v1.91.0 - Updated High Orphans</title>
+    <title>Roulette Tracker v1.92.0 - Driest 5 Corners Integration</title>
     <style>
         * {
             box-sizing: border-box;
@@ -192,7 +192,7 @@
             padding-bottom: 10px;
         }
 
-        .junko-card, .strategy-card, .anomaly-card, .s2w-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        .junko-card, .strategy-card, .anomaly-card, .s2w-card, .d5c-card { background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; }
         .junko-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
         .quad-badge { background: #121212; padding: 8px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #333; }
         .quad-title { font-size: 0.7rem; font-weight: bold; color: #888; }
@@ -207,6 +207,11 @@
         .s2w-title { font-size: 0.65rem; color: #38bdf8; font-weight: bold; margin-bottom: 4px; }
         .s2w-split-row { font-size: 0.7rem; color: #bbb; display: flex; justify-content: space-between; padding: 2px 4px; border-bottom: 1px solid #1a1a1a; }
         .s2w-split-row:last-child { border-bottom: none; }
+
+        /* Driest 5 Corners Styles */
+        .d5c-title { font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px; }
+        .d5c-readout { font-size: 0.95rem; font-weight: bold; color: #ffffff; margin-bottom: 6px; line-height: 1.4; word-break: break-word; }
+        .d5c-footer { font-size: 0.7rem; color: #64748b; font-weight: 500; text-transform: uppercase; }
 
         .strat-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
         .strat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -253,7 +258,7 @@
 
     <header>
         <h1>ROULETTE TRACKER</h1>
-        <span class="version-tag">v1.91.0</span>
+        <span class="version-tag">v1.92.0</span>
     </header>
 
     <!-- DUAL MODE INPUT BLOCK -->
@@ -398,6 +403,13 @@
             <div id="bet-numbers-display" class="bet-numbers-panel"></div>
         </div>
 
+        <!-- DRIEST 5 CORNERS (LIVE) CARD - INSERTED DIRECTLY BELOW 10-2-WIN -->
+        <div class="d5c-card">
+            <div class="d5c-title">Driest 5 Corners (live)</div>
+            <div id="d5c-readout" class="d5c-readout">D5C – none (0)</div>
+            <div id="d5c-footer" class="d5c-footer">LIVE — newest spin -- hit none</div>
+        </div>
+
         <!-- STRATEGY MONITORS -->
         <div class="strategy-card">
             <div style="font-size: 0.75rem; font-weight: bold; color: #888; margin-bottom: 6px;">ACTIVE STRATEGY MONITORS</div>
@@ -490,7 +502,7 @@
             "27","30","28","31","32","33","35","36"
         ];
 
-        // UPDATED: High Orphans (HO) now includes 22 and 29 (11 numbers total)
+        // High Orphans (HO) includes 22 & 29 (11 numbers total)
         const QUADRANTS = {
             GN: ["00","0","1","2","9","10","13","14","27","28"],
             HO: ["22","23","24","25","26","29","30","33","34","35","36"],
@@ -825,6 +837,46 @@
                 });
                 const statDriestVcol = document.getElementById('stat-driest-vcol');
                 if (statDriestVcol) statDriestVcol.innerText = driestVColName;
+
+                // 7. DRIEST 5 CORNERS (LIVE) CALCULATIONS
+                let cornerAges = [];
+                Object.keys(CORNERS).forEach(cName => {
+                    let cNums = CORNERS[cName];
+                    let age = 0;
+                    for (let i = 0; i < spins.length; i++) {
+                        if (spins[i]) {
+                            let n = parseInt(spins[i].number, 10);
+                            if (!isNaN(n) && cNums.includes(n)) break;
+                        }
+                        age++;
+                    }
+                    cornerAges.push({ name: cName, age: age });
+                });
+
+                // Sort descending by drought age
+                cornerAges.sort((a, b) => b.age - a.age);
+
+                const top5Corners = cornerAges.slice(0, 5);
+                const d5cReadoutEl = document.getElementById('d5c-readout');
+                if (d5cReadoutEl) {
+                    if (top5Corners.length > 0) {
+                        d5cReadoutEl.innerText = "D5C – " + top5Corners.map(c => `${c.name} (${c.age})`).join(" / ");
+                    } else {
+                        d5cReadoutEl.innerText = "D5C – none (0)";
+                    }
+                }
+
+                const d5cFooterEl = document.getElementById('d5c-footer');
+                if (d5cFooterEl) {
+                    if (spins.length > 0) {
+                        let latestNum = spins[0].number;
+                        let hitCorners = getCornersForNum(latestNum);
+                        let hitStr = hitCorners.length > 0 ? hitCorners.join(", ") : "none";
+                        d5cFooterEl.innerText = `LIVE — newest spin ${latestNum} hit ${hitStr}`;
+                    } else {
+                        d5cFooterEl.innerText = `LIVE — newest spin -- hit none`;
+                    }
+                }
 
                 // Quadrants
                 Object.keys(QUADRANTS).forEach(key => {
