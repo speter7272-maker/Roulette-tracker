@@ -3,89 +3,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roulette Strategy Training Lab - Master's Favorite</title>
+  <title>Master's Favorite Training Lab ($60 Cap Variant)</title>
   <style>
     :root {
-      --felt-green: #3b7b6d;
-      --felt-dark: #1b4d3e;
+      --table-felt: #0d382c;
+      --table-border: #237865;
+      --casino-red: #c0392b;
+      --casino-black: #181818;
+      --casino-green: #1b5e20;
       --gold: #ffd700;
-      --red: #e74c3c;
-      --black: #2c3e50;
       --win-yellow: #f1c40f;
     }
+    
+    * { box-sizing: border-box; }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #121212;
       color: #ffffff;
       margin: 0;
-      padding: 10px;
+      padding: 12px;
     }
+
     .app-container {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 15px;
-      max-width: 1400px;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      max-width: 1450px;
       margin: 0 auto;
     }
-    @media (max-width: 900px) {
+
+    @media (max-width: 1100px) {
       .app-container { grid-template-columns: 1fr; }
     }
+
     .card {
       background: #1e1e1e;
-      border-radius: 8px;
-      padding: 15px;
+      border-radius: 10px;
+      padding: 16px;
       border: 1px solid #333;
     }
+
     .header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: var(--felt-dark);
-      padding: 10px 15px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-    }
-    /* Table Felt Grid */
-    .roulette-board {
-      display: grid;
-      grid-template-columns: 50px repeat(12, 1fr) 60px;
-      grid-template-rows: repeat(3, 50px) 40px;
-      gap: 2px;
-      background: #0d2b22;
-      padding: 10px;
+      background: #144738;
+      padding: 12px 18px;
       border-radius: 8px;
-      position: relative;
+      margin-bottom: 16px;
     }
-    .cell {
-      background: var(--felt-green);
+
+    .state-badge {
+      background: #e67e22;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    /* History Pill Stream */
+    .history-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 0 14px 0;
+    }
+    .history-pill {
+      min-width: 34px;
+      height: 34px;
+      border-radius: 50%;
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 13px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    /* ==========================================================================
+       AUTHENTIC CASINO ROULETTE TABLE FELT (MATCHING SCREENSHOT LAYOUT)
+       ========================================================================== */
+    .table-felt-wrapper {
+      background: var(--table-felt);
+      border: 2px solid var(--table-border);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.7);
+      overflow-x: auto;
+    }
+
+    .roulette-main-grid {
+      display: grid;
+      grid-template-columns: 75px repeat(12, 1fr) 65px;
+      grid-template-rows: repeat(3, 58px) 46px 46px;
+      gap: 2px;
+      background: var(--table-border);
+      border: 2px solid var(--table-border);
+      border-radius: 6px;
+      min-width: 780px;
+    }
+
+    .grid-cell {
+      background: var(--table-felt);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-weight: bold;
       position: relative;
-      border: 1px solid rgba(255,255,255,0.2);
-      cursor: pointer;
+      user-select: none;
     }
-    .cell.red { background: var(--red); }
-    .cell.black { background: var(--black); }
-    .cell.green { background: #27ae60; }
-    .cell.zero { grid-row: 1 / span 2; }
-    .cell.double-zero { grid-row: 2 / span 2; }
-    .cell.flash-win {
+
+    /* Zeros Wing (Far Left) */
+    .zeros-container {
+      grid-column: 1;
+      grid-row: 1 / span 3;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      height: 100%;
+    }
+    .zero-box {
+      flex: 1;
+      background: var(--table-felt);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Oval Number Pills */
+    .num-pill {
+      width: 38px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .num-pill.red { background: var(--casino-red); border: 1px solid #e74c3c; }
+    .num-pill.black { background: var(--casino-black); border: 1px solid #444; }
+    .num-pill.green { background: var(--casino-green); border: 1px solid #2ecc71; width: 44px; height: 68px; }
+
+    /* Outside Bets Cells */
+    .outside-label {
+      font-size: 14px;
+      letter-spacing: 1px;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .bet-box-red {
+      background: var(--casino-red) !important;
+      border-radius: 4px;
+      margin: 3px;
+    }
+    .bet-box-black {
+      background: var(--casino-black) !important;
+      border-radius: 4px;
+      margin: 3px;
+    }
+
+    /* Winning Flash Highlight */
+    .flash-win .num-pill, .flash-win {
       background: var(--win-yellow) !important;
-      color: #000 !important;
-      animation: pulse 1s infinite;
+      color: #000000 !important;
+      animation: pulseWin 0.9s infinite alternate;
     }
-    @keyframes pulse {
+    @keyframes pulseWin {
       0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
+      100% { transform: scale(1.12); }
     }
-    /* Coin Chips */
+
+    /* Coin Chip Overlays */
     .coin {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       background: radial-gradient(circle, var(--gold) 60%, #b8860b 100%);
       color: #000;
       border-radius: 50%;
@@ -94,13 +191,24 @@
       align-items: center;
       font-size: 11px;
       font-weight: 900;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.6);
       position: absolute;
-      z-index: 10;
+      z-index: 20;
     }
     .corner-coin { transform: translate(50%, 50%); bottom: 0; right: 0; }
     .split-coin { transform: translate(0, 50%); bottom: 0; }
-    /* Control Panel */
+
+    /* Buttons & Controls */
+    .controls-row {
+      margin-top: 16px;
+      background: #282828;
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
     .btn {
       background: #27ae60;
       color: white;
@@ -108,75 +216,61 @@
       padding: 10px 18px;
       font-size: 14px;
       font-weight: bold;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
-      margin-right: 8px;
     }
     .btn-secondary { background: #2980b9; }
     .btn-warning { background: #e67e22; }
-    /* Indicators Sidebar */
+
+    /* Sidebar Stats */
     .stat-row {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
+      padding: 10px 0;
       border-bottom: 1px solid #333;
     }
     .stat-val { font-weight: bold; color: #00ffcc; }
-    .pnl-positive { color: #2ecc71; font-size: 20px; font-weight: bold; }
-    .pnl-negative { color: #e74c3c; font-size: 20px; font-weight: bold; }
-    .history-bar {
-      display: flex;
-      gap: 5px;
-      overflow-x: auto;
-      padding: 10px 0;
-    }
-    .history-pill {
-      min-width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      font-size: 12px;
-    }
+    .pnl-pos { color: #2ecc71; font-size: 22px; font-weight: bold; }
+    .pnl-neg { color: #e74c3c; font-size: 22px; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <div class="app-container">
-  <!-- Left Pane: Board & Interactive Training Controls -->
+  <!-- Left Column: Table Felt & Interactive Training Lab -->
   <div class="card">
     <div class="header-bar">
-      <h2>Master's Favorite Training Lab ($60 Cap Variant)</h2>
-      <div id="tableStateBadge" style="background:#e67e22; padding:4px 10px; border-radius:12px; font-weight:bold;">STATE: OBSERVATION (Spins 1-15)</div>
+      <h2 style="margin:0;">Master's Favorite Training Lab ($60 Cap Variant)</h2>
+      <div id="tableStateBadge" class="state-badge">STATE: OBSERVATION (Spins 1-15)</div>
     </div>
 
-    <!-- History Bar -->
+    <!-- Last 15 History Stream -->
     <div style="font-size:12px; color:#aaa; margin-bottom:4px;">LAST 15 SPINS (Newest on Right):</div>
     <div class="history-bar" id="historyBar"></div>
 
-    <!-- Roulette Board -->
-    <div class="roulette-board" id="rouletteBoard">
-      <!-- Generated via JS -->
+    <!-- Authentic Roulette Table Felt -->
+    <div class="table-felt-wrapper">
+      <div class="roulette-main-grid" id="rouletteBoard">
+        <!-- Generated Dynamically via JS -->
+      </div>
     </div>
 
-    <!-- Training Practice Controls -->
-    <div style="margin-top: 15px; background: #2a2a2a; padding: 12px; border-radius: 6px;">
+    <!-- Interactive Execution Bar -->
+    <div class="controls-row">
       <button class="btn" id="btnNextSpin" onclick="triggerNextSpin()">Next Spin (Execute)</button>
       <button class="btn btn-warning" id="btnRevealBet" onclick="revealSuggestedBets()">Reveal Suggested Bets</button>
       <button class="btn btn-secondary" onclick="resetSimulator()">Reset Training Session</button>
-      <span id="practiceInstruction" style="margin-left: 10px; font-style: italic; color: #f1c40f;">Spin 1 of 15 (Lookback Phase)</span>
+      <span id="practiceInstruction" style="font-style: italic; color: #f1c40f; font-size:13px;">Spin 1 of 15 (Lookback Phase)</span>
     </div>
   </div>
 
-  <!-- Right Pane: Live Strategy Metrics & Session PnL -->
+  <!-- Right Column: Live Strategy Metrics & Decision Engine -->
   <div class="card">
-    <h3>Strategy Metrics & Decision Engine</h3>
+    <h3 style="margin-top:0; border-bottom:1px solid #444; padding-bottom:10px;">Strategy Metrics & Decision Engine</h3>
     
     <div class="stat-row">
       <span>Session PnL:</span>
-      <span id="lblSessionPnL" class="pnl-positive">$0.00</span>
+      <span id="lblSessionPnL" class="pnl-pos">$0.00</span>
     </div>
     <div class="stat-row">
       <span>Last Spin Net:</span>
@@ -214,46 +308,93 @@
 </div>
 
 <script>
-  // Sample Session Dataset (Al Chin 01/20/2026)
+  // Sample Session Dataset (Al Chin 01/20/2026 Seg 1)
   const sampleSpins = [25, 4, 34, 1, 16, 6, 2, 12, 0, 25, 20, 30, 5, 4, 0, 36, 34, 11, 3, 7, 16, 25, 25];
   let currentSpinIdx = 0;
   
-  // Strategy State Variables
+  // Strategy Variables
   let spinHistory = [];
   let sessionPnL = 0;
-  let maxPnL = 0;
   let activeCorners = [0, 1, 2, 3, 4]; // 1/5, 8/12, 13/17, 20/24, 25/29
   let unitSize = 5;
-  let activeSet = "ZZ1";
-  let revealed = false;
 
   const redNumbers = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
-  // Corner Layout Definitions
   const zz1Corners = [
-    { name: "1/5", nums: [1,2,4,5], cellId: "cell-1" },
-    { name: "8/12", nums: [8,9,11,12], cellId: "cell-8" },
-    { name: "13/17", nums: [13,14,16,17], cellId: "cell-13" },
-    { name: "20/24", nums: [20,21,23,24], cellId: "cell-20" },
-    { name: "25/29", nums: [25,26,28,29], cellId: "cell-25" }
+    { name: "1/5", cellId: "cell-1" },
+    { name: "8/12", cellId: "cell-8" },
+    { name: "13/17", cellId: "cell-13" },
+    { name: "20/24", cellId: "cell-20" },
+    { name: "25/29", cellId: "cell-25" }
   ];
 
-  function initBoard() {
+  function buildAuthenticBoard() {
     const board = document.getElementById('rouletteBoard');
     board.innerHTML = '';
 
-    // Zero & Double Zero
-    board.innerHTML += `<div class="cell green zero" id="cell-0">0</div>`;
-    board.innerHTML += `<div class="cell green double-zero" id="cell-00">00</div>`;
+    // 1. Zeros Container (Far Left, Grid Column 1, Grid Rows 1..3)
+    const zerosContainer = document.createElement('div');
+    zerosContainer.className = 'zeros-container';
+    zerosContainer.innerHTML = `
+      <div class="zero-box"><div class="num-pill green" id="cell-00">00</div></div>
+      <div class="zero-box"><div class="num-pill green" id="cell-0">0</div></div>
+    `;
+    board.appendChild(zerosContainer);
 
-    // Numbers 1 to 36 (3 rows)
-    for (let col = 0; col < 12; col++) {
-      for (let row = 3; row >= 1; row--) {
-        const num = col * 3 + row;
+    // 2. Main Numbers Grid (3 Rows x 12 Columns)
+    // Row 1: 3, 6, 9 ... 36
+    // Row 2: 2, 5, 8 ... 35
+    // Row 3: 1, 4, 7 ... 34
+    for (let r = 1; r <= 3; r++) {
+      for (let col = 0; col < 12; col++) {
+        let num;
+        if (r === 1) num = 3 + col * 3;
+        if (r === 2) num = 2 + col * 3;
+        if (r === 3) num = 1 + col * 3;
+
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.style.gridRow = r;
+        cell.style.gridColumn = col + 2;
+
         const colorClass = redNumbers.has(num) ? 'red' : 'black';
-        board.innerHTML += `<div class="cell ${colorClass}" id="cell-${num}">${num}</div>`;
+        cell.innerHTML = `<div class="num-pill ${colorClass}" id="cell-${num}">${num}</div>`;
+        board.appendChild(cell);
       }
+
+      // 3. "2 to 1" Column Bets (Far Right, Column 14)
+      const colBet = document.createElement('div');
+      colBet.className = 'grid-cell outside-label';
+      colBet.style.gridRow = r;
+      colBet.style.gridColumn = 14;
+      colBet.innerText = '2 to 1';
+      board.appendChild(colBet);
     }
+
+    // 4. Dozens Row (Grid Row 4, Columns 2..13)
+    const doz1 = createOutsideCell('1ST 12', 4, '2 / span 4');
+    const doz2 = createOutsideCell('2ND 12', 4, '6 / span 4');
+    const doz3 = createOutsideCell('3RD 12', 4, '10 / span 4');
+    board.appendChild(doz1);
+    board.appendChild(doz2);
+    board.appendChild(doz3);
+
+    // 5. Outside Bets Row (Grid Row 5, Columns 2..13)
+    board.appendChild(createOutsideCell('1-18', 5, '2 / span 2'));
+    board.appendChild(createOutsideCell('EVEN', 5, '4 / span 2'));
+    board.appendChild(createOutsideCell('RED', 5, '6 / span 2', 'bet-box-red'));
+    board.appendChild(createOutsideCell('BLACK', 5, '8 / span 2', 'bet-box-black'));
+    board.appendChild(createOutsideCell('ODD', 5, '10 / span 2'));
+    board.appendChild(createOutsideCell('19-36', 5, '12 / span 2'));
+  }
+
+  function createOutsideCell(label, row, colSpan, extraClass = '') {
+    const cell = document.createElement('div');
+    cell.className = `grid-cell outside-label ${extraClass}`;
+    cell.style.gridRow = row;
+    cell.style.gridColumn = colSpan;
+    cell.innerText = label;
+    return cell;
   }
 
   function triggerNextSpin() {
@@ -266,19 +407,21 @@
     spinHistory.push(num);
     currentSpinIdx++;
 
-    // Highlight winning number
-    document.querySelectorAll('.cell').forEach(c => c.classList.remove('flash-win'));
-    const winCell = document.getElementById(`cell-${num === 0 ? '0' : (num === '00' ? '00' : num)}`);
-    if (winCell) winCell.classList.add('flash-win');
+    // Clear previous flash highlights
+    document.querySelectorAll('.num-pill, .grid-cell').forEach(c => c.classList.remove('flash-win'));
 
-    // Update History Bar
+    // Highlight Winning Number Pill
+    const cellId = num === 0 ? 'cell-0' : (num === '00' ? 'cell-00' : `cell-${num}`);
+    const winPill = document.getElementById(cellId);
+    if (winPill) {
+      winPill.parentElement.classList.add('flash-win');
+    }
+
     renderHistory();
 
-    // Process Strategy Logic if past observation window
     if (spinHistory.length > 15) {
       document.getElementById('tableStateBadge').innerText = "STATE: ACTIVE BETTING";
-      document.getElementById('practiceInstruction').innerText = "Guess where bets go, then click 'Reveal Suggested Bets'!";
-      revealed = false;
+      document.getElementById('practiceInstruction').innerText = "Guess bet positions, then click 'Reveal Suggested Bets'!";
     } else {
       document.getElementById('practiceInstruction').innerText = `Lookback Spin ${spinHistory.length} of 15`;
     }
@@ -291,7 +434,7 @@
     bar.innerHTML = '';
     const slice = spinHistory.slice(-15);
     slice.forEach(n => {
-      const bg = n === 0 || n === '00' ? '#27ae60' : (redNumbers.has(n) ? '#e74c3c' : '#2c3e50');
+      const bg = n === 0 || n === '00' ? '#27ae60' : (redNumbers.has(n) ? '#c0392b' : '#181818');
       bar.innerHTML += `<div class="history-pill" style="background:${bg};">${n}</div>`;
     });
   }
@@ -301,7 +444,7 @@
       alert("Still in 15-spin observation window!");
       return;
     }
-    
+
     // Clear old coins
     document.querySelectorAll('.coin').forEach(c => c.remove());
 
@@ -313,7 +456,7 @@
         const coin = document.createElement('div');
         coin.className = 'coin corner-coin';
         coin.innerText = `$${unitSize}`;
-        cell.appendChild(coin);
+        cell.parentElement.appendChild(coin);
       }
     });
 
@@ -324,15 +467,16 @@
         const coin = document.createElement('div');
         coin.className = 'coin split-coin';
         coin.innerText = `$5`;
-        zeroCell.appendChild(coin);
+        zeroCell.parentElement.appendChild(coin);
       }
     }
-
-    revealed = true;
   }
 
   function updateDashboard() {
-    document.getElementById('lblSessionPnL').innerText = `$${sessionPnL.toFixed(2)}`;
+    const pnlLbl = document.getElementById('lblSessionPnL');
+    pnlLbl.innerText = `$${sessionPnL.toFixed(2)}`;
+    pnlLbl.className = sessionPnL >= 0 ? 'pnl-pos' : 'pnl-neg';
+
     document.getElementById('lblUnitSize').innerText = `$${unitSize} / corner`;
     const handle = activeCorners.length * unitSize;
     document.getElementById('lblSpinHandle').innerText = `$${handle}.00`;
@@ -345,15 +489,15 @@
     sessionPnL = 0;
     activeCorners = [0, 1, 2, 3, 4];
     unitSize = 5;
-    document.querySelectorAll('.cell').forEach(c => c.classList.remove('flash-win'));
+    document.querySelectorAll('.num-pill, .grid-cell').forEach(c => c.classList.remove('flash-win'));
     document.querySelectorAll('.coin').forEach(c => c.remove());
     renderHistory();
     updateDashboard();
     document.getElementById('tableStateBadge').innerText = "STATE: OBSERVATION (Spins 1-15)";
   }
 
-  // Initialize Board on load
-  initBoard();
+  // Initialize Authentic Layout on Load
+  buildAuthenticBoard();
 </script>
 
 </body>
